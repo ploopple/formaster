@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, Color } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { FormField, MarkStyle, DocumentAttachment } from '../types';
 import { isFieldVisible } from './formLogic';
 
@@ -86,11 +87,29 @@ const hexToRgb = (hex: string | undefined): Color | undefined => {
     ) : undefined;
 };
 
+// Helper to detect if text contains Hebrew characters
+const containsHebrew = (text: string): boolean => {
+  return /[\u0590-\u05FF]/.test(text);
+};
+
 export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormField[]): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.load(originalPdfBytes);
+  
+  // Register fontkit to enable custom font embedding
+  pdfDoc.registerFontkit(fontkit);
+  
   const pages = pdfDoc.getPages();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const scriptFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+  
+  // Load Hebrew font
+  let hebrewFont;
+  try {
+    const hebrewFontBytes = await fetch('/fonts/NotoSansHebrew-Regular.ttf').then(res => res.arrayBuffer());
+    hebrewFont = await pdfDoc.embedFont(hebrewFontBytes);
+  } catch (e) {
+    console.error('Failed to load Hebrew font:', e);
+  }
 
   for (const field of fields) {
     if (!isFieldVisible(field, fields)) continue;
@@ -150,7 +169,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                                 drawMark(page, centerX, centerY, pdfW, pdfH, field.markStyle || 'checkmark');
                             }
                         } else {
-                            page.drawText(cellValue, { x: pdfX + 3, y: textY, size: fontSize, font: font, color: rgb(0,0,0) });
+                            const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
+                            page.drawText(cellValue, { x: pdfX + 3, y: textY, size: fontSize, font: cellFont, color: rgb(0,0,0) });
                         }
                     }
                 });
@@ -189,7 +209,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         } else {
                             const textHeight = fontSize * 0.7;
                             const textY = cellCenterY - (textHeight / 2);
-                            page.drawText(cellValue, { x: currentColX + cellPadding + 1, y: textY, size: fontSize, font: font, color: rgb(0, 0, 0), maxWidth: colWidthAbs - (cellPadding * 2) });
+                            const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
+                            page.drawText(cellValue, { x: currentColX + cellPadding + 1, y: textY, size: fontSize, font: cellFont, color: rgb(0, 0, 0), maxWidth: colWidthAbs - (cellPadding * 2) });
                         }
                     }
                     currentColX += colWidthAbs;
@@ -247,7 +268,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
          }
 
         if (field.value) {
-            const fontToUse = field.type === 'signature' ? scriptFont : font;
+            let fontToUse = field.type === 'signature' ? scriptFont : font;
             const sizeToUse = field.type === 'signature' ? fontSize * 1.5 : fontSize;
             
             // Process value based on field type
@@ -256,6 +277,11 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             // For date fields: optionally remove separators
             if (field.type === 'date' && field.dateHideSeparator) {
                 displayValue = displayValue.replace(/\//g, '');
+            }
+            
+            // Use Hebrew font if text contains Hebrew characters
+            if (hebrewFont && containsHebrew(displayValue)) {
+                fontToUse = hebrewFont;
             }
             
             // Calculate Text Alignment X

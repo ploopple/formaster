@@ -1,24 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smart PDF Filler
+
+A Next.js application for creating interactive PDF forms with a visual editor and form filling capabilities.
+
+## Features
+
+- **Visual PDF Editor**: Draw and position form fields directly on PDF documents
+- **Form Templates**: Browse and use pre-configured form templates
+- **Multiple Field Types**: Text, number, date, select, radio, checkbox, signature, and table fields
+- **Conditional Logic**: Show/hide fields based on other field values
+- **Validation**: Built-in field validation with error messages
+- **Undo/Redo**: Full history management for editing
+- **Keyboard Shortcuts**: Efficient editing with keyboard controls
+- **Export**: Download filled PDFs or export form configurations as JSON
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── page.tsx           # Home page with upload/template options
+├── editor/page.tsx    # PDF editor and form filler
+└── templates/page.tsx # Form templates browser
+
+components/
+├── PDFViewer.tsx      # PDF rendering and field interaction
+├── Sidebar.tsx        # Field properties and form controls
+├── FormsList.tsx      # Template browser
+└── ...
+
+services/
+├── pdfUtils.ts        # PDF generation and manipulation
+├── formLogic.ts       # Conditional field logic
+└── validationService.ts # Field validation
+```
+
+## Usage
+
+1. **Home Page** (`/`): Choose to upload a new PDF or browse templates
+2. **Templates** (`/templates`): Select from pre-configured form templates
+3. **Editor** (`/editor`): 
+   - **Editor Mode**: Create and position form fields on the PDF
+   - **Fill Mode**: Fill out the form fields and download the result
 
 ## Learn More
 

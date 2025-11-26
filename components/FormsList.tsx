@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { formsData, FormTemplate } from '../formsData';
-import { FileText, Search, Calendar, FolderOpen } from 'lucide-react';
+import { FileText, Search, Calendar, FolderOpen, ArrowLeft } from 'lucide-react';
 
 interface FormsListProps {
   onSelectForm: (form: FormTemplate) => void;
@@ -10,7 +11,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const categories = ['all', ...Array.from(new Set(formsData.map(f => f.category).filter(Boolean)))];
+  const categories = ['all', ...Array.from(new Set(formsData.map(f => f.category).filter(Boolean)))] as string[];
 
   const filteredForms = formsData.filter(form => {
     const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -24,6 +25,10 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-4 transition-colors">
+            <ArrowLeft size={20} />
+            <span>Back to Home</span>
+          </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">Form Templates</h1>
           <p className="text-slate-600">Select a form template to start filling</p>
         </div>

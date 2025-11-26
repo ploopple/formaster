@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
+import { pdfjs } from '../lib/pdfjs-config';
 import { FormField, AppMode, FieldOption } from '../types';
 import { Trash2, Rows, Eye, EyeOff } from 'lucide-react';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Configure PDF.js worker - use CDN for reliability
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 import { isFieldVisible } from '../services/formLogic';
 
@@ -271,9 +269,29 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     return () => { window.removeEventListener('pointermove', handlePointerMove); window.removeEventListener('pointerup', handlePointerUp); };
   }, [dragState, drawingState, onFieldUpdate, fields, pageNumber, onFieldAdd, onFieldSelect]);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [workerReady, setWorkerReady] = useState(false);
+
+  // Ensure worker is configured on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Force reconfigure to ensure it's set
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+      console.log('PDF.js worker configured:', pdfjs.GlobalWorkerOptions.workerSrc);
+      // Small delay to ensure worker is ready
+      setTimeout(() => setWorkerReady(true), 100);
+    }
+  }, []);
+
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
        setNumPages(numPages);
+       setLoadError(null);
        // We can't restore scroll here reliably because page height isn't ready
+  };
+
+  const onDocumentLoadError = (error: Error) => {
+    console.error('PDF load error:', error);
+    setLoadError('Failed to load PDF. Please try again.');
   };
   
   const onPageRenderSuccess = () => {
@@ -553,8 +571,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         ref={containerRef}
         onScroll={(e) => scrollTopRef.current = e.currentTarget.scrollTop}
       >
-        {file && (
-          <Document file={file} onLoadSuccess={onDocumentLoadSuccess} className="shadow-xl">
+        {!workerReady && (
+          <div className="text-slate-600">Initializing PDF viewer...</div>
+        )}
+        {loadError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <p className="text-red-600">{loadError}</p>
+          </div>
+        )}
+        {file && !loadError && workerReady && (
+          <Document 
+            file={file} 
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading={<div className="text-slate-600">Loading PDF...</div>}
+            className="shadow-xl"
+          >
             <div className="relative" onPointerDown={handleBackgroundPointerDown}>
               <Page pageNumber={pageNumber} width={containerWidth * scale} renderAnnotationLayer={false} renderTextLayer={false} onRenderSuccess={onPageRenderSuccess} />
               
