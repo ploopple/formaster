@@ -1,8 +1,10 @@
 'use client'
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { AppMode, FormField, TableCell, FieldSection, FieldValidationState } from '../types';
-import PDFViewer from '../components/PDFViewer'; 
 import Sidebar from '../components/Sidebar';
+
+const PDFViewer = dynamic(() => import('../components/PDFViewer'), { ssr: false });
 import { SignatureModal } from '../components/SignatureModal';
 import FormsList from '../components/FormsList';
 import KeyboardShortcutsPanel from '../components/KeyboardShortcutsPanel';
