@@ -8,7 +8,7 @@ export enum AppMode {
 
 export type FieldType = 'text' | 'number' | 'radio' | 'checkbox' | 'table' | 'table-row' | 'date' | 'signature' | 'select' | 'textarea';
 
-export type MarkStyle = 'checkmark' | 'x' | 'circle' | 'square' | 'dot';
+export type MarkStyle = 'checkmark' | 'x' | 'circle' | 'square' | 'dot' | 'none';
 
 export interface FieldOption {
   id: string;
@@ -67,6 +67,7 @@ export interface FormField {
   letterSpacing: number;
   textAlign?: 'left' | 'center' | 'right';
   fontFamily?: string;
+  color?: string; // Hex code for text color
   
   // Visual Styling (The "Box" look)
   backgroundColor?: string; // Hex code

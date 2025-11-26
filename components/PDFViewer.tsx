@@ -254,7 +254,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 const height = Math.min(100 - y, Math.abs(rawY2 - rawY1));
                 if (width > 1 && height > 1) {
                      const newField: FormField = { 
-                        id: crypto.randomUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
+                        id: crypto.randomUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: undefined, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
                     };
                     onFieldAdd(newField);
                     onFieldSelect(newField.id);

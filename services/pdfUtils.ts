@@ -48,6 +48,9 @@ const drawSquare = (page: PDFPage, x: number, y: number, width: number, height: 
 // Draw mark based on style
 const drawMark = (page: PDFPage, x: number, y: number, width: number, height: number, style: MarkStyle = 'checkmark') => {
     switch (style) {
+        case 'none':
+            // Don't draw anything
+            break;
         case 'x':
             drawXMark(page, x, y, width, height);
             break;
@@ -103,7 +106,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
   const scriptFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
   
   // Load Hebrew font
-  let hebrewFont;
+  let hebrewFont: typeof font | undefined;
   try {
     const hebrewFontBytes = await fetch('/fonts/NotoSansHebrew-Regular.ttf').then(res => res.arrayBuffer());
     hebrewFont = await pdfDoc.embedFont(hebrewFontBytes);
@@ -170,7 +173,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             }
                         } else {
                             const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
-                            page.drawText(cellValue, { x: pdfX + 3, y: textY, size: fontSize, font: cellFont, color: rgb(0,0,0) });
+                            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
+                            page.drawText(cellValue, { x: pdfX + 3, y: textY, size: fontSize, font: cellFont, color: textColor });
                         }
                     }
                 });
@@ -210,7 +214,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             const textHeight = fontSize * 0.7;
                             const textY = cellCenterY - (textHeight / 2);
                             const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
-                            page.drawText(cellValue, { x: currentColX + cellPadding + 1, y: textY, size: fontSize, font: cellFont, color: rgb(0, 0, 0), maxWidth: colWidthAbs - (cellPadding * 2) });
+                            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
+                            page.drawText(cellValue, { x: currentColX + cellPadding + 1, y: textY, size: fontSize, font: cellFont, color: textColor, maxWidth: colWidthAbs - (cellPadding * 2) });
                         }
                     }
                     currentColX += colWidthAbs;
@@ -297,6 +302,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             // Calculate Vertical Alignment (Centered)
             const textHeight = sizeToUse * 0.7; 
             let textY = y + (fieldHeightPoints / 2) - (textHeight / 2);
+            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
             
             if (field.type === 'textarea') {
                 // Top Align for TextArea with padding
@@ -306,7 +312,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                     y: textY,
                     size: sizeToUse,
                     font: fontToUse,
-                    color: rgb(0, 0, 0),
+                    color: textColor,
                     maxWidth: fieldWidthPoints - (padding * 2),
                     lineHeight: sizeToUse * 1.35, // Match Web line-height 1.35
                 });
@@ -318,14 +324,14 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                     // Position is relative to field, convert to absolute PDF coordinates
                     const digitX = x + (pos.x / 100) * fieldWidthPoints;
                     const digitY = y + fieldHeightPoints - (pos.y / 100) * fieldHeightPoints - (textHeight / 2);
-                    page.drawText(digits[i], { x: digitX, y: digitY, size: sizeToUse, font: fontToUse, color: rgb(0, 0, 0) });
+                    page.drawText(digits[i], { x: digitX, y: digitY, size: sizeToUse, font: fontToUse, color: textColor });
                 }
             } else if (field.letterSpacing && field.letterSpacing > 0) {
                  // Letter Spacing Logic
                  let currentX = textX;
                  for (let i = 0; i < displayValue.length; i++) {
                      const char = displayValue[i];
-                     page.drawText(char, { x: currentX, y: textY, size: sizeToUse, font: fontToUse, color: rgb(0, 0, 0) });
+                     page.drawText(char, { x: currentX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
                      const charWidth = fontToUse.widthOfTextAtSize(char, sizeToUse);
                      currentX += charWidth + field.letterSpacing;
                  }
@@ -333,7 +339,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                  // Standard Line
                  // check if the field type is radio 
                  if(field.type !== "radio") {
-                     page.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: rgb(0, 0, 0) });
+                     page.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
                  }
             }
         }

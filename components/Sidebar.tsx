@@ -403,12 +403,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                              
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Text Color</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="color" value={selectedField.color || '#000000'} onChange={(e) => onUpdateField(selectedField.id, { color: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
+                                        <button onClick={() => onUpdateField(selectedField.id, { color: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">Clear</button>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase">Background</label>
                                     <div className="flex items-center gap-2">
                                         <input type="color" value={selectedField.backgroundColor || '#ffffff'} onChange={(e) => onUpdateField(selectedField.id, { backgroundColor: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
                                         <button onClick={() => onUpdateField(selectedField.id, { backgroundColor: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">Clear</button>
                                     </div>
                                 </div>
+                             </div>
+                             
+                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase">Border Color</label>
                                     <div className="flex items-center gap-2">
@@ -677,13 +687,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 <Check size={14} className="text-slate-600" />
                                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Mark Style</h3>
                              </div>
-                             <div className="grid grid-cols-5 gap-2">
+                             <div className="grid grid-cols-6 gap-2">
                                 {[
                                     { value: 'checkmark', label: '✓', title: 'Checkmark' },
                                     { value: 'x', label: '✕', title: 'X Mark' },
                                     { value: 'circle', label: '○', title: 'Circle' },
                                     { value: 'square', label: '■', title: 'Square' },
                                     { value: 'dot', label: '●', title: 'Dot' },
+                                    { value: 'none', label: '∅', title: 'None' },
                                 ].map((mark) => (
                                     <button
                                         key={mark.value}
