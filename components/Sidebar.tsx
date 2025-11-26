@@ -69,8 +69,46 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [newSectionName, setNewSectionName] = React.useState('');
   const [showNewSectionInput, setShowNewSectionInput] = React.useState(false);
   const [currentFillStep, setCurrentFillStep] = React.useState(0);
+  const [sidebarWidth, setSidebarWidth] = React.useState(320);
+  const [isResizing, setIsResizing] = React.useState(false);
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
 
   if (mode === AppMode.UPLOAD) return null;
+
+  // Resize handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = window.innerWidth - e.clientX;
+      // Min width: 280px, Max width: 800px
+      const clampedWidth = Math.min(Math.max(newWidth, 280), 800);
+      setSidebarWidth(clampedWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   const handleTypeChange = (newType: FieldType) => {
     if (!selectedField) return;
@@ -304,7 +342,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     <>
     {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />}
     
-    <div className={`fixed md:relative top-0 right-0 h-full w-full md:w-80 bg-white border-l border-slate-200 shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`}>
+    <div 
+      ref={sidebarRef}
+      className={`fixed md:relative top-0 right-0 h-full w-full bg-white border-l border-slate-200 shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`}
+      style={{ width: window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%' }}
+    >
+      {/* Resize handle */}
+      <div 
+        className="hidden md:block absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500 transition-colors group"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-slate-300 group-hover:bg-blue-500 rounded-r transition-colors" />
+      </div>
       <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
         <div>
             <h2 className="font-semibold text-slate-800 flex items-center gap-2">
@@ -1309,9 +1358,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           <div className="flex flex-col h-full">
             {(() => {
-              const renderFillField = (field: FormField) => {
+              const renderFillField = (field: FormField, isNested: boolean = false) => {
                 if (!isFieldVisible(field, fields)) return null;
                 if (field.type === 'table-row') return null;
+                // Skip nested fields at top level - they are rendered inside their parent
+                if (!isNested && field.parentFieldId) return null;
                 const linkedDedupe = fields.find(f => f.groupId === field.groupId);
                 if (field.groupId && linkedDedupe && linkedDedupe.id !== field.id && fields.indexOf(linkedDedupe) < fields.indexOf(field)) return null;
 
@@ -1426,19 +1477,30 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {(field.type === 'radio') && (
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
-                            {(field.options || []).map((opt) => (
-                                <label key={opt.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
-                                    <input 
-                                        type="radio" 
-                                        name={`field-${field.id}`}
-                                        value={opt.value}
-                                        checked={field.value === opt.value}
-                                        onChange={() => onUpdateField(field.id, { value: opt.value })}
-                                        className="text-blue-600 focus:ring-blue-500 accent-blue-600"
-                                    />
-                                    <span className="text-sm text-slate-700">{opt.value}</span>
-                                </label>
-                            ))}
+                            {(field.options || []).map((opt) => {
+                                const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
+                                return (
+                                    <div key={opt.id}>
+                                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                            <input 
+                                                type="radio" 
+                                                name={`field-${field.id}`}
+                                                value={opt.value}
+                                                checked={field.value === opt.value}
+                                                onChange={() => onUpdateField(field.id, { value: opt.value })}
+                                                className="text-blue-600 focus:ring-blue-500 accent-blue-600"
+                                            />
+                                            <span className="text-sm text-slate-700">{opt.value}</span>
+                                        </label>
+                                        {/* Render nested fields when this option is selected */}
+                                        {field.value === opt.value && nestedFields.length > 0 && (
+                                            <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
+                                                {nestedFields.map(nestedField => renderFillField(nestedField, true))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                     
@@ -1446,22 +1508,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
                              {(field.options || []).map((opt) => {
                                 const isChecked = (field.value || '').split(',').includes(opt.value);
+                                const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
                                 return (
-                                    <label key={opt.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
-                                        <input 
-                                            type="checkbox"
-                                            checked={isChecked}
-                                            onChange={(e) => {
-                                                const current = field.value ? field.value.split(',') : [];
-                                                let next;
-                                                if (e.target.checked) next = [...current, opt.value];
-                                                else next = current.filter(v => v !== opt.value);
-                                                onUpdateField(field.id, { value: next.join(',') });
-                                            }}
-                                            className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
-                                        />
-                                        <span className="text-sm text-slate-700">{opt.value}</span>
-                                    </label>
+                                    <div key={opt.id}>
+                                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                            <input 
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={(e) => {
+                                                    const current = field.value ? field.value.split(',') : [];
+                                                    let next;
+                                                    if (e.target.checked) next = [...current, opt.value];
+                                                    else next = current.filter(v => v !== opt.value);
+                                                    onUpdateField(field.id, { value: next.join(',') });
+                                                }}
+                                                className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
+                                            />
+                                            <span className="text-sm text-slate-700">{opt.value}</span>
+                                        </label>
+                                        {/* Render nested fields when this option is checked */}
+                                        {isChecked && nestedFields.length > 0 && (
+                                            <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
+                                                {nestedFields.map(nestedField => renderFillField(nestedField, true))}
+                                            </div>
+                                        )}
+                                    </div>
                                 )
                              })}
                         </div>
@@ -1720,7 +1791,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   
                   {/* Fields for current step */}
                   <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-                    {activeStep.fields.map(renderFillField)}
+                    {activeStep.fields.map(f => renderFillField(f))}
                   </div>
                 </>
               );
