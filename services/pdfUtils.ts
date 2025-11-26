@@ -149,17 +149,6 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                     const pdfW = (uiCellWidth / 100) * width;
                     const pdfY = originY + height - ((uiCellTop / 100) * height) - pdfH;
                     
-                    // Draw cell background
-                    page.drawRectangle({
-                        x: pdfX,
-                        y: pdfY,
-                        width: pdfW,
-                        height: pdfH,
-                        color: rgb(0.95, 0.95, 0.95), // Light gray background
-                        borderColor: rgb(0.8, 0.8, 0.8),
-                        borderWidth: 0.5,
-                    });
-                    
                     if (cellValue) {
                         // Centered Vertical Alignment matches Flexbox 'center'
                         const textHeight = fontSize * 0.7; // Cap height approx

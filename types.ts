@@ -26,6 +26,7 @@ export interface TableColumn {
   width: number; // Percentage relative to the table width
   options?: string[]; // Options for select/radio types
   dateFormat?: string; // Format for date type (e.g., DD/MM/YYYY)
+  spacing?: number; // Spacing/gap around the column cells in pixels
 }
 
 export interface TableCell {
@@ -38,6 +39,7 @@ export interface TableCell {
     height: number; // % relative to Row
     options?: string[]; // Options for select/radio types
     dateFormat?: string; // Format for date type
+    spacing?: number; // Spacing/gap around the cell in pixels
 }
 
 export interface FieldSection {

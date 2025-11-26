@@ -21,7 +21,7 @@ export interface FormTemplate {
 
 export const formsData: FormTemplate[] = [
 {
-  "id": "2ca0314f-7f3a-4ba6-bbde-56ac5109d497",
+  "id": "16d437b6-36fe-433b-826d-1827f5874afc",
   "title": "EDIT_THIS_TITLE",
   "description": "EDIT_THIS_DESCRIPTION",
   "fileName": "/forms/tofes-101.pdf",
@@ -502,9 +502,519 @@ export const formsData: FormTemplate[] = [
       "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
       "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
       "textAlign": "center"
+    },
+    {
+      "id": "7cc45361-13d6-4ec3-9657-856de4567c91",
+      "page": 1,
+      "x": 20.29355456285897,
+      "y": 82.80128693053675,
+      "width": 15.108337986598595,
+      "height": 1.6203907307171854,
+      "name": "spouse date of birth",
+      "value": "30/11/2025",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 5,
+      "options": [],
+      "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
+      "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
+      "dateFormat": "DD/MM/YYYY",
+      "dateHideSeparator": true,
+      "hidden": true
+    },
+    {
+      "id": "a7952b49-7890-4e92-8310-36fc3a8c84d5",
+      "page": 1,
+      "x": 75.5971801212508,
+      "y": 37.0430550857014,
+      "width": 20,
+      "height": 3,
+      "name": "is spuse an immigrant?",
+      "value": "yes",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "f5263e1a-0325-4c14-b545-b5828d6458d5",
+          "x": 75.5971801212508,
+          "y": 37.0430550857014,
+          "width": 5,
+          "height": 3,
+          "value": "yes"
+        },
+        {
+          "id": "79225587-de82-40a3-81a9-8f1df8f6e538",
+          "x": 75.5971801212508,
+          "y": 37.0430550857014,
+          "width": 5,
+          "height": 3,
+          "value": "no"
+        }
+      ],
+      "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
+      "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
+      "markStyle": "none"
+    },
+    {
+      "id": "7b8b37cc-8cd5-4633-ac49-25d277af37cc",
+      "page": 1,
+      "x": 5.360561582641991,
+      "y": 82.60339140730716,
+      "width": 14.971980695596681,
+      "height": 1.9186893888137122,
+      "name": "spouse immigration date",
+      "value": "30/11/2025",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 4.5,
+      "options": [],
+      "parentFieldId": "a7952b49-7890-4e92-8310-36fc3a8c84d5",
+      "parentOptionId": "f5263e1a-0325-4c14-b545-b5828d6458d5",
+      "dateFormat": "DD/MM/YYYY",
+      "dateHideSeparator": true,
+      "hidden": true
+    },
+    {
+      "id": "2d560c9b-dc95-48bd-aeb9-d6ae201220d8",
+      "page": 1,
+      "x": 75.5971801212508,
+      "y": 37.0430550857014,
+      "width": 20,
+      "height": 3,
+      "name": "does spouse have an income?",
+      "value": "yes",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "e48d33d9-7ac3-465c-b9f3-1d9d39247e6b",
+          "x": 45.82068642310146,
+          "y": 84.12261783942265,
+          "width": 5,
+          "height": 3,
+          "value": "yes"
+        },
+        {
+          "id": "e4401983-441f-4b3e-813b-507ee0f882db",
+          "x": 67.23526244416081,
+          "y": 84.11733198015337,
+          "width": 5,
+          "height": 3,
+          "value": "no"
+        }
+      ],
+      "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
+      "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562"
+    },
+    {
+      "id": "5591cc53-a085-45ca-8f3e-cd6d8e7ce254",
+      "page": 1,
+      "x": 50.82068642310146,
+      "y": 89.12261783942265,
+      "width": 20,
+      "height": 3,
+      "name": "spuse income type",
+      "value": "job/busniss/allownce",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "35a0278d-ef6a-450c-a8de-b270100a1e09",
+          "x": 25.094029195915756,
+          "y": 84.36411112990528,
+          "width": 5,
+          "height": 3,
+          "value": "job/busniss/allownce"
+        },
+        {
+          "id": "31c302b4-0045-4db7-881e-5af8eb9c8fa0",
+          "x": 11.708080727504786,
+          "y": 84.2916948579161,
+          "width": 5,
+          "height": 3,
+          "value": "other income"
+        }
+      ],
+      "parentFieldId": "2d560c9b-dc95-48bd-aeb9-d6ae201220d8",
+      "parentOptionId": "e48d33d9-7ac3-465c-b9f3-1d9d39247e6b"
+    },
+    {
+      "id": "452e894c-f90a-4560-b46a-76ec959f7f30",
+      "page": 1,
+      "x": 47.653507897255906,
+      "y": 31.92617152260938,
+      "width": 7.655452297383526,
+      "height": 4.229744587280109,
+      "name": "living in israel?",
+      "value": "no",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "537e1e67-a231-4754-a139-6800a583550d",
+          "x": 50.07578174856414,
+          "y": 32.19240263447226,
+          "width": 5,
+          "height": 3,
+          "value": "yes"
+        },
+        {
+          "id": "e86b4599-8171-4855-8ed2-4970d1b70b5f",
+          "x": 50.250777760051065,
+          "y": 33.840181164016684,
+          "width": 4.764927010210593,
+          "height": 3.0667780221019396,
+          "value": "no"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "d2059596-c801-4a2f-94d2-3472a3741569",
+      "page": 1,
+      "x": 22.758954211869813,
+      "y": 31.909432968256652,
+      "width": 24.4697770421187,
+      "height": 4.257935836716285,
+      "name": "Are you a member of a Kibbutz or Cooperative Moshav?",
+      "value": "No. You are not a member of a kibbutz or cooperative moshav",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "bb4faf7c-0fc5-4baf-816a-e120d1d7b773",
+          "x": 43.611648452456926,
+          "y": 32.063427668301756,
+          "width": 5,
+          "height": 3,
+          "value": "No. You are not a member of a kibbutz or cooperative moshav"
+        },
+        {
+          "id": "7342bef8-d69b-44a4-a5a0-6093f52596e3",
+          "x": 43.53013321633695,
+          "y": 33.81586621137799,
+          "width": 5,
+          "height": 3,
+          "value": "Yes. My income from this employer is not transferred to the kibbutz"
+        },
+        {
+          "id": "37d244e3-66ee-472e-b490-0f4f623b8f43",
+          "x": 39.73770540842374,
+          "y": 32.22834647750338,
+          "width": 5,
+          "height": 3,
+          "value": "Yes. My income from this employer is transferred to the kibbutz"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "b94fd952-d35d-4705-a8c4-ce3ed194c053",
+      "page": 1,
+      "x": 5.004836072112317,
+      "y": 31.728480385938205,
+      "width": 17.70426172622846,
+      "height": 4.427788114569239,
+      "name": "Are you a member of a healthcare provider?",
+      "value": "yes",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "11be068a-01b9-460f-b25a-08c5559ec31d",
+          "x": 19.01897535098915,
+          "y": 33.6086605280221,
+          "width": 5,
+          "height": 3,
+          "value": "yes"
+        },
+        {
+          "id": "66a0b08b-98ef-4ded-ad04-64167929bf34",
+          "x": 18.688178047223996,
+          "y": 32.022021770692376,
+          "width": 5,
+          "height": 3,
+          "value": "no"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "e4e10fc5-d6de-463f-913b-97a1fdbd69c3",
+      "page": 1,
+      "x": 4.907267070835993,
+      "y": 34.24271696690347,
+      "width": 7.024868379068282,
+      "height": 1.659153698691926,
+      "name": "Select your healthcare provider",
+      "value": "meuhadet",
+      "previewText": "Select...",
+      "type": "select",
+      "fontSize": 9,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "b11144cd-2885-415d-a1f8-c715c941646a",
+          "x": 10.004836072112317,
+          "y": 36.728480385938205,
+          "width": 0,
+          "height": 0,
+          "value": "Clalit"
+        },
+        {
+          "id": "99ba6da5-93e3-4007-8783-27ed2ef26c9c",
+          "x": 10.004836072112317,
+          "y": 36.728480385938205,
+          "width": 0,
+          "height": 0,
+          "value": "Macabit"
+        },
+        {
+          "id": "0c694802-d3b0-4731-b663-71a77688cb9d",
+          "x": 15.004836072112317,
+          "y": 36.728480385938205,
+          "width": 0,
+          "height": 0,
+          "value": "meuhadet"
+        },
+        {
+          "id": "055feb12-db4b-406b-af28-393c46a08a19",
+          "x": 20.00483607211232,
+          "y": 36.728480385938205,
+          "width": 0,
+          "height": 0,
+          "value": "Luimet"
+        }
+      ],
+      "parentFieldId": "b94fd952-d35d-4705-a8c4-ce3ed194c053",
+      "parentOptionId": "11be068a-01b9-460f-b25a-08c5559ec31d",
+      "hidden": true
+    },
+    {
+      "id": "5a2d574d-ee1b-4dd6-9964-3c3adfa5af56",
+      "page": 1,
+      "x": 60.73159301212508,
+      "y": 37.26030830655165,
+      "width": 30.060924537332475,
+      "height": 1.6090155615696844,
+      "name": "email",
+      "value": "asdfasdf@asdfgfgsdfg.sadfa",
+      "previewText": "",
+      "type": "text",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "textAlign": "center"
+    },
+    {
+      "id": "4b8d8216-9d90-4186-886f-f1204d7d51be",
+      "page": 1,
+      "x": 37.077217613273774,
+      "y": 36.67117726657646,
+      "width": 18.657267070835985,
+      "height": 1.881765899864682,
+      "name": "phone number",
+      "value": "000000000",
+      "previewText": "",
+      "type": "number",
+      "fontSize": 12,
+      "letterSpacing": 3,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "maxLength": 9
+    },
+    {
+      "id": "0823963d-e806-4088-957e-45bfe05cb73d",
+      "page": 1,
+      "x": 7.211231652839821,
+      "y": 36.67117726657646,
+      "width": 20.765694798978938,
+      "height": 1.8193927604871547,
+      "name": "mobile phone number",
+      "value": "0000000000",
+      "previewText": "",
+      "type": "number",
+      "fontSize": 12,
+      "letterSpacing": 4,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "maxLength": 10
+    },
+    {
+      "id": "187d4351-8ff2-4a68-afa6-2ecc20b2b9af",
+      "page": 1,
+      "x": 94.8259014039566,
+      "y": 42.66272627882555,
+      "width": 2.7216616145500865,
+      "height": 4.035577356788458,
+      "name": "Do you have children",
+      "value": "yes",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "2ea868eb-9508-43d3-adf3-7b24f154c0f2",
+          "x": 94.8259014039566,
+          "y": 42.66272627882555,
+          "width": 2.7216616145500865,
+          "height": 3,
+          "value": "yes"
+        },
+        {
+          "id": "2b53dffa-20a6-49c4-8b68-2abced79dfd3",
+          "x": 94.8259014039566,
+          "y": 42.66272627882555,
+          "width": 2.7216616145500865,
+          "height": 3,
+          "value": "no"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2,
+      "markStyle": "none"
+    },
+    {
+      "id": "54d7c4a9-198f-48ab-ae10-108e219cd8ce",
+      "page": 1,
+      "x": 42.70545828015317,
+      "y": 43.26436278085532,
+      "width": 48.8626256381621,
+      "height": 36.335976262967975,
+      "name": "Nested: yes",
+      "value": "[[\"\",\"211855952\",\"\",\"true\",\"true\"]]",
+      "previewText": "",
+      "type": "table",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [],
+      "parentFieldId": "187d4351-8ff2-4a68-afa6-2ecc20b2b9af",
+      "parentOptionId": "2ea868eb-9508-43d3-adf3-7b24f154c0f2",
+      "maxRows": 3,
+      "filledRows": 1,
+      "showHeaders": true,
+      "cellPadding": 2,
+      "cellGap": 0,
+      "columns": [
+        {
+          "id": "63aa326d-651c-42a4-9f92-9c9650118bae",
+          "header": "date of birth",
+          "type": "date",
+          "width": 20
+        },
+        {
+          "id": "f3981e4b-0c58-466a-a41b-fa03d4d862b0",
+          "header": "id number",
+          "type": "number",
+          "width": 20
+        },
+        {
+          "id": "93ef1aa7-c131-4f2c-b77d-3262d830d14b",
+          "header": "name",
+          "type": "text",
+          "width": 20
+        },
+        {
+          "id": "42899add-2bab-4a80-ae3e-baddc66a2ffb",
+          "header": "2",
+          "type": "checkbox",
+          "width": 20
+        },
+        {
+          "id": "df76aa3b-9481-4e30-a861-1f3ef4f5ca91",
+          "header": "1",
+          "type": "checkbox",
+          "width": 20
+        }
+      ]
+    },
+    {
+      "id": "8dbaaec5-b3cc-4a7f-95b1-6cd8b1c0d17e",
+      "page": 1,
+      "x": 42.70471043395023,
+      "y": 45.20534440016069,
+      "width": 48.8626256381621,
+      "height": 2.53220850248083,
+      "name": "Nested: yes Row 1",
+      "value": "",
+      "previewText": "",
+      "type": "table-row",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "parentFieldId": "54d7c4a9-198f-48ab-ae10-108e219cd8ce",
+      "rowIndex": 0,
+      "cells": [
+        {
+          "id": "7bcce3c6-f8a3-4e05-8f3f-fc4a1719273d",
+          "type": "date",
+          "header": "date of birth",
+          "x": 0,
+          "y": 0,
+          "width": 32,
+          "height": 100
+        },
+        {
+          "id": "ef0510c9-82e2-4c4f-b53a-80bfe87184a9",
+          "type": "number",
+          "header": "id number",
+          "x": 32,
+          "y": 0,
+          "width": 35,
+          "height": 100
+        },
+        {
+          "id": "810d7a3a-f62d-444e-8fe2-404e1e50c38c",
+          "type": "text",
+          "header": "name",
+          "x": 67,
+          "y": 0,
+          "width": 25,
+          "height": 100
+        },
+        {
+          "id": "dd69bbd0-97d7-48f5-a24d-8ba84400250f",
+          "type": "checkbox",
+          "header": "2",
+          "x": 92,
+          "y": 0,
+          "width": 3,
+          "height": 100
+        },
+        {
+          "id": "bc51a51c-317a-4334-bed7-c3a9f590cf35",
+          "type": "checkbox",
+          "header": "1",
+          "x": 96,
+          "y": 0,
+          "width": 3,
+          "height": 100
+        }
+      ]
     }
   ],
-  "createdAt": "2025-11-26T16:15:08.516Z",
+  "createdAt": "2025-11-26T16:56:06.945Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

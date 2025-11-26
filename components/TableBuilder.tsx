@@ -382,6 +382,26 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField, onClo
                       </select>
                     </div>
                   )}
+
+                  {/* Cell spacing */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-medium text-slate-500">Cell Spacing</label>
+                      <span className="text-[10px] font-mono text-slate-600">{col.spacing || 0}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      value={col.spacing || 0}
+                      onChange={(e) => updateColumn(col.id, { spacing: Number(e.target.value) })}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex justify-between text-[9px] text-slate-400">
+                      <span>0px</span>
+                      <span>20px</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

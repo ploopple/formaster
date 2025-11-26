@@ -151,7 +151,13 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
                     const isEditing = editingCell?.row === rIdx && editingCell?.col === cIdx;
 
                     return (
-                      <div key={cell.id} className="space-y-1">
+                      <div 
+                        key={cell.id} 
+                        className="space-y-1"
+                        style={{ 
+                          padding: cell.spacing ? `${cell.spacing}px` : undefined 
+                        }}
+                      >
                         <label className="text-xs font-medium text-slate-500">
                           {cell.header || `Field ${cIdx + 1}`}
                         </label>
@@ -230,7 +236,10 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
                   <div
                     key={col.id}
                     className="px-2 py-2 border-r border-slate-100 last:border-r-0"
-                    style={{ width: `${col.width}%` }}
+                    style={{ 
+                      width: `${col.width}%`,
+                      padding: col.spacing ? `${col.spacing}px` : undefined
+                    }}
                   >
                     {col.type === 'checkbox' ? (
                       <div className="flex justify-center">
