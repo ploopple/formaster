@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from '../lib/pdfjs-config';
 import { FormField, AppMode, FieldOption } from '../types';
@@ -56,8 +56,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const [containerWidth, setContainerWidth] = useState<number>(600);
   const [activeOptionId, setActiveOptionId] = useState<string | null>(null);
   
-  // Scroll preservation
-  const scrollTopRef = useRef(0);
+  // Pan & Zoom state (transform-based, survives PDF re-renders)
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+  
+  // Stable blob URL to prevent Document remounting on every blob change
+  const [stableFileUrl, setStableFileUrl] = useState<string | null>(null);
+  const previousUrlRef = useRef<string | null>(null);
 
   // Drawing New Field State
   const [drawingState, setDrawingState] = useState<{
@@ -86,6 +92,82 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   } | null>(null);
 
   useEffect(() => { setActiveOptionId(null); }, [selectedFieldId]);
+
+  // Create stable blob URL that updates without causing Document remount
+  useEffect(() => {
+    if (!file) {
+      setStableFileUrl(null);
+      return;
+    }
+    
+    // Create new URL for the blob
+    const newUrl = URL.createObjectURL(file instanceof Blob ? file : new Blob([file]));
+    
+    // Revoke previous URL to prevent memory leaks
+    if (previousUrlRef.current) {
+      URL.revokeObjectURL(previousUrlRef.current);
+    }
+    
+    previousUrlRef.current = newUrl;
+    setStableFileUrl(newUrl);
+    
+    return () => {
+      if (previousUrlRef.current) {
+        URL.revokeObjectURL(previousUrlRef.current);
+        previousUrlRef.current = null;
+      }
+    };
+  }, [file]);
+
+  // Handle middle-mouse or space+drag panning
+  const handlePanStart = useCallback((e: React.PointerEvent) => {
+    // Middle mouse button (button 1) or holding space
+    if (e.button === 1) {
+      e.preventDefault();
+      setIsPanning(true);
+      panStartRef.current = { x: e.clientX, y: e.clientY, offsetX: panOffset.x, offsetY: panOffset.y };
+    }
+  }, [panOffset]);
+
+  const handlePanMove = useCallback((e: PointerEvent) => {
+    if (!isPanning) return;
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+    setPanOffset({ x: panStartRef.current.offsetX + dx, y: panStartRef.current.offsetY + dy });
+  }, [isPanning]);
+
+  const handlePanEnd = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  useEffect(() => {
+    if (isPanning) {
+      window.addEventListener('pointermove', handlePanMove);
+      window.addEventListener('pointerup', handlePanEnd);
+      return () => {
+        window.removeEventListener('pointermove', handlePanMove);
+        window.removeEventListener('pointerup', handlePanEnd);
+      };
+    }
+  }, [isPanning, handlePanMove, handlePanEnd]);
+
+  // Mouse wheel to pan (like scrolling, but using transform)
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    // Don't interfere with drawing/dragging
+    if (drawingState || dragState) return;
+    
+    e.preventDefault();
+    setPanOffset(prev => ({
+      x: prev.x - (e.shiftKey ? e.deltaY : e.deltaX),
+      y: prev.y - (e.shiftKey ? 0 : e.deltaY)
+    }));
+  }, [drawingState, dragState]);
+
+  // Reset pan when changing pages
+  const handlePageChange = (newPage: number) => {
+    setPageNumber(newPage);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
   useEffect(() => {
     const updateWidth = () => { if (containerRef.current) setContainerWidth(containerRef.current.clientWidth - 32); };
@@ -284,9 +366,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, []);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-       setNumPages(numPages);
-       setLoadError(null);
-       // We can't restore scroll here reliably because page height isn't ready
+    setNumPages(numPages);
+    setLoadError(null);
   };
 
   const onDocumentLoadError = (error: Error) => {
@@ -295,10 +376,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   };
   
   const onPageRenderSuccess = () => {
-      // Restore scroll after page renders to prevent jumping when PDF regenerates
-      if (containerRef.current && scrollTopRef.current > 0) {
-          containerRef.current.scrollTop = scrollTopRef.current;
-      }
+    // Pan offset is preserved via state, no scroll restoration needed
   };
 
   const handleBackgroundPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -560,16 +638,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     <div className="flex-1 flex flex-col h-full bg-slate-100 overflow-hidden relative">
       <div className="h-14 md:h-12 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-4 shrink-0 z-10 overflow-x-auto gap-2">
         <div className="flex items-center space-x-2 md:space-x-4">
-          <button disabled={pageNumber <= 1} onClick={() => setPageNumber(p => p - 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Previous</button>
+          <button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Previous</button>
           <span className="text-xs md:text-sm text-slate-500">Page {pageNumber} of {numPages}</span>
-          <button disabled={pageNumber >= numPages} onClick={() => setPageNumber(p => p + 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Next</button>
+          <button disabled={pageNumber >= numPages} onClick={() => handlePageChange(pageNumber + 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Next</button>
         </div>
-        <div className="flex items-center space-x-1 md:space-x-2"><button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">-</button><span className="text-xs font-mono w-8 md:w-12 text-center">{Math.round(scale * 100)}%</span><button onClick={() => setScale(s => Math.min(2.5, s + 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">+</button></div>
+        <div className="flex items-center space-x-1 md:space-x-2">
+          <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">-</button>
+          <span className="text-xs font-mono w-8 md:w-12 text-center">{Math.round(scale * 100)}%</span>
+          <button onClick={() => setScale(s => Math.min(2.5, s + 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">+</button>
+          <button onClick={() => setPanOffset({ x: 0, y: 0 })} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-xs ml-2" title="Reset view">Reset</button>
+        </div>
       </div>
       <div 
-        className="flex-1 overflow-auto p-4 md:p-8 flex justify-center relative select-none" 
+        className="flex-1 overflow-hidden p-4 md:p-8 flex justify-center items-center relative select-none" 
         ref={containerRef}
-        onScroll={(e) => scrollTopRef.current = e.currentTarget.scrollTop}
+        onPointerDown={handlePanStart}
+        onWheel={handleWheel}
+        style={{ cursor: isPanning ? 'grabbing' : 'default' }}
       >
         {!workerReady && (
           <div className="text-slate-600">Initializing PDF viewer...</div>
@@ -579,32 +664,40 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             <p className="text-red-600">{loadError}</p>
           </div>
         )}
-        {file && !loadError && workerReady && (
-          <Document 
-            file={file} 
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={<div className="text-slate-600">Loading PDF...</div>}
-            className="shadow-xl"
+        {stableFileUrl && !loadError && workerReady && (
+          <div 
+            style={{ 
+              transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+              transition: isPanning ? 'none' : 'transform 0.1s ease-out'
+            }}
           >
-            <div className="relative" onPointerDown={handleBackgroundPointerDown}>
-              <Page pageNumber={pageNumber} width={containerWidth * scale} renderAnnotationLayer={false} renderTextLayer={false} onRenderSuccess={onPageRenderSuccess} />
-              
-              <canvas 
-                ref={overlayCanvasRef} 
-                className="absolute inset-0 pointer-events-none z-0"
-              />
+            <Document 
+              key="pdf-document"
+              file={stableFileUrl} 
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={<div className="text-slate-600">Loading PDF...</div>}
+              className="shadow-xl"
+            >
+              <div className="relative" onPointerDown={handleBackgroundPointerDown}>
+                <Page pageNumber={pageNumber} width={containerWidth * scale} renderAnnotationLayer={false} renderTextLayer={false} onRenderSuccess={onPageRenderSuccess} />
+                
+                <canvas 
+                  ref={overlayCanvasRef} 
+                  className="absolute inset-0 pointer-events-none z-0"
+                />
 
-              <div className="absolute inset-0 z-10">
-                {fields.filter(f => f.page === pageNumber).map(field => {
-                    if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
-                    if (mode === AppMode.FILL && field.type === 'table-row') return null;
-                    if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
-                    return renderBox(field, null);
-                  })}
+                <div className="absolute inset-0 z-10">
+                  {fields.filter(f => f.page === pageNumber).map(field => {
+                      if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
+                      if (mode === AppMode.FILL && field.type === 'table-row') return null;
+                      if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
+                      return renderBox(field, null);
+                    })}
+                </div>
               </div>
-            </div>
-          </Document>
+            </Document>
+          </div>
         )}
       </div>
     </div>
