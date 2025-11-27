@@ -18,7 +18,10 @@ export const isFieldVisible = (field: FormField, allFields: FormField[]): boolea
   if (parent.type === 'radio') {
     return parent.value === parentOpt.value;
   } else if (parent.type === 'checkbox') {
-    return parent.value.split(',').includes(parentOpt.value);
+    // Use ||| as separator to handle option values containing commas
+    const separator = '|||';
+    const checkboxValues = parent.value ? parent.value.split(separator).filter(v => v) : [];
+    return checkboxValues.includes(parentOpt.value);
   }
   
   return false;

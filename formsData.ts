@@ -21,7 +21,7 @@ export interface FormTemplate {
 
 export const formsData: FormTemplate[] = [
 {
-  "id": "584cefda-d99c-45c0-b40a-5ccee4b41e62",
+  "id": "148d0dec-43db-4dec-aefc-7cbd13c8ec67",
   "title": "EDIT_THIS_TITLE",
   "description": "EDIT_THIS_DESCRIPTION",
   "fileName": "/forms/tofes-101.pdf",
@@ -1319,9 +1319,177 @@ export const formsData: FormTemplate[] = [
       "dateFormat": "DD/MM/YYYY",
       "dateHideSeparator": true,
       "hidden": true
+    },
+    {
+      "id": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
+      "page": 1,
+      "x": 4.807404674537333,
+      "y": 52.331779731196434,
+      "width": 37.78343371091257,
+      "height": 26.903966508795676,
+      "name": "Do you have other incomes?",
+      "value": "I have other incomes as follows",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "cc6d4605-2336-480e-9a83-e12f05cdfc33",
+          "x": 38.091546346522016,
+          "y": 52.785658847118846,
+          "width": 5,
+          "height": 3,
+          "value": "I have no other income including scholarships"
+        },
+        {
+          "id": "c15e06a4-73d9-446a-840e-530add632441",
+          "x": 38.13641711869815,
+          "y": 55.7533164362032,
+          "width": 5,
+          "height": 3,
+          "value": "I have other incomes as follows"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "bf578394-cbc2-4fd6-a6e9-37cd17c43f6a",
+      "page": 1,
+      "x": 43.13641711869815,
+      "y": 60.7533164362032,
+      "width": 20,
+      "height": 3,
+      "name": "Types of income",
+      "value": "Option 1,Option 2,Option 3,Option 4,Option 5,Option 6,Monthly salary,Salary for additional employment,Partial salary,Wage (Daily rate of pay),Allowance,Scholarship",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "266f46bb-5f6d-4054-b42b-ced2c5e39e75",
+          "x": 38.03436104020422,
+          "y": 57.24544402979814,
+          "width": 5,
+          "height": 3,
+          "value": "Monthly salary"
+        },
+        {
+          "id": "9c3d38fe-cfcd-48b0-8ff4-dab41f689d3a",
+          "x": 38.06153278557754,
+          "y": 58.53114119939669,
+          "width": 5,
+          "height": 3,
+          "value": "Salary for additional employment"
+        },
+        {
+          "id": "0a0cebd3-b853-4e2e-a4f6-74a0d2b92545",
+          "x": 37.990138401403954,
+          "y": 59.81067153318109,
+          "width": 5,
+          "height": 3,
+          "value": "Partial salary"
+        },
+        {
+          "id": "fe0b9b99-9fca-4fb0-a055-ba96577f74bb",
+          "x": 18.271079291640078,
+          "y": 57.21901473345172,
+          "width": 5,
+          "height": 3,
+          "value": "Wage (Daily rate of pay)"
+        },
+        {
+          "id": "21f9bc9a-9f0f-4d21-ad9c-c2fcd14fb39d",
+          "x": 18.257019783024884,
+          "y": 58.575542417258674,
+          "width": 5,
+          "height": 3,
+          "value": "Allowance"
+        },
+        {
+          "id": "658e5f97-1420-4622-9058-d04303dc5f1c",
+          "x": 18.286335354179958,
+          "y": 59.80626665045669,
+          "width": 5,
+          "height": 3,
+          "value": "Scholarship"
+        }
+      ],
+      "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
+      "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
+    },
+    {
+      "id": "6df48cdf-0e9d-4e6e-b366-6a46db577c6b",
+      "page": 1,
+      "x": 43.13641711869815,
+      "y": 60.7533164362032,
+      "width": 20,
+      "height": 3,
+      "name": "Receives tax credits at other income ",
+      "value": "I receive tax credits and tax bracket against another income, therefore I'm not entitled to them against this income",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "c4a4fdc7-12f6-47b7-aac9-a3865baeccff",
+          "x": 37.992980216975106,
+          "y": 62.66891183539129,
+          "width": 5,
+          "height": 3,
+          "value": "I request to receive tax credits and tax bracket for this income (section D). I do not receive them against any other income."
+        },
+        {
+          "id": "dbfef74a-fc70-4022-9654-9fd81d20fc76",
+          "x": 37.94511805998723,
+          "y": 65.43588296755188,
+          "width": 5,
+          "height": 3,
+          "value": "I receive tax credits and tax bracket against another income, therefore I'm not entitled to them against this income"
+        }
+      ],
+      "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
+      "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
+    },
+    {
+      "id": "28bce723-c8bb-4803-8935-06050207060e",
+      "page": 1,
+      "x": 43.13641711869815,
+      "y": 60.7533164362032,
+      "width": 20,
+      "height": 3,
+      "name": "Contributions at other incomes ",
+      "value": "No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.,No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income,No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income|||No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income|||No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "004a15ce-e01c-4e8f-85cc-93d036805ba8",
+          "x": 37.88053424537897,
+          "y": 68.32045388615315,
+          "width": 5,
+          "height": 3,
+          "value": "No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income"
+        },
+        {
+          "id": "0f2343ec-2a53-4c57-ad33-672f922b833a",
+          "x": 37.85897108189701,
+          "y": 72.45036504731432,
+          "width": 5,
+          "height": 3,
+          "value": "No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income."
+        }
+      ],
+      "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
+      "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
     }
   ],
-  "createdAt": "2025-11-27T16:06:57.810Z",
+  "createdAt": "2025-11-27T16:30:50.080Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

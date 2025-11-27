@@ -1451,7 +1451,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {(field.type === 'checkbox') && (
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
                              {(field.options || []).map((opt) => {
-                                const isChecked = (field.value || '').split(',').includes(opt.value);
+                                // Use ||| as separator to handle option values containing commas
+                                const separator = '|||';
+                                const currentValues = field.value ? field.value.split(separator).filter(v => v) : [];
+                                const isChecked = currentValues.includes(opt.value);
                                 const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
                                 return (
                                     <div key={opt.id}>
@@ -1460,11 +1463,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => {
-                                                    const current = field.value ? field.value.split(',') : [];
+                                                    const separator = '|||';
+                                                    const current = field.value ? field.value.split(separator).filter(v => v) : [];
                                                     let next;
                                                     if (e.target.checked) next = [...current, opt.value];
                                                     else next = current.filter(v => v !== opt.value);
-                                                    onUpdateField(field.id, { value: next.join(',') });
+                                                    onUpdateField(field.id, { value: next.join(separator) });
                                                 }}
                                                 className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
                                             />

@@ -446,7 +446,10 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             }
             
             // Draw selection indicator
-            const isSelected = field.type === 'radio' ? field.value === opt.value : field.value.split(',').includes(opt.value);
+            // Use ||| as separator to handle option values containing commas
+            const separator = '|||';
+            const checkboxValues = field.value ? field.value.split(separator).filter(v => v) : [];
+            const isSelected = field.type === 'radio' ? field.value === opt.value : checkboxValues.includes(opt.value);
             if (isSelected) {
                 const centerX = optX + optW / 2;
                 const centerY = optY + optH / 2;

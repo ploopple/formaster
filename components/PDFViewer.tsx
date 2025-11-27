@@ -602,8 +602,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                          if (field.type === 'radio') {
                              onFieldUpdate(field.id, { value: option!.value });
                          } else if (field.type === 'checkbox') {
-                             const current = field.value ? field.value.split(',') : [];
-                             onFieldUpdate(field.id, { value: current.includes(option!.value) ? current.filter(v => v !== option!.value).join(',') : [...current, option!.value].join(',') });
+                             // Use ||| as separator to handle option values containing commas
+                             const separator = '|||';
+                             const current = field.value ? field.value.split(separator).filter(v => v) : [];
+                             const isCurrentlyChecked = current.includes(option!.value);
+                             const next = isCurrentlyChecked ? current.filter(v => v !== option!.value) : [...current, option!.value];
+                             onFieldUpdate(field.id, { value: next.join(separator) });
                          }
                      } else if (field.type === 'signature') {
                          onOpenSignature?.(field.id);
