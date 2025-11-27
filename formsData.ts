@@ -21,7 +21,7 @@ export interface FormTemplate {
 
 export const formsData: FormTemplate[] = [
 {
-  "id": "b856061d-f57f-473f-8647-c45dfc5987b3",
+  "id": "584cefda-d99c-45c0-b40a-5ccee4b41e62",
   "title": "EDIT_THIS_TITLE",
   "description": "EDIT_THIS_DESCRIPTION",
   "fileName": "/forms/tofes-101.pdf",
@@ -903,8 +903,8 @@ export const formsData: FormTemplate[] = [
       "y": 43.46223011283548,
       "width": 47.824615108487556,
       "height": 35.70167315065404,
-      "name": "Nested: yes",
-      "value": "[[\"2025-11-30\",\"2346232345\",\"hdfghdfh\",\"true\",\"true\"]]",
+      "name": "Children",
+      "value": "[]",
       "previewText": "",
       "type": "table",
       "fontSize": 12,
@@ -912,7 +912,7 @@ export const formsData: FormTemplate[] = [
       "options": [],
       "parentFieldId": "187d4351-8ff2-4a68-afa6-2ecc20b2b9af",
       "parentOptionId": "2ea868eb-9508-43d3-adf3-7b24f154c0f2",
-      "maxRows": 3,
+      "maxRows": 13,
       "filledRows": 1,
       "showHeaders": true,
       "cellPadding": 2,
@@ -939,7 +939,7 @@ export const formsData: FormTemplate[] = [
           "name": "Name",
           "type": "text",
           "width": 25,
-          "fontSize": 12,
+          "fontSize": 10,
           "textAlign": "center",
           "options": [
             {
@@ -1214,9 +1214,114 @@ export const formsData: FormTemplate[] = [
       "letterSpacing": 0,
       "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
       "rowIndex": 12
+    },
+    {
+      "id": "5a154326-f708-4447-91d0-6b99a299b064",
+      "page": 1,
+      "x": 4.593426036682616,
+      "y": 39.94979428331102,
+      "width": 37.838292464114836,
+      "height": 11.779523675310038,
+      "name": "Details of my incomes from this employer",
+      "value": "Monthly salary",
+      "previewText": "",
+      "type": "radio",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "46bfe083-d172-441e-849e-49fd288dff9c",
+          "x": 38.42266472129724,
+          "y": 41.39118058887905,
+          "width": 5,
+          "height": 3,
+          "value": "Monthly salary"
+        },
+        {
+          "id": "f628208d-ae77-463a-9010-13d805fa12a9",
+          "x": 38.224972080836714,
+          "y": 42.84954802752217,
+          "width": 5,
+          "height": 3,
+          "value": "Salary for additional employment"
+        },
+        {
+          "id": "46632cf5-40ce-4afa-8b52-975d80a4c634",
+          "x": 38.447221372119486,
+          "y": 44.31297221298583,
+          "width": 5,
+          "height": 3,
+          "value": "Partial salary"
+        },
+        {
+          "id": "a74151cf-9a95-4144-bec2-2e8d8985cfe5",
+          "x": 38.41865120911453,
+          "y": 45.62758687463997,
+          "width": 5,
+          "height": 3,
+          "value": "Wage (Daily rate of pay)"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2,
+      "markStyle": "checkmark"
+    },
+    {
+      "id": "ec5e4af6-98ca-4287-b6cd-5763366d7ce6",
+      "page": 1,
+      "x": 14.541437810063783,
+      "y": 48.88222754151003,
+      "width": 13.674920269312548,
+      "height": 1.5527098997493738,
+      "name": "If you have also Allowance/Scholarship",
+      "value": "",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "bc5cddba-374d-4221-b07b-bb140187220f",
+          "x": 38.188784549964566,
+          "y": 47.467166451284456,
+          "width": 5.325290131112687,
+          "height": 2.428336466165414,
+          "value": "Allowance"
+        },
+        {
+          "id": "1320241a-dcdb-47a8-bb7f-fd8663cc03fe",
+          "x": 38.21370038979447,
+          "y": 48.83464765429199,
+          "width": 5.426337703756201,
+          "height": 2.3453164160401005,
+          "value": "Scholarship"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "2ef095a7-3ca7-4cae-b282-bda4d16323bd",
+      "page": 1,
+      "x": 5.3218884120171674,
+      "y": 44.32301153612629,
+      "width": 15.190115343347639,
+      "height": 2.5142778536733417,
+      "name": "Date of beginning of work in the tax year",
+      "value": "02/12/2025",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 4.5,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "dateFormat": "DD/MM/YYYY",
+      "dateHideSeparator": true,
+      "hidden": true
     }
   ],
-  "createdAt": "2025-11-27T13:22:35.838Z",
+  "createdAt": "2025-11-27T16:06:57.810Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

@@ -388,7 +388,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             } else {
                  // Standard Line
                  // check if the field type is radio 
-                 if(field.type !== "radio") {
+                 if(field.type !== "radio" && field.type !== "checkbox") {
                      page.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
                  }
             }
