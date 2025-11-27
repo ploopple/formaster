@@ -1745,6 +1745,10 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {(field.type === 'radio') && (
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
+                            <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
+                                <Info size={10} />
+                                <span>You can select one option</span>
+                            </div>
                             {(field.options || []).map((opt) => {
                                 const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
                                 return (
@@ -1774,6 +1778,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                     
                     {(field.type === 'checkbox') && (
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
+                             <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
+                                <Info size={10} />
+                                <span>You can select multiple options</span>
+                             </div>
                              {(field.options || []).map((opt) => {
                                 // Use ||| as separator to handle option values containing commas
                                 const separator = '|||';
