@@ -32,6 +32,7 @@ interface SidebarProps {
   validationStates?: Map<string, FieldValidationState>;
   touchedFields?: Set<string>;
   onFieldBlur?: (fieldId: string) => void;
+  onSyncCompositeChildren?: (compositeId: string, template: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -59,7 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onReorderSections,
   validationStates,
   touchedFields,
-  onFieldBlur
+  onFieldBlur,
+  onSyncCompositeChildren
 }) => {
   const [draggedFieldId, setDraggedFieldId] = React.useState<string | null>(null);
   const [dragOverFieldId, setDragOverFieldId] = React.useState<string | null>(null);
@@ -147,6 +149,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (newType === 'date') { updates.value = ""; updates.previewText = "DD/MM/YYYY"; updates.dateFormat = "DD/MM/YYYY"; }
     if (newType === 'select') { updates.previewText = "Select..."; }
     if (newType === 'textarea') { updates.previewText = "Multiline Text..."; }
+    if (newType === 'composite') { 
+        updates.compositeTemplate = "I am a permanent resident since {date:since_date}. I live in {text:location}.";
+        updates.compositeValues = {};
+        updates.previewText = "Composite Text...";
+    }
 
     onUpdateField(selectedField.id, updates);
   };
@@ -377,6 +384,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 <option value="radio">Radio</option>
                                 <option value="checkbox">Checkbox</option>
                                 <option value="table">Table</option>
+                                <option value="composite">Composite Text</option>
                             </select>
                         </div>
                     )}
@@ -404,6 +412,73 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 />
                                 Hide "/" separator in PDF
                             </label>
+                        </div>
+                    )}
+
+                    {/* COMPOSITE FIELD CONFIGURATION */}
+                    {selectedField.type === 'composite' && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-2 mb-1">
+                                <FileText size={14} className="text-slate-600" />
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Composite Template</h3>
+                            </div>
+                            <p className="text-[10px] text-slate-500 leading-relaxed">
+                                Use <code className="bg-slate-100 px-1 rounded">{'{text:name}'}</code> for text inputs, <code className="bg-slate-100 px-1 rounded">{'{date:name}'}</code> for dates, <code className="bg-slate-100 px-1 rounded">{'{number:name}'}</code> for numbers. Child fields will be created that you can position on the PDF.
+                            </p>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Template</label>
+                                <textarea 
+                                    value={selectedField.compositeTemplate || ''} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { compositeTemplate: e.target.value })}
+                                    placeholder="I am a resident since {date:since_date}. I live in {text:location}."
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[80px] font-mono text-xs"
+                                    dir="auto"
+                                />
+                            </div>
+                            {/* Sync button and child fields */}
+                            {selectedField.compositeTemplate && (
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => onSyncCompositeChildren?.(selectedField.id, selectedField.compositeTemplate || '')}
+                                        className="w-full px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Plus size={14} />
+                                        Sync Child Fields from Template
+                                    </button>
+                                    
+                                    {/* Show existing child fields */}
+                                    {(() => {
+                                        const childFields = fields.filter(f => f.parentFieldId === selectedField.id);
+                                        if (childFields.length === 0) return (
+                                            <p className="text-[10px] text-slate-400 italic text-center py-2">
+                                                Click "Sync" to create positionable child fields
+                                            </p>
+                                        );
+                                        return (
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Child Fields ({childFields.length})</label>
+                                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                    {childFields.map(child => (
+                                                        <div 
+                                                            key={child.id} 
+                                                            onClick={() => onSelectField(child.id)}
+                                                            className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`text-[9px] px-1.5 py-0.5 rounded ${child.type === 'date' ? 'bg-purple-100 text-purple-700' : child.type === 'number' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                    {child.type}
+                                                                </span>
+                                                                <span className="text-xs text-slate-700">{child.name}</span>
+                                                            </div>
+                                                            <ChevronRight size={12} className="text-slate-400" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1643,6 +1718,103 @@ const Sidebar: React.FC<SidebarProps> = ({
                             onUpdateField={onUpdateField}
                             customRows={fields.filter(f => f.parentFieldId === field.id && f.type === 'table-row')}
                         />
+                    )}
+
+                    {field.type === 'composite' && field.compositeTemplate && (
+                        <div className="p-3 bg-white border border-slate-200 rounded-md text-sm leading-relaxed" dir="auto">
+                            {(() => {
+                                // Parse template and render with inline inputs using child field values
+                                const template = field.compositeTemplate;
+                                const childFields = fields.filter(f => f.parentFieldId === field.id);
+                                const childByName = new Map(childFields.map(c => [c.name, c]));
+                                const parts: React.ReactNode[] = [];
+                                let lastIndex = 0;
+                                const regex = /\{(text|date|number):([^}]+)\}/g;
+                                let match;
+                                let keyIdx = 0;
+                                
+                                while ((match = regex.exec(template)) !== null) {
+                                    // Add static text before this match
+                                    if (match.index > lastIndex) {
+                                        parts.push(<span key={`static-${keyIdx++}`}>{template.slice(lastIndex, match.index)}</span>);
+                                    }
+                                    
+                                    const [, inputType, inputName] = match;
+                                    const childField = childByName.get(inputName);
+                                    const inputValue = childField?.value || '';
+                                    
+                                    if (inputType === 'date') {
+                                        parts.push(
+                                            <input
+                                                key={`input-${inputName}`}
+                                                type="date"
+                                                value={inputValue}
+                                                onChange={(e) => {
+                                                    if (childField) {
+                                                        onUpdateField(childField.id, { value: e.target.value });
+                                                    }
+                                                }}
+                                                className="inline-block mx-1 px-2 py-0.5 border border-purple-300 rounded bg-purple-50 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 min-w-[130px]"
+                                                placeholder={inputName}
+                                                disabled={!childField}
+                                            />
+                                        );
+                                    } else if (inputType === 'number') {
+                                        parts.push(
+                                            <input
+                                                key={`input-${inputName}`}
+                                                type="number"
+                                                value={inputValue}
+                                                onChange={(e) => {
+                                                    if (childField) {
+                                                        onUpdateField(childField.id, { value: e.target.value });
+                                                    }
+                                                }}
+                                                className="inline-block mx-1 px-2 py-0.5 border border-green-300 rounded bg-green-50 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 w-20"
+                                                placeholder={inputName}
+                                                disabled={!childField}
+                                            />
+                                        );
+                                    } else {
+                                        // text
+                                        parts.push(
+                                            <input
+                                                key={`input-${inputName}`}
+                                                type="text"
+                                                value={inputValue}
+                                                onChange={(e) => {
+                                                    if (childField) {
+                                                        onUpdateField(childField.id, { value: e.target.value });
+                                                    }
+                                                }}
+                                                className="inline-block mx-1 px-2 py-0.5 border border-blue-300 rounded bg-blue-50 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                placeholder={inputName}
+                                                style={{ width: `${Math.max(80, inputName.length * 10)}px` }}
+                                                disabled={!childField}
+                                            />
+                                        );
+                                    }
+                                    
+                                    lastIndex = match.index + match[0].length;
+                                }
+                                
+                                // Add remaining static text
+                                if (lastIndex < template.length) {
+                                    parts.push(<span key={`static-${keyIdx++}`}>{template.slice(lastIndex)}</span>);
+                                }
+                                
+                                // Show warning if no child fields exist
+                                if (childFields.length === 0) {
+                                    return (
+                                        <div className="text-amber-600 text-xs">
+                                            ⚠️ No child fields created. Go to Editor mode and click "Sync Child Fields" to create positionable fields.
+                                        </div>
+                                    );
+                                }
+                                
+                                return parts;
+                            })()}
+                        </div>
                     )}
                       
                       {/* Validation Error Display */}

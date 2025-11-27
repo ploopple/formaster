@@ -6,7 +6,16 @@ export enum AppMode {
   FILL = 'FILL',
 }
 
-export type FieldType = 'text' | 'number' | 'radio' | 'checkbox' | 'table' | 'table-row' | 'date' | 'signature' | 'select' | 'textarea';
+export type FieldType = 'text' | 'number' | 'radio' | 'checkbox' | 'table' | 'table-row' | 'date' | 'signature' | 'select' | 'textarea' | 'composite';
+
+// Composite field segment types for inline inputs within text
+export type CompositeSegmentType = 'static' | 'text' | 'date' | 'number';
+
+export interface CompositeSegment {
+  type: CompositeSegmentType;
+  content: string; // For static: the text. For inputs: the field key/name
+  placeholder?: string; // Placeholder text for input fields
+}
 
 export type MarkStyle = 'checkmark' | 'x' | 'circle' | 'square' | 'dot' | 'none';
 
@@ -142,6 +151,10 @@ export interface FormField {
   // Document attachment support
   documentRequirement?: DocumentRequirement;
   attachments?: DocumentAttachment[];
+  
+  // Composite field support - text with inline inputs
+  compositeTemplate?: string; // e.g., "I live in {text:city} since {date:since_date}."
+  compositeValues?: Record<string, string>; // { city: "Tel Aviv", since_date: "01/01/2020" }
 }
 
 export interface PDFDimensions {

@@ -222,6 +222,69 @@ function EditorContent() {
     setSelectedFieldId(newRow.id);
   }, [fields, setFields]);
 
+  // Sync composite child fields based on template placeholders
+  const syncCompositeChildren = useCallback((compositeId: string, template: string) => {
+    const compositeField = fields.find(f => f.id === compositeId);
+    if (!compositeField) return;
+    
+    // Parse placeholders from template
+    const placeholderRegex = /\{(text|date|number):([^}]+)\}/g;
+    const placeholders: { type: 'text' | 'date' | 'number'; name: string }[] = [];
+    let match;
+    while ((match = placeholderRegex.exec(template)) !== null) {
+      placeholders.push({ type: match[1] as 'text' | 'date' | 'number', name: match[2] });
+    }
+    
+    // Get existing child fields for this composite
+    const existingChildren = fields.filter(f => f.parentFieldId === compositeId);
+    const existingByName = new Map(existingChildren.map(f => [f.name, f]));
+    
+    // Determine which children to add, keep, or remove
+    const newChildren: FormField[] = [];
+    const keepIds = new Set<string>();
+    
+    placeholders.forEach((ph, idx) => {
+      const childName = ph.name;
+      const existing = existingByName.get(childName);
+      
+      if (existing) {
+        // Keep existing, update type if needed
+        keepIds.add(existing.id);
+        if (existing.type !== ph.type) {
+          // Type changed, update it
+          setFields(prev => prev.map(f => f.id === existing.id ? { ...f, type: ph.type } : f));
+        }
+      } else {
+        // Create new child field
+        const newChild: FormField = {
+          id: crypto.randomUUID(),
+          page: compositeField.page,
+          x: compositeField.x + (idx * 15) % 60,
+          y: compositeField.y + Math.floor(idx / 4) * 5,
+          width: 15,
+          height: 3,
+          name: childName,
+          value: '',
+          previewText: ph.type === 'date' ? 'DD/MM/YYYY' : '',
+          type: ph.type,
+          fontSize: compositeField.fontSize || 12,
+          letterSpacing: compositeField.letterSpacing || 0,
+          parentFieldId: compositeId,
+          dateFormat: ph.type === 'date' ? 'DD/MM/YYYY' : undefined,
+        };
+        newChildren.push(newChild);
+      }
+    });
+    
+    // Remove children that are no longer in template
+    const toRemove = existingChildren.filter(c => !keepIds.has(c.id)).map(c => c.id);
+    
+    setFields(prev => {
+      let updated = prev.filter(f => !toRemove.includes(f.id));
+      return [...updated, ...newChildren];
+    });
+  }, [fields, setFields]);
+
   const clearAllFields = useCallback(() => {
     if (window.confirm('Are you sure you want to delete all fields?')) {
       setFields([]);
@@ -416,7 +479,7 @@ function EditorContent() {
         {(previewBlob || file) && (
           <PDFViewer file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} />
         )}
-        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} />
+        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} />
       </div>
       <SignatureModal isOpen={!!signingFieldId} onClose={() => setSigningFieldId(null)} onSave={handleSaveSignature} />
       <KeyboardShortcutsPanel isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />

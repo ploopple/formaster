@@ -128,6 +128,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
 
   for (const field of fields) {
     if (!isFieldVisible(field, fields)) continue;
+    // Skip composite fields - only their child fields render to PDF
+    if (field.type === 'composite') continue;
     if (field.type === 'table-row') continue; 
 
     const pageIndex = field.page - 1;
@@ -361,9 +363,24 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 // Process value based on field type
                 let displayValue = field.value.toString();
                 
-                // For date fields: optionally remove separators
-                if (field.type === 'date' && field.dateHideSeparator) {
-                    displayValue = displayValue.replace(/\//g, '');
+                // For date fields: convert from YYYY-MM-DD to user's format and optionally remove separators
+                if (field.type === 'date' && displayValue) {
+                    // HTML date input stores as YYYY-MM-DD, convert to display format
+                    if (displayValue.includes('-')) {
+                        const [year, month, day] = displayValue.split('-');
+                        const format = field.dateFormat || 'DD/MM/YYYY';
+                        if (format === 'DD/MM/YYYY') {
+                            displayValue = `${day}/${month}/${year}`;
+                        } else if (format === 'MM/YYYY') {
+                            displayValue = `${month}/${year}`;
+                        } else if (format === 'YYYY') {
+                            displayValue = year;
+                        }
+                    }
+                    // Remove separators if requested
+                    if (field.dateHideSeparator) {
+                        displayValue = displayValue.replace(/[\/\-]/g, '');
+                    }
                 }
                 
                 // Use Hebrew font if text contains Hebrew characters
