@@ -21,7 +21,7 @@ export interface FormTemplate {
 
 export const formsData: FormTemplate[] = [
 {
-  "id": "29e9d573-5542-4667-8e84-14d4025015b6",
+  "id": "26a88388-8fec-4221-b63c-a19f502b2d85",
   "title": "EDIT_THIS_TITLE",
   "description": "EDIT_THIS_DESCRIPTION",
   "fileName": "/forms/tofes-101.pdf",
@@ -1529,7 +1529,7 @@ export const formsData: FormTemplate[] = [
           "y": 4.613272219990412,
           "width": 3.9361638481174266,
           "height": 2.7750761163734787,
-          "value": "Option 1"
+          "value": "Yes"
         }
       ],
       "borderWidth": 0,
@@ -1568,9 +1568,179 @@ export const formsData: FormTemplate[] = [
       ],
       "borderWidth": 0,
       "padding": 2
+    },
+    {
+      "id": "cd9aa84e-9e86-4799-aeb8-69d459202748",
+      "page": 2,
+      "x": 38.173809428844926,
+      "y": 11.672377597118855,
+      "width": 26.41592214422464,
+      "height": 2.836392083897158,
+      "name": "Are you a permanent resident of a recognized settlement?",
+      "value": "",
+      "previewText": "Composite Text...",
+      "type": "composite",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "compositeTemplate": "I am a permanent resident of a recognized settlement (eligible for tax benefits) since {date:since_date}. My immediate family and I live in the settlement of {text:location} , and I do not have another \"center of life.\" A certificate from the local authority is attached on Form 1312A.",
+      "compositeValues": {},
+      "parentFieldId": "ad917e94-28fa-40bd-8ca7-bf429871cb62",
+      "parentOptionId": "3d99897f-1900-4531-a923-27d15d70cf19"
+    },
+    {
+      "id": "97a02527-eb5e-43e5-b18e-9c9b15466bf2",
+      "page": 2,
+      "x": 42.011008296107214,
+      "y": 11.452309656207714,
+      "width": 13.41107610082961,
+      "height": 2.114970963013081,
+      "name": "since_date",
+      "value": "2025-12-03",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "parentFieldId": "cd9aa84e-9e86-4799-aeb8-69d459202748",
+      "dateFormat": "DD/MM/YYYY",
+      "textAlign": "center",
+      "dateHideSeparator": false
+    },
+    {
+      "id": "6c374195-2a43-4e8f-844c-6961b4cab14d",
+      "page": 2,
+      "x": 50.01789845245692,
+      "y": 13.709195368882499,
+      "width": 23.721382418634334,
+      "height": 1.0206218989625622,
+      "name": "location",
+      "value": "kljgh",
+      "previewText": "",
+      "type": "text",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "parentFieldId": "cd9aa84e-9e86-4799-aeb8-69d459202748",
+      "textAlign": "center"
+    },
+    {
+      "id": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
+      "page": 2,
+      "x": 11.3617780791321,
+      "y": 16.62787066207149,
+      "width": 7.6155671665603055,
+      "height": 2.3708840775823212,
+      "name": "Field 60",
+      "value": "",
+      "previewText": "Composite Text...",
+      "type": "composite",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [],
+      "borderWidth": 0,
+      "padding": 2,
+      "compositeTemplate": "I am a new immigrant since {date:since_date2}. I had no income in Israel from the beginning of the current tax year until the date of{date:location2}.",
+      "compositeValues": {},
+      "documentRequirement": {
+        "enabled": true,
+        "acceptedTypes": [
+          "image/*",
+          "application/pdf"
+        ],
+        "maxFiles": 5,
+        "label": "Immigrant Certificate"
+      },
+      "parentFieldId": "ba5b1361-1fed-4e73-8697-805e16f0e02b",
+      "parentOptionId": "8dfce569-6d3d-48fd-9beb-d39629d3f791"
+    },
+    {
+      "id": "f48fe24b-546f-4bf5-aade-8c6d4e742cdc",
+      "page": 2,
+      "x": 54.65459476707084,
+      "y": 15.320149078850921,
+      "width": 14.197311742182514,
+      "height": 1.4390857577807847,
+      "name": "since_date2",
+      "value": "2025-11-05",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "parentFieldId": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
+      "dateFormat": "DD/MM/YYYY",
+      "textAlign": "center"
+    },
+    {
+      "id": "feda4ab6-be0f-42f7-972a-08f11b926a0e",
+      "page": 2,
+      "x": 31.79263720485003,
+      "y": 16.922997804606446,
+      "width": 10.40772574984046,
+      "height": 1.166687810103744,
+      "name": "location2",
+      "value": "2025-11-30",
+      "previewText": "DD/MM/YYYY",
+      "type": "date",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "parentFieldId": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
+      "dateFormat": "DD/MM/YYYY"
+    },
+    {
+      "id": "ad917e94-28fa-40bd-8ca7-bf429871cb62",
+      "page": 2,
+      "x": 83.99733766751754,
+      "y": 12.318838185752142,
+      "width": 4.960713146139128,
+      "height": 1.0721484551195317,
+      "name": "Are you a permanent resident of an eligible locality",
+      "value": "Option 1|||yes",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "3d99897f-1900-4531-a923-27d15d70cf19",
+          "x": 84.09206485322272,
+          "y": 11.438918812725529,
+          "width": 4.960713146139128,
+          "height": 2.3597837731168254,
+          "value": "yes"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "ba5b1361-1fed-4e73-8697-805e16f0e02b",
+      "page": 2,
+      "x": 84.8503079379562,
+      "y": 15.15375064499484,
+      "width": 3.794479927007302,
+      "height": 1.822311984004127,
+      "name": "I am a new immagrate",
+      "value": "Yes",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "8dfce569-6d3d-48fd-9beb-d39629d3f791",
+          "x": 84.8503079379562,
+          "y": 14.67555657643372,
+          "width": 3.794479927007302,
+          "height": 2.300506052565246,
+          "value": "Yes"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
     }
   ],
-  "createdAt": "2025-11-27T17:10:07.600Z",
+  "createdAt": "2025-11-27T18:05:19.736Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

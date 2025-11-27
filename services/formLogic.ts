@@ -2,7 +2,7 @@ import { FormField } from '../types';
 
 export const isFieldVisible = (field: FormField, allFields: FormField[]): boolean => {
   // Base case: No parent, always visible
-  if (!field.parentFieldId || !field.parentOptionId) return true;
+  if (!field.parentFieldId) return true;
 
   // Find parent
   const parent = allFields.find(f => f.id === field.parentFieldId);
@@ -11,7 +11,11 @@ export const isFieldVisible = (field: FormField, allFields: FormField[]): boolea
   // Recursive step: Check if parent is visible first
   if (!isFieldVisible(parent, allFields)) return false;
 
-  // Check specific logic for this level
+  // If no parentOptionId, visibility depends only on parent being visible
+  // This handles composite child fields that inherit visibility from their composite parent
+  if (!field.parentOptionId) return true;
+
+  // Check specific logic for this level (radio/checkbox option selection)
   const parentOpt = parent.options?.find(o => o.id === field.parentOptionId);
   if (!parentOpt) return false;
 

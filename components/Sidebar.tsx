@@ -781,6 +781,84 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     )}
 
+                    {/* PARENT FIELD SECTION - For radio/checkbox/composite */}
+                    {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'composite') && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                            <div className="flex items-center gap-2 mb-1">
+                                <CornerDownRight size={14} className="text-slate-600" />
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Parent Field</h3>
+                            </div>
+                            <p className="text-[10px] text-slate-500 leading-relaxed">
+                                Make this field visible only when a specific option is selected in another radio/checkbox field.
+                            </p>
+                            
+                            {/* Parent Field Selector */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Parent Field</label>
+                                <select
+                                    value={selectedField.parentFieldId || ''}
+                                    onChange={(e) => {
+                                        const newParentId = e.target.value || undefined;
+                                        onUpdateField(selectedField.id, { 
+                                            parentFieldId: newParentId,
+                                            parentOptionId: undefined // Reset option when parent changes
+                                        });
+                                    }}
+                                    className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs"
+                                >
+                                    <option value="">None (Always Visible)</option>
+                                    {fields
+                                        .filter(f => 
+                                            (f.type === 'radio' || f.type === 'checkbox') && 
+                                            f.id !== selectedField.id &&
+                                            f.options && f.options.length > 0
+                                        )
+                                        .map(f => (
+                                            <option key={f.id} value={f.id}>{f.name}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                            
+                            {/* Parent Option Selector - Only show when parent is selected */}
+                            {selectedField.parentFieldId && (() => {
+                                const parentField = fields.find(f => f.id === selectedField.parentFieldId);
+                                if (!parentField || !parentField.options || parentField.options.length === 0) return null;
+                                
+                                return (
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-semibold text-slate-400 uppercase">Show When Option Is</label>
+                                        <select
+                                            value={selectedField.parentOptionId || ''}
+                                            onChange={(e) => {
+                                                onUpdateField(selectedField.id, { parentOptionId: e.target.value || undefined });
+                                            }}
+                                            className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs"
+                                        >
+                                            <option value="">Select an option...</option>
+                                            {parentField.options.map(opt => (
+                                                <option key={opt.id} value={opt.id}>{opt.value}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                );
+                            })()}
+                            
+                            {/* Show current parent info */}
+                            {selectedField.parentFieldId && selectedField.parentOptionId && (() => {
+                                const parentField = fields.find(f => f.id === selectedField.parentFieldId);
+                                const parentOption = parentField?.options?.find(o => o.id === selectedField.parentOptionId);
+                                if (!parentField || !parentOption) return null;
+                                
+                                return (
+                                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                                        <span className="font-medium">Visible when:</span> "{parentField.name}" = "{parentOption.value}"
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    )}
+
                     {/* VALIDATION RULES SECTION */}
                     {selectedField.type !== 'table' && selectedField.type !== 'table-row' && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
