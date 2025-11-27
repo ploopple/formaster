@@ -305,6 +305,26 @@ const Sidebar: React.FC<SidebarProps> = ({
       // Update the field's sectionId
       onUpdateField(draggedFieldId, { sectionId: sectionId || undefined });
       
+      // Also move all nested fields (children) to the same section
+      const nestedFieldIds = new Set<string>();
+      let added = true;
+      nestedFieldIds.add(draggedFieldId);
+      while (added) {
+          added = false;
+          fields.forEach(f => {
+              if (f.parentFieldId && nestedFieldIds.has(f.parentFieldId) && !nestedFieldIds.has(f.id)) {
+                  nestedFieldIds.add(f.id);
+                  added = true;
+              }
+          });
+      }
+      // Update all nested fields to the same section (excluding the dragged field itself which is already updated)
+      nestedFieldIds.forEach(fieldId => {
+          if (fieldId !== draggedFieldId) {
+              onUpdateField(fieldId, { sectionId: sectionId || undefined });
+          }
+      });
+      
       setDraggedFieldId(null);
       setDragOverFieldId(null);
       setDragOverSectionId(null);
