@@ -61,6 +61,18 @@ export interface FieldSection {
   order: number;
 }
 
+// Position definition for multi-position fields
+export interface FieldPosition {
+  page: number; // 1-based index
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  // Optional overrides for typography at this position
+  fontSize?: number;
+  letterSpacing?: number;
+}
+
 export interface FormField {
   id: string;
   groupId?: string; // ID to link multiple visual fields to the same data
@@ -71,6 +83,10 @@ export interface FormField {
   y: number; 
   width: number; 
   height: number; 
+  
+  // Additional positions where this field should appear (same value rendered at multiple locations)
+  additionalPositions?: FieldPosition[];
+  
   name: string;
   value: string; // Text content, or selected value(s), or JSON string for Table data
   previewText: string;

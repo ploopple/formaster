@@ -208,14 +208,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           if (field.type === 'table-row') return;
           if (field.hidden) return; // Skip drawing hidden fields
 
-          const drawFieldBox = (xPct: number, yPct: number, wPct: number, hPct: number, isOption: boolean = false) => {
+          const drawFieldBox = (xPct: number, yPct: number, wPct: number, hPct: number, isOption: boolean = false, isAdditional: boolean = false) => {
               const x = (xPct / 100) * canvas.width;
               const y = (yPct / 100) * canvas.height;
               const w = (wPct / 100) * canvas.width;
               const h = (hPct / 100) * canvas.height;
 
               // Draw semi-transparent overlay to show field boundaries
-              ctx.strokeStyle = selectedFieldId === field.id ? '#3b82f6' : '#93c5fd';
+              // Additional positions use a different color (purple)
+              if (isAdditional) {
+                  ctx.strokeStyle = selectedFieldId === field.id ? '#8b5cf6' : '#c4b5fd';
+              } else {
+                  ctx.strokeStyle = selectedFieldId === field.id ? '#3b82f6' : '#93c5fd';
+              }
               ctx.lineWidth = selectedFieldId === field.id ? 2 : 1;
               ctx.setLineDash([4, 4]);
               ctx.strokeRect(x, y, w, h);
@@ -232,6 +237,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                       ctx.fillRect(x, y, w, h);
                   }
               }
+              
+              // Draw indicator for additional positions
+              if (isAdditional) {
+                  ctx.fillStyle = 'rgba(139, 92, 246, 0.15)';
+                  ctx.fillRect(x, y, w, h);
+              }
           };
 
           if ((field.type === 'radio' || field.type === 'checkbox') && field.options) {
@@ -241,6 +252,31 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           } else {
               drawFieldBox(field.x, field.y, field.width, field.height);
           }
+      });
+      
+      // Also draw additional positions for fields that have them on this page
+      fields.forEach(field => {
+          if (field.type === 'table-row' || field.type === 'table' || field.type === 'radio' || field.type === 'checkbox') return;
+          if (field.hidden) return;
+          if (!field.additionalPositions) return;
+          
+          field.additionalPositions.forEach(pos => {
+              if (pos.page !== pageNumber) return;
+              
+              const x = (pos.x / 100) * canvas.width;
+              const y = (pos.y / 100) * canvas.height;
+              const w = (pos.width / 100) * canvas.width;
+              const h = (pos.height / 100) * canvas.height;
+              
+              // Draw with purple color to indicate additional position
+              ctx.strokeStyle = selectedFieldId === field.id ? '#8b5cf6' : '#c4b5fd';
+              ctx.lineWidth = selectedFieldId === field.id ? 2 : 1;
+              ctx.setLineDash([4, 4]);
+              ctx.strokeRect(x, y, w, h);
+              ctx.setLineDash([]);
+              ctx.fillStyle = 'rgba(139, 92, 246, 0.15)';
+              ctx.fillRect(x, y, w, h);
+          });
       });
     }
 

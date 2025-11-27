@@ -21,7 +21,7 @@ export interface FormTemplate {
 
 export const formsData: FormTemplate[] = [
 {
-  "id": "148d0dec-43db-4dec-aefc-7cbd13c8ec67",
+  "id": "0559badf-ec6a-428a-933a-f9f11a344f2a",
   "title": "EDIT_THIS_TITLE",
   "description": "EDIT_THIS_DESCRIPTION",
   "fileName": "/forms/tofes-101.pdf",
@@ -42,7 +42,17 @@ export const formsData: FormTemplate[] = [
       "options": [],
       "parentFieldId": "5c974c78-97d5-414f-aae7-cdc442fde4cd",
       "parentOptionId": "6c84a1ae-5885-483e-84b9-537c00d94798",
-      "maxLength": 9
+      "maxLength": 9,
+      "additionalPositions": [
+        {
+          "page": 2,
+          "x": 15.95405232929164,
+          "y": 1.8493459630130809,
+          "width": 17.337168953414167,
+          "height": 1.3531799729364005,
+          "letterSpacing": 2
+        }
+      ]
     },
     {
       "id": "94928b80-768c-4601-b456-318468792e95",
@@ -91,7 +101,7 @@ export const formsData: FormTemplate[] = [
       "width": 0,
       "height": 0,
       "name": "Do you have an ID?",
-      "value": "Yes",
+      "value": "No",
       "previewText": "",
       "type": "radio",
       "fontSize": 12,
@@ -152,7 +162,18 @@ export const formsData: FormTemplate[] = [
       "options": [],
       "parentFieldId": "5c974c78-97d5-414f-aae7-cdc442fde4cd",
       "parentOptionId": "ff7ec086-5380-4fd9-9b3b-63d9418fbb30",
-      "maxLength": 13
+      "maxLength": 13,
+      "additionalPositions": [
+        {
+          "page": 2,
+          "x": 16.209317166560304,
+          "y": 1.3531799729364005,
+          "width": 25.169362236758136,
+          "height": 2.2913424672981506,
+          "letterSpacing": 0,
+          "fontSize": 10
+        }
+      ]
     },
     {
       "id": "782e5037-1b2f-46ac-82a3-e8f4f5425fd0",
@@ -1487,9 +1508,69 @@ export const formsData: FormTemplate[] = [
       ],
       "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
       "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
+    },
+    {
+      "id": "0047181e-043a-4f9d-9949-b7b6e615ffc2",
+      "page": 2,
+      "x": 85.9733966177409,
+      "y": 5.738631658420726,
+      "width": 1.51413927887684,
+      "height": 1.1302929070816425,
+      "name": "Do you live in Israel?",
+      "value": "Option 1",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "c3ba12c4-d266-4428-aab1-94a7551d50e1",
+          "x": 84.91843490746648,
+          "y": 4.613272219990412,
+          "width": 3.9361638481174266,
+          "height": 2.7750761163734787,
+          "value": "Option 1"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
+    },
+    {
+      "id": "30fe436b-7984-4021-be1f-b72b786db9eb",
+      "page": 2,
+      "x": 4.806656828334397,
+      "y": 7.235234612863667,
+      "width": 85.68198588066369,
+      "height": 4.288065234551197,
+      "name": "Are you",
+      "value": "Option 2|||Option 1|||100% disabled or permanently blind|||In addition, I receive a monthly compensation in accordance with Disabled Law (compensation and rehabilitation) or the Compensation for Victims of Hostile Acts Law",
+      "previewText": "",
+      "type": "checkbox",
+      "fontSize": 12,
+      "letterSpacing": 0,
+      "options": [
+        {
+          "id": "e4cd9bf8-0d54-4272-aa5b-aa811dc02d37",
+          "x": 84.21745373324825,
+          "y": 6.338576685484326,
+          "width": 5,
+          "height": 3,
+          "value": "100% disabled or permanently blind"
+        },
+        {
+          "id": "457f2379-2a63-454a-b9ee-85850229438f",
+          "x": 84.13095285577538,
+          "y": 8.986263593468086,
+          "width": 5,
+          "height": 3,
+          "value": "In addition, I receive a monthly compensation in accordance with Disabled Law (compensation and rehabilitation) or the Compensation for Victims of Hostile Acts Law"
+        }
+      ],
+      "borderWidth": 0,
+      "padding": 2
     }
   ],
-  "createdAt": "2025-11-27T16:30:50.080Z",
+  "createdAt": "2025-11-27T16:54:55.085Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

@@ -1,7 +1,19 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage, Color } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { FormField, MarkStyle, DocumentAttachment } from '../types';
+import { FormField, MarkStyle, FieldPosition } from '../types';
 import { isFieldVisible } from './formLogic';
+
+// Helper to get all positions for a field (main position + additional positions)
+const getAllPositions = (field: FormField): FieldPosition[] => {
+  const mainPosition: FieldPosition = {
+    page: field.page,
+    x: field.x,
+    y: field.y,
+    width: field.width,
+    height: field.height,
+  };
+  return [mainPosition, ...(field.additionalPositions || [])];
+};
 
 // Helper to draw checkmark
 const drawCheckmark = (page: PDFPage, x: number, y: number, width: number, height: number) => {
@@ -274,18 +286,67 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
         }
 
     } else if (field.type === 'signature' && field.value.startsWith('data:image')) {
-        try {
-            const pngImage = await pdfDoc.embedPng(field.value);
-            const { width: imgW, height: imgH } = pngImage.scaleToFit((field.width / 100) * width, (field.height / 100) * height);
-            const fieldX = originX + (field.x / 100) * width;
-            const fieldY = originY + height - ((field.y / 100) * height) - ((field.height / 100) * height);
+        // Render signature at all positions (main + additional)
+        const allPositions = getAllPositions(field);
+        for (const pos of allPositions) {
+            const posPageIndex = pos.page - 1;
+            if (posPageIndex < 0 || posPageIndex >= pages.length) continue;
+            const posPage = pages[posPageIndex];
+            const posDims = getPageDimensions(posPage);
             
-            // Draw background if exists
-             if (field.backgroundColor || (field.borderWidth && field.borderWidth > 0)) {
-                page.drawRectangle({
-                    x: fieldX, y: fieldY,
-                    width: (field.width / 100) * width,
-                    height: (field.height / 100) * height,
+            try {
+                const pngImage = await pdfDoc.embedPng(field.value);
+                const { width: imgW, height: imgH } = pngImage.scaleToFit((pos.width / 100) * posDims.width, (pos.height / 100) * posDims.height);
+                const fieldX = posDims.originX + (pos.x / 100) * posDims.width;
+                const fieldY = posDims.originY + posDims.height - ((pos.y / 100) * posDims.height) - ((pos.height / 100) * posDims.height);
+                
+                // Draw background if exists
+                if (field.backgroundColor || (field.borderWidth && field.borderWidth > 0)) {
+                    posPage.drawRectangle({
+                        x: fieldX, y: fieldY,
+                        width: (pos.width / 100) * posDims.width,
+                        height: (pos.height / 100) * posDims.height,
+                        color: hexToRgb(field.backgroundColor),
+                        borderColor: hexToRgb(field.borderColor),
+                        borderWidth: field.borderWidth || 0,
+                        opacity: field.backgroundColor ? (field.opacity ?? 1) : 0,
+                    });
+                }
+
+                posPage.drawImage(pngImage, { 
+                    x: fieldX + ((pos.width / 100) * posDims.width - imgW) / 2, 
+                    y: fieldY + ((pos.height / 100) * posDims.height - imgH) / 2, 
+                    width: imgW, 
+                    height: imgH 
+                });
+            } catch (e) { console.error('Failed to embed signature', e); }
+        }
+
+    } else {
+        // GENERIC TEXT/NUMBER/DATE/SELECT RENDERING - render at all positions
+        const allPositions = getAllPositions(field);
+        for (const pos of allPositions) {
+            const posPageIndex = pos.page - 1;
+            if (posPageIndex < 0 || posPageIndex >= pages.length) continue;
+            const posPage = pages[posPageIndex];
+            const posDims = getPageDimensions(posPage);
+            
+            const x = posDims.originX + (pos.x / 100) * posDims.width;
+            const fieldHeightPoints = (pos.height / 100) * posDims.height;
+            const y = posDims.originY + posDims.height - ((pos.y / 100) * posDims.height) - fieldHeightPoints;
+            const fieldWidthPoints = (pos.width / 100) * posDims.width;
+            const padding = field.padding || 0;
+            
+            // Use position-specific fontSize/letterSpacing if defined, otherwise fall back to field defaults
+            const posFontSize = pos.fontSize ?? fontSize;
+            const posLetterSpacing = pos.letterSpacing ?? field.letterSpacing ?? 0;
+
+            // Draw Box/Background/Border
+            if (field.backgroundColor || (field.borderWidth && field.borderWidth > 0)) {
+                posPage.drawRectangle({
+                    x, y,
+                    width: fieldWidthPoints,
+                    height: fieldHeightPoints,
                     color: hexToRgb(field.backgroundColor),
                     borderColor: hexToRgb(field.borderColor),
                     borderWidth: field.borderWidth || 0,
@@ -293,104 +354,76 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 });
             }
 
-            page.drawImage(pngImage, { 
-                x: fieldX + ((field.width / 100) * width - imgW) / 2, 
-                y: fieldY + ((field.height / 100) * height - imgH) / 2, 
-                width: imgW, 
-                height: imgH 
-            });
-        } catch (e) { console.error('Failed to embed signature', e); }
-
-    } else {
-        // GENERIC TEXT/NUMBER/DATE/SELECT RENDERING
-        const x = originX + (field.x / 100) * width;
-        const fieldHeightPoints = (field.height / 100) * height;
-        const y = originY + height - ((field.y / 100) * height) - fieldHeightPoints;
-        const fieldWidthPoints = (field.width / 100) * width;
-        const padding = field.padding || 0;
-
-         // Draw Box/Background/Border
-         if (field.backgroundColor || (field.borderWidth && field.borderWidth > 0)) {
-             page.drawRectangle({
-                 x, y,
-                 width: fieldWidthPoints,
-                 height: fieldHeightPoints,
-                 color: hexToRgb(field.backgroundColor),
-                 borderColor: hexToRgb(field.borderColor),
-                 borderWidth: field.borderWidth || 0,
-                 opacity: field.backgroundColor ? (field.opacity ?? 1) : 0,
-             });
-         }
-
-        if (field.value) {
-            let fontToUse = field.type === 'signature' ? scriptFont : font;
-            const sizeToUse = field.type === 'signature' ? fontSize * 1.5 : fontSize;
-            
-            // Process value based on field type
-            let displayValue = field.value.toString();
-            
-            // For date fields: optionally remove separators
-            if (field.type === 'date' && field.dateHideSeparator) {
-                displayValue = displayValue.replace(/\//g, '');
-            }
-            
-            // Use Hebrew font if text contains Hebrew characters
-            if (hebrewFont && containsHebrew(displayValue)) {
-                fontToUse = hebrewFont;
-            }
-            
-            // Calculate Text Alignment X
-            const textWidth = fontToUse.widthOfTextAtSize(displayValue, sizeToUse);
-            let textX = x + padding; // Left default
-            
-            if (field.textAlign === 'center') {
-                textX = x + (fieldWidthPoints / 2) - (textWidth / 2);
-            } else if (field.textAlign === 'right') {
-                textX = x + fieldWidthPoints - textWidth - padding;
-            }
-
-            // Calculate Vertical Alignment (Centered)
-            const textHeight = sizeToUse * 0.7; 
-            let textY = y + (fieldHeightPoints / 2) - (textHeight / 2);
-            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
-            
-            if (field.type === 'textarea') {
-                // Top Align for TextArea with padding
-                textY = y + fieldHeightPoints - sizeToUse - padding;
-                page.drawText(displayValue, {
-                    x: x + padding,
-                    y: textY,
-                    size: sizeToUse,
-                    font: fontToUse,
-                    color: textColor,
-                    maxWidth: fieldWidthPoints - (padding * 2),
-                    lineHeight: sizeToUse * 1.35, // Match Web line-height 1.35
-                });
-            } else if (field.type === 'number' && field.digitPositions && field.digitPositions.length > 0) {
-                // Number field with individual digit positions
-                const digits = displayValue.replace(/[^0-9]/g, ''); // Extract only digits
-                for (let i = 0; i < digits.length && i < field.digitPositions.length; i++) {
-                    const pos = field.digitPositions[i];
-                    // Position is relative to field, convert to absolute PDF coordinates
-                    const digitX = x + (pos.x / 100) * fieldWidthPoints;
-                    const digitY = y + fieldHeightPoints - (pos.y / 100) * fieldHeightPoints - (textHeight / 2);
-                    page.drawText(digits[i], { x: digitX, y: digitY, size: sizeToUse, font: fontToUse, color: textColor });
+            if (field.value) {
+                let fontToUse = field.type === 'signature' ? scriptFont : font;
+                const sizeToUse = field.type === 'signature' ? posFontSize * 1.5 : posFontSize;
+                
+                // Process value based on field type
+                let displayValue = field.value.toString();
+                
+                // For date fields: optionally remove separators
+                if (field.type === 'date' && field.dateHideSeparator) {
+                    displayValue = displayValue.replace(/\//g, '');
                 }
-            } else if (field.letterSpacing && field.letterSpacing > 0) {
-                 // Letter Spacing Logic
-                 let currentX = textX;
-                 for (let i = 0; i < displayValue.length; i++) {
-                     const char = displayValue[i];
-                     page.drawText(char, { x: currentX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
-                     const charWidth = fontToUse.widthOfTextAtSize(char, sizeToUse);
-                     currentX += charWidth + field.letterSpacing;
-                 }
-            } else {
-                 // Standard Line
-                 // check if the field type is radio 
-                 if(field.type !== "radio" && field.type !== "checkbox") {
-                     page.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
-                 }
+                
+                // Use Hebrew font if text contains Hebrew characters
+                if (hebrewFont && containsHebrew(displayValue)) {
+                    fontToUse = hebrewFont;
+                }
+                
+                // Calculate Text Alignment X
+                const textWidth = fontToUse.widthOfTextAtSize(displayValue, sizeToUse);
+                let textX = x + padding; // Left default
+                
+                if (field.textAlign === 'center') {
+                    textX = x + (fieldWidthPoints / 2) - (textWidth / 2);
+                } else if (field.textAlign === 'right') {
+                    textX = x + fieldWidthPoints - textWidth - padding;
+                }
+
+                // Calculate Vertical Alignment (Centered)
+                const textHeight = sizeToUse * 0.7; 
+                let textY = y + (fieldHeightPoints / 2) - (textHeight / 2);
+                const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
+                
+                if (field.type === 'textarea') {
+                    // Top Align for TextArea with padding
+                    textY = y + fieldHeightPoints - sizeToUse - padding;
+                    posPage.drawText(displayValue, {
+                        x: x + padding,
+                        y: textY,
+                        size: sizeToUse,
+                        font: fontToUse,
+                        color: textColor,
+                        maxWidth: fieldWidthPoints - (padding * 2),
+                        lineHeight: sizeToUse * 1.35, // Match Web line-height 1.35
+                    });
+                } else if (field.type === 'number' && field.digitPositions && field.digitPositions.length > 0) {
+                    // Number field with individual digit positions
+                    const digits = displayValue.replace(/[^0-9]/g, ''); // Extract only digits
+                    for (let i = 0; i < digits.length && i < field.digitPositions.length; i++) {
+                        const digitPos = field.digitPositions[i];
+                        // Position is relative to field, convert to absolute PDF coordinates
+                        const digitX = x + (digitPos.x / 100) * fieldWidthPoints;
+                        const digitY = y + fieldHeightPoints - (digitPos.y / 100) * fieldHeightPoints - (textHeight / 2);
+                        posPage.drawText(digits[i], { x: digitX, y: digitY, size: sizeToUse, font: fontToUse, color: textColor });
+                    }
+                } else if (posLetterSpacing > 0) {
+                    // Letter Spacing Logic (using position-specific letter spacing)
+                    let currentX = textX;
+                    for (let i = 0; i < displayValue.length; i++) {
+                        const char = displayValue[i];
+                        posPage.drawText(char, { x: currentX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
+                        const charWidth = fontToUse.widthOfTextAtSize(char, sizeToUse);
+                        currentX += charWidth + posLetterSpacing;
+                    }
+                } else {
+                    // Standard Line
+                    // check if the field type is radio 
+                    if(field.type !== "radio" && field.type !== "checkbox") {
+                        posPage.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
+                    }
+                }
             }
         }
     } 

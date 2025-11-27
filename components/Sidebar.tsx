@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement } from '../types';
+import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement, FieldPosition } from '../types';
 import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle } from 'lucide-react';
 import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
@@ -1010,12 +1010,163 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Geometry</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">Page</label><input type="number" min="1" value={selectedField.page} onChange={(e) => onUpdateField(selectedField.id, { page: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
+                            <div></div>
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">X (px)</label><input type="number" value={Math.round((selectedField.x / 100) * pageDimensions.width)} onChange={(e) => onUpdateField(selectedField.id, { x: (Number(e.target.value) / pageDimensions.width) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">Y (px)</label><input type="number" value={Math.round((selectedField.y / 100) * pageDimensions.height)} onChange={(e) => onUpdateField(selectedField.id, { y: (Number(e.target.value) / pageDimensions.height) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">W (px)</label><input type="number" value={Math.round((selectedField.width / 100) * pageDimensions.width)} onChange={(e) => onUpdateField(selectedField.id, { width: (Number(e.target.value) / pageDimensions.width) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">H (px)</label><input type="number" value={Math.round((selectedField.height / 100) * pageDimensions.height)} onChange={(e) => onUpdateField(selectedField.id, { height: (Number(e.target.value) / pageDimensions.height) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                         </div>
                     </div>
+
+                    {/* Additional Positions - for fields that need to appear in multiple places */}
+                    {selectedField.type !== 'table' && selectedField.type !== 'table-row' && selectedField.type !== 'radio' && selectedField.type !== 'checkbox' && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Copy size={14} className="text-slate-600" />
+                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Additional Positions</h3>
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        const positions = selectedField.additionalPositions || [];
+                                        const newPos = { 
+                                            page: selectedField.page, 
+                                            x: selectedField.x, 
+                                            y: selectedField.y, 
+                                            width: selectedField.width, 
+                                            height: selectedField.height 
+                                        };
+                                        onUpdateField(selectedField.id, { additionalPositions: [...positions, newPos] });
+                                    }}
+                                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                >
+                                    <Plus size={12} /> Add Position
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-slate-400">Same field value rendered at multiple locations/pages</p>
+                            
+                            {selectedField.additionalPositions && selectedField.additionalPositions.length > 0 ? (
+                                <div className="space-y-3 max-h-64 overflow-y-auto">
+                                    {selectedField.additionalPositions.map((pos, idx) => (
+                                        <div key={idx} className="p-2 bg-slate-50 rounded border border-slate-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-semibold text-slate-600">Position #{idx + 2}</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        const newPositions = selectedField.additionalPositions?.filter((_, i) => i !== idx);
+                                                        onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                    }}
+                                                    className="text-red-500 hover:text-red-600"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">Page</label>
+                                                    <input 
+                                                        type="number" 
+                                                        min="1"
+                                                        value={pos.page} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], page: Number(e.target.value) };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div></div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">X (px)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={Math.round((pos.x / 100) * pageDimensions.width)} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], x: (Number(e.target.value) / pageDimensions.width) * 100 };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">Y (px)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={Math.round((pos.y / 100) * pageDimensions.height)} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], y: (Number(e.target.value) / pageDimensions.height) * 100 };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">W (px)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={Math.round((pos.width / 100) * pageDimensions.width)} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], width: (Number(e.target.value) / pageDimensions.width) * 100 };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">H (px)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={Math.round((pos.height / 100) * pageDimensions.height)} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], height: (Number(e.target.value) / pageDimensions.height) * 100 };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">Font Size</label>
+                                                    <input 
+                                                        type="number" 
+                                                        min="1"
+                                                        value={pos.fontSize ?? selectedField.fontSize ?? 12} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], fontSize: Number(e.target.value) };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] text-slate-400">Letter Space</label>
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.5"
+                                                        value={pos.letterSpacing ?? selectedField.letterSpacing ?? 0} 
+                                                        onChange={(e) => {
+                                                            const newPositions = [...(selectedField.additionalPositions || [])];
+                                                            newPositions[idx] = { ...newPositions[idx], letterSpacing: Number(e.target.value) };
+                                                            onUpdateField(selectedField.id, { additionalPositions: newPositions });
+                                                        }}
+                                                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" 
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-[10px] text-slate-400 italic">No additional positions. Click "Add Position" to render this field in multiple places.</p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
                         <button onClick={() => onDuplicateField(selectedField.id)} className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-md text-sm font-medium transition-colors"><Copy size={16} /> Clone</button>
