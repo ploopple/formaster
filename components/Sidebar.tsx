@@ -1914,6 +1914,46 @@ const Sidebar: React.FC<SidebarProps> = ({
                             })()}
                         </div>
                     )}
+
+                    {field.type === 'signature' && (
+                        <div className="space-y-2">
+                            {field.value && field.value.startsWith('data:image') ? (
+                                <div className="relative group">
+                                    <div className="w-full h-24 bg-white border border-slate-200 rounded-md overflow-hidden flex items-center justify-center">
+                                        <img 
+                                            src={field.value} 
+                                            alt="Signature" 
+                                            className="max-w-full max-h-full object-contain"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 mt-2">
+                                        <button
+                                            onClick={() => onOpenSignature?.(field.id)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
+                                        >
+                                            <PenTool size={14} />
+                                            Redraw
+                                        </button>
+                                        <button
+                                            onClick={() => onUpdateField(field.id, { value: '' })}
+                                            className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md text-sm font-medium transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => onOpenSignature?.(field.id)}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 hover:border-blue-400 text-blue-600 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <PenTool size={18} />
+                                    Click to Sign
+                                </button>
+                            )}
+                        </div>
+                    )}
                       
                       {/* Validation Error Display */}
                       {showError && validationState.errors.length > 0 && (
