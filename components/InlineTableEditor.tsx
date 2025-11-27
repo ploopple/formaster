@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FormField, TableColumn, TableCell } from '../types';
+import { FormField, TableColumn } from '../types';
 import { Plus, Minus, Check, ChevronDown } from 'lucide-react';
 
 interface InlineTableEditorProps {
@@ -42,60 +42,51 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     if (currentRows > 1) {
       const data = getTableData();
       data.pop();
-      onUpdateField(field.id, { 
-        filledRows: currentRows - 1,
-        value: JSON.stringify(data)
-      });
+      onUpdateField(field.id, { filledRows: currentRows - 1, value: JSON.stringify(data) });
     }
   };
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
       inputRef.current.focus();
-      if (inputRef.current instanceof HTMLInputElement) {
-        inputRef.current.select();
-      }
+      if (inputRef.current instanceof HTMLInputElement) inputRef.current.select();
     }
   }, [editingCell]);
 
-  // Helper to render cell input - defined BEFORE any early returns
-  const renderCellInput = (
-    colOrCell: TableColumn | TableCell,
-    value: string,
-    rowIdx: number,
-    colIdx: number,
-    isEditing: boolean
-  ) => {
-    const type = colOrCell.type;
-    const options = colOrCell.options || [];
+  // Helper to render cell input based on column definition
+  const renderCellInput = (col: TableColumn, value: string, rowIdx: number, colIdx: number, isEditing: boolean) => {
+    const type = col.type;
 
     if (type === 'checkbox') {
       return (
-        <button
-          onClick={() => updateCell(rowIdx, colIdx, value === 'true' ? 'false' : 'true')}
-          className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
-            value === 'true'
-              ? 'bg-blue-600 border-blue-600 text-white'
-              : 'bg-white border-slate-300 hover:border-blue-400'
-          }`}
-        >
+        <button onClick={() => updateCell(rowIdx, colIdx, value === 'true' ? 'false' : 'true')}
+          className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${value === 'true' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300 hover:border-blue-400'}`}>
           {value === 'true' && <Check size={14} />}
         </button>
+      );
+    }
+
+    if (type === 'radio') {
+      // Radio in table context - show options as buttons
+      return (
+        <div className="flex gap-1 flex-wrap">
+          {(col.options || []).map((opt) => (
+            <button key={opt.id} onClick={() => updateCell(rowIdx, colIdx, opt.value)}
+              className={`px-2 py-0.5 text-[10px] rounded border transition-all ${value === opt.value ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300 hover:border-blue-400'}`}>
+              {opt.value}
+            </button>
+          ))}
+        </div>
       );
     }
 
     if (type === 'select') {
       return (
         <div className="relative">
-          <select
-            value={value}
-            onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none pr-8"
-          >
+          <select value={value} onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none pr-8">
             <option value="">Select...</option>
-            {options.filter(opt => opt.trim()).map((opt, i) => (
-              <option key={i} value={opt}>{opt}</option>
-            ))}
+            {(col.options || []).map((opt) => (<option key={opt.id} value={opt.value}>{opt.value}</option>))}
           </select>
           <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
@@ -104,31 +95,36 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
 
     if (type === 'date') {
       return (
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
-        />
+        <input type="date" value={value} onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none" />
       );
     }
 
-    // Text or number input
+    if (type === 'signature') {
+      return (
+        <div className="w-full h-12 border border-dashed border-slate-300 rounded flex items-center justify-center text-xs text-slate-400">
+          Signature
+        </div>
+      );
+    }
+
+    // Text, number, textarea
     return (
-      <input
-        ref={isEditing ? inputRef as React.RefObject<HTMLInputElement> : undefined}
-        type={type === 'number' ? 'number' : 'text'}
-        value={value}
+      <input ref={isEditing ? inputRef as React.RefObject<HTMLInputElement> : undefined}
+        type={type === 'number' ? 'number' : 'text'} value={value}
         onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
         onFocus={() => setEditingCell({ row: rowIdx, col: colIdx })}
         onBlur={() => setEditingCell(null)}
-        placeholder={`Enter ${(colOrCell as TableColumn).header || 'value'}...`}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-colors"
-      />
+        placeholder={`Enter ${col.name || 'value'}...`}
+        maxLength={col.maxLength}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-colors" />
     );
   };
 
-  // Render for custom rows
+  // Get columns from parent table (for custom rows) or from field itself
+  const columns = field.columns || [];
+  
+  // Render for custom rows - cells are derived from parent table columns
   if (customRows.length > 0) {
     const sortedRows = [...customRows].sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0));
     const visibleCount = Math.min(field.filledRows || 1, sortedRows.length);
@@ -146,22 +142,13 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
                   <span className="text-xs font-semibold text-slate-600">Row {rIdx + 1}</span>
                 </div>
                 <div className="p-3 space-y-3">
-                  {(row.cells || []).map((cell, cIdx) => {
+                  {columns.map((col, cIdx) => {
                     const cellValue = tableData[rIdx]?.[cIdx] || '';
                     const isEditing = editingCell?.row === rIdx && editingCell?.col === cIdx;
-
                     return (
-                      <div 
-                        key={cell.id} 
-                        className="space-y-1"
-                        style={{ 
-                          padding: cell.spacing ? `${cell.spacing}px` : undefined 
-                        }}
-                      >
-                        <label className="text-xs font-medium text-slate-500">
-                          {cell.header || `Field ${cIdx + 1}`}
-                        </label>
-                        {renderCellInput(cell, cellValue, rIdx, cIdx, isEditing)}
+                      <div key={col.id} className="space-y-1" style={{ padding: col.padding ? `${col.padding}px` : undefined }}>
+                        <label className="text-xs font-medium text-slate-500">{col.name || `Field ${cIdx + 1}`}</label>
+                        {renderCellInput(col, cellValue, rIdx, cIdx, isEditing)}
                       </div>
                     );
                   })}
@@ -170,26 +157,16 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
             );
           })}
         </div>
-
-        {/* Row controls */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500">
-            {visibleCount} of {sortedRows.length} rows
-          </span>
+          <span className="text-xs text-slate-500">{visibleCount} of {sortedRows.length} rows</span>
           <div className="flex gap-2">
             {visibleCount > 1 && (
-              <button
-                onClick={removeRow}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors"
-              >
+              <button onClick={removeRow} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors">
                 <Minus size={14} /> Remove Row
               </button>
             )}
             {visibleCount < sortedRows.length && (
-              <button
-                onClick={addRow}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-              >
+              <button onClick={addRow} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
                 <Plus size={14} /> Add Row
               </button>
             )}
@@ -199,90 +176,64 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     );
   }
 
-  // Render for standard table columns
-  const columns = field.columns || [];
+  // Render for standard table columns (no custom rows)
   const rowsToRender = field.filledRows || 1;
   const maxRows = field.maxRows || 10;
   const tableData = getTableData();
 
   return (
     <div className="space-y-3">
-      {/* Table */}
       <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
-        {/* Header */}
         {field.showHeaders && columns.length > 0 && (
           <div className="flex bg-slate-100 border-b border-slate-200">
             {columns.map((col) => (
-              <div
-                key={col.id}
-                className="px-3 py-2 text-xs font-semibold text-slate-600 border-r border-slate-200 last:border-r-0"
-                style={{ width: `${col.width}%` }}
-              >
-                {col.header}
+              <div key={col.id} className="px-3 py-2 text-xs font-semibold text-slate-600 border-r border-slate-200 last:border-r-0" style={{ width: `${col.width}%` }}>
+                {col.name}
               </div>
             ))}
           </div>
         )}
-
-        {/* Rows */}
         <div className="divide-y divide-slate-100">
           {Array.from({ length: rowsToRender }).map((_, rowIdx) => (
             <div key={rowIdx} className="flex hover:bg-slate-50 transition-colors">
               {columns.map((col, colIdx) => {
                 const cellValue = tableData[rowIdx]?.[colIdx] || '';
                 const isEditing = editingCell?.row === rowIdx && editingCell?.col === colIdx;
-
                 return (
-                  <div
-                    key={col.id}
-                    className="px-2 py-2 border-r border-slate-100 last:border-r-0"
-                    style={{ 
-                      width: `${col.width}%`,
-                      padding: col.spacing ? `${col.spacing}px` : undefined
-                    }}
-                  >
+                  <div key={col.id} className="px-2 py-2 border-r border-slate-100 last:border-r-0" style={{ width: `${col.width}%`, padding: col.padding ? `${col.padding}px` : undefined }}>
                     {col.type === 'checkbox' ? (
                       <div className="flex justify-center">
-                        <button
-                          onClick={() => updateCell(rowIdx, colIdx, cellValue === 'true' ? 'false' : 'true')}
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                            cellValue === 'true'
-                              ? 'bg-blue-600 border-blue-600 text-white'
-                              : 'bg-white border-slate-300 hover:border-blue-400'
-                          }`}
-                        >
+                        <button onClick={() => updateCell(rowIdx, colIdx, cellValue === 'true' ? 'false' : 'true')}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${cellValue === 'true' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300 hover:border-blue-400'}`}>
                           {cellValue === 'true' && <Check size={12} />}
                         </button>
                       </div>
-                    ) : col.type === 'select' ? (
-                      <select
-                        value={cellValue}
-                        onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none cursor-pointer"
-                      >
-                        <option value="">-</option>
-                        {(col.options || []).filter(opt => opt.trim()).map((opt, i) => (
-                          <option key={i} value={opt}>{opt}</option>
+                    ) : col.type === 'radio' ? (
+                      <div className="flex gap-1 flex-wrap justify-center">
+                        {(col.options || []).map((opt) => (
+                          <button key={opt.id} onClick={() => updateCell(rowIdx, colIdx, opt.value)}
+                            className={`px-1.5 py-0.5 text-[9px] rounded border ${cellValue === opt.value ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300 hover:border-blue-400'}`}>
+                            {opt.value}
+                          </button>
                         ))}
+                      </div>
+                    ) : col.type === 'select' ? (
+                      <select value={cellValue} onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none cursor-pointer">
+                        <option value="">-</option>
+                        {(col.options || []).map((opt) => (<option key={opt.id} value={opt.value}>{opt.value}</option>))}
                       </select>
                     ) : col.type === 'date' ? (
-                      <input
-                        type="date"
-                        value={cellValue}
-                        onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
-                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none"
-                      />
+                      <input type="date" value={cellValue} onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none" />
                     ) : (
-                      <input
-                        ref={isEditing ? inputRef as React.RefObject<HTMLInputElement> : undefined}
-                        type={col.type === 'number' ? 'number' : 'text'}
-                        value={cellValue}
+                      <input ref={isEditing ? inputRef as React.RefObject<HTMLInputElement> : undefined}
+                        type={col.type === 'number' ? 'number' : 'text'} value={cellValue}
                         onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                         onFocus={() => setEditingCell({ row: rowIdx, col: colIdx })}
                         onBlur={() => setEditingCell(null)}
-                        placeholder="..."
-                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none transition-colors"
-                      />
+                        placeholder="..." maxLength={col.maxLength}
+                        className="w-full px-2 py-1 text-xs border border-transparent rounded bg-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none transition-colors" />
                     )}
                   </div>
                 );
@@ -291,26 +242,16 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
           ))}
         </div>
       </div>
-
-      {/* Row controls */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">
-          {rowsToRender} of {maxRows} rows
-        </span>
+        <span className="text-xs text-slate-500">{rowsToRender} of {maxRows} rows</span>
         <div className="flex gap-2">
           {rowsToRender > 1 && (
-            <button
-              onClick={removeRow}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors"
-            >
+            <button onClick={removeRow} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors">
               <Minus size={14} /> Remove
             </button>
           )}
           {rowsToRender < maxRows && (
-            <button
-              onClick={addRow}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-            >
+            <button onClick={addRow} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
               <Plus size={14} /> Add Row
             </button>
           )}

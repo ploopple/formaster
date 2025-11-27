@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormField, AppMode, FieldType, FieldOption, TableColumn, TableCell, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement } from '../types';
+import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement } from '../types';
 import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle } from 'lucide-react';
 import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
@@ -137,8 +137,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         updates.cellPadding = 2;
         updates.cellGap = 0;
         updates.columns = [
-            { id: crypto.randomUUID(), header: 'Col 1', type: 'text', width: 50 },
-            { id: crypto.randomUUID(), header: 'Col 2', type: 'text', width: 50 }
+            { id: crypto.randomUUID(), name: 'Col 1', type: 'text', width: 50 },
+            { id: crypto.randomUUID(), name: 'Col 2', type: 'text', width: 50 }
         ];
         updates.value = "[]"; 
     }
@@ -180,41 +180,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // --- Table Helpers ---
-  const addColumn = () => {
-    if (!selectedField?.columns) return;
-    const newCol: TableColumn = { id: crypto.randomUUID(), header: `Col ${selectedField.columns.length + 1}`, type: 'text', width: 20 };
-    onUpdateField(selectedField.id, { columns: [...selectedField.columns, newCol] });
-  };
-
-  const updateColumn = (colId: string, updates: Partial<TableColumn>) => {
-      if (!selectedField?.columns) return;
-      onUpdateField(selectedField.id, { columns: selectedField.columns.map(c => c.id === colId ? { ...c, ...updates } : c) });
-  };
-
-  const deleteColumn = (colId: string) => {
-      if (!selectedField?.columns || selectedField.columns.length <= 1) return;
-      onUpdateField(selectedField.id, { columns: selectedField.columns.filter(c => c.id !== colId) });
-  };
-
-  const addCell = () => {
-      if (!selectedField?.cells) return;
-      const lastCell = selectedField.cells[selectedField.cells.length - 1];
-      const newCell: TableCell = {
-          id: crypto.randomUUID(), type: 'text', x: lastCell ? Math.min(75, lastCell.x + lastCell.width) : 0, y: 0, width: 25, height: 100
-      };
-      onUpdateField(selectedField.id, { cells: [...selectedField.cells, newCell] });
-  };
-
-  const updateCell = (cellId: string, updates: Partial<TableCell>) => {
-      if (!selectedField?.cells) return;
-      onUpdateField(selectedField.id, { cells: selectedField.cells.map(c => c.id === cellId ? { ...c, ...updates } : c) });
-  };
-
-  const deleteCell = (cellId: string) => {
-      if (!selectedField?.cells) return;
-      onUpdateField(selectedField.id, { cells: selectedField.cells.filter(c => c.id !== cellId) });
-  };
-
   const getTableData = (val: string): string[][] => {
       try { const data = JSON.parse(val || "[]"); return Array.isArray(data) ? data : []; } catch { return []; }
   };
@@ -665,52 +630,31 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {selectedField.type === 'table-row' && (
                         <div className="space-y-4 pt-2 border-t border-slate-100">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Row Cells</h3>
-                                <button onClick={addCell} className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"><Plus size={12} /> Add Cell</button>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Rows size={14} className="text-slate-600" />
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Row Position</h3>
                             </div>
-                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                {(selectedField.cells || []).map((cell, idx) => (
-                                    <div key={cell.id} className="p-2 border border-slate-200 rounded bg-slate-50/50 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-500">{cell.header ? cell.header : `Cell ${idx + 1}`}</span>
-                                            <button onClick={() => deleteCell(cell.id)} className="text-slate-400 hover:text-red-500"><X size={14} /></button>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="text-[9px] text-slate-400">Type</label><select value={cell.type} onChange={(e) => { const newType = e.target.value as any; const updates: any = { type: newType }; if (newType === 'select' && (!cell.options || cell.options.length === 0)) { updates.options = ['Option 1', 'Option 2']; } updateCell(cell.id, updates); }} className="w-full px-1 py-1 text-xs border border-slate-200 rounded bg-white text-slate-700"><option value="text">Text</option><option value="number">Number</option><option value="checkbox">Checkbox</option><option value="radio">Radio</option><option value="select">Select</option><option value="date">Date</option></select></div>
-                                            <div><label className="text-[9px] text-slate-400">Width %</label><input type="number" value={Math.round(cell.width)} onChange={(e) => updateCell(cell.id, { width: Number(e.target.value) })} className="w-full px-1 py-1 text-xs border border-slate-200 rounded bg-white text-slate-700" /></div>
-                                            <div><label className="text-[9px] text-slate-400">X %</label><input type="number" value={Math.round(cell.x)} onChange={(e) => updateCell(cell.id, { x: Number(e.target.value) })} className="w-full px-1 py-1 text-xs border border-slate-200 rounded bg-white text-slate-700" /></div>
-                                            <div><label className="text-[9px] text-slate-400">Height %</label><input type="number" value={Math.round(cell.height)} onChange={(e) => updateCell(cell.id, { height: Number(e.target.value) })} className="w-full px-1 py-1 text-xs border border-slate-200 rounded bg-white text-slate-700" /></div>
-                                        </div>
-                                        {cell.type === 'select' && (
-                                            <div className="space-y-1 mt-2">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[9px] text-slate-400">Options</label>
-                                                    <button onClick={() => updateCell(cell.id, { options: [...(cell.options || []), ''] })} className="text-[9px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"><Plus size={10} /> Add Option</button>
-                                                </div>
-                                                <div className="space-y-1 max-h-24 overflow-y-auto">
-                                                    {(cell.options || []).map((opt, optIdx) => (
-                                                        <div key={optIdx} className="flex items-center gap-1">
-                                                            <input type="text" value={opt} onChange={(e) => updateCell(cell.id, { options: (cell.options || []).map((o, i) => i === optIdx ? e.target.value : o) })} placeholder={`Option ${optIdx + 1}`} className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs" />
-                                                            <button onClick={() => updateCell(cell.id, { options: (cell.options || []).filter((_, i) => i !== optIdx) })} className="text-slate-400 hover:text-red-500"><X size={12} /></button>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                            <p className="text-[10px] text-slate-500 bg-blue-50 p-2 rounded border border-blue-100">
+                                Row cells are defined by the parent table's columns. Edit columns in the table settings.
+                            </p>
+                            {(() => {
+                                const parentTable = fields.find(f => f.id === selectedField.parentFieldId);
+                                if (parentTable?.columns && parentTable.columns.length > 0) {
+                                    return (
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-medium text-slate-500">Columns from parent table:</label>
+                                            <div className="flex flex-wrap gap-1">
+                                                {parentTable.columns.map(col => (
+                                                    <span key={col.id} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
+                                                        {col.name} ({col.type})
+                                                    </span>
+                                                ))}
                                             </div>
-                                        )}
-                                        {cell.type === 'date' && (
-                                            <div className="space-y-1 mt-2">
-                                                <label className="text-[9px] text-slate-400">Date Format</label>
-                                                <select value={cell.dateFormat || 'DD/MM/YYYY'} onChange={(e) => updateCell(cell.id, { dateFormat: e.target.value })} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs">
-                                                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                                                    <option value="MM/YYYY">MM/YYYY</option>
-                                                    <option value="YYYY">YYYY</option>
-                                                </select>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
                     )}
 

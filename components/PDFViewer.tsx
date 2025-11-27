@@ -429,12 +429,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
      if (mode !== AppMode.EDITOR) return null;
      const isSelected = selectedFieldId === field.id;
      const isHidden = field.hidden;
+     // Get columns from parent table
+     const parentTable = fields.find(f => f.id === field.parentFieldId);
+     const columns = parentTable?.columns || [];
+     let currentX = 0;
      return (
          <div key={field.id} onPointerDown={(e) => handleItemPointerDown(e, field, null)} onClick={(e) => e.stopPropagation()} style={{ left: `${field.x}%`, top: `${field.y}%`, width: `${field.width}%`, height: `${field.height}%` }} className={`absolute z-20 ${isHidden ? '' : 'border border-dashed border-purple-400 bg-purple-50/10'} cursor-move group ${isSelected ? 'ring-1 ring-purple-500' : ''}`}>
              <div className="absolute -top-5 left-0 text-[10px] bg-purple-500 text-white px-1 rounded flex items-center gap-1 shadow-sm pointer-events-none">Row {field.rowIndex !== undefined ? field.rowIndex + 1 : '?'} {isHidden && '(Hidden)'}</div>
-             {!isHidden && (field.cells || []).map((cell, idx) => (
-                 <div key={cell.id} className={`absolute border-r border-slate-600/30 flex items-center justify-center text-[9px] font-mono text-slate-500`} style={{ left: `${cell.x}%`, top: `${cell.y}%`, width: `${cell.width}%`, height: `${cell.height}%` }}>{cell.header || `C${idx + 1}`}</div>
-             ))}
+             {!isHidden && columns.map((col, idx) => {
+                 const cellX = currentX;
+                 currentX += col.width;
+                 return (
+                     <div key={col.id} className="absolute border-r border-slate-600/30 flex items-center justify-center text-[9px] font-mono text-slate-500" style={{ left: `${cellX}%`, top: '0%', width: `${col.width}%`, height: '100%' }}>{col.name || `C${idx + 1}`}</div>
+                 );
+             })}
              {isSelected && (
                 <>
                     {!isHidden && resizeHandles.map(({ h, c, pos }) => (<div key={h} onPointerDown={(e) => handleResizeStart(e, field, null, h)} className={`absolute w-2.5 h-2.5 bg-white border border-purple-600 z-30 shadow-sm ${c} ${pos}`} />))}
@@ -447,6 +455,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   const renderTable = (field: FormField) => {
     const customRows = fields.filter(f => f.parentFieldId === field.id && f.type === 'table-row');
+    const columns = field.columns || [];
     
     // In FILL mode with custom rows, make cells clickable for editing
     if (customRows.length > 0 && mode === AppMode.FILL) {
@@ -457,26 +466,29 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               <React.Fragment key={field.id}>
                 {visibleRows.map((row) => {
                     const rIdx = row.rowIndex || 0;
+                    let currentX = 0;
                     return (
                         <div key={row.id} className="absolute w-full h-full pointer-events-none">
-                            {(row.cells || []).map((cell, cIdx) => {
+                            {columns.map((col, cIdx) => {
                                 const tableData = getTableData(field);
                                 const cellValue = tableData[rIdx]?.[cIdx] || '';
+                                const cellX = currentX;
+                                currentX += col.width;
                                 return (
                                     <div 
-                                        key={cell.id} 
+                                        key={col.id} 
                                         className="absolute z-10 pointer-events-auto cursor-pointer" 
                                         style={{ 
-                                            left: `${row.x + (cell.x / 100 * row.width)}%`, 
-                                            top: `${row.y + (cell.y / 100 * row.height)}%`, 
-                                            width: `${(cell.width / 100 * row.width)}%`, 
-                                            height: `${(cell.height / 100 * row.height)}%` 
+                                            left: `${row.x + (cellX / 100 * row.width)}%`, 
+                                            top: `${row.y}%`, 
+                                            width: `${(col.width / 100 * row.width)}%`, 
+                                            height: `${row.height}%` 
                                         }}
                                         onClick={() => {
-                                            if (cell.type === 'checkbox') {
+                                            if (col.type === 'checkbox') {
                                                 updateTableCell(field, rIdx, cIdx, cellValue === 'true' ? 'false' : 'true');
                                             } else {
-                                                const newValue = prompt(`Enter value for ${cell.header || `Cell ${cIdx + 1}`}:`, cellValue);
+                                                const newValue = prompt(`Enter value for ${col.name || `Cell ${cIdx + 1}`}:`, cellValue);
                                                 if (newValue !== null) {
                                                     updateTableCell(field, rIdx, cIdx, newValue);
                                                 }

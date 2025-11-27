@@ -19,27 +19,39 @@ export interface FieldOption {
   value: string; // The value this option represents (e.g., "Yes", "Male")
 }
 
+// Column type excludes 'table' and 'table-row' - all other field types are allowed
+export type TableColumnType = Exclude<FieldType, 'table' | 'table-row'>;
+
 export interface TableColumn {
   id: string;
-  header: string;
-  type: 'text' | 'number' | 'checkbox' | 'radio' | 'select' | 'date';
-  width: number; // Percentage relative to the table width
-  options?: string[]; // Options for select/radio types
-  dateFormat?: string; // Format for date type (e.g., DD/MM/YYYY)
-  spacing?: number; // Spacing/gap around the column cells in pixels
-}
-
-export interface TableCell {
-    id: string;
-    type: 'text' | 'number' | 'checkbox' | 'radio' | 'select' | 'date';
-    header?: string; // The header name from the column definition
-    x: number; // % relative to Row
-    y: number; // % relative to Row
-    width: number; // % relative to Row
-    height: number; // % relative to Row
-    options?: string[]; // Options for select/radio types
-    dateFormat?: string; // Format for date type
-    spacing?: number; // Spacing/gap around the cell in pixels
+  name: string; // Column header name
+  type: TableColumnType;
+  width: number; // Percentage relative to the row width (all columns should sum to 100)
+  
+  // Text Styling (inherited from field properties)
+  fontSize?: number;
+  letterSpacing?: number;
+  textAlign?: 'left' | 'center' | 'right';
+  fontFamily?: string;
+  color?: string;
+  
+  // Visual Styling
+  backgroundColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderRadius?: number;
+  padding?: number;
+  opacity?: number;
+  
+  // Type-specific properties
+  maxLength?: number; // For text/number
+  dateFormat?: string; // For date type
+  dateHideSeparator?: boolean; // For date type
+  options?: FieldOption[]; // For radio/checkbox/select
+  markStyle?: MarkStyle; // For radio/checkbox
+  
+  // Validation
+  validationRules?: ValidationRule[];
 }
 
 export interface FieldSection {
@@ -93,9 +105,8 @@ export interface FormField {
   maxRows?: number;   // The capacity/limit of the table (defines row height)
   filledRows?: number; // The current number of rows visible/active in Fill Mode
   showHeaders?: boolean;
-  columns?: TableColumn[];
-  cells?: TableCell[]; // For custom table-row templates
-  rowIndex?: number; // For explicit table rows: which data index (0, 1, 2) does this visual row represent?
+  columns?: TableColumn[]; // Column definitions with full field properties
+  rowIndex?: number; // For table-row: which data index (0, 1, 2) does this visual row represent?
   cellPadding?: number; // Padding inside table cells
   cellGap?: number; // Margin/Gap between table cells
 

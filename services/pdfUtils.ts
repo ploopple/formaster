@@ -133,16 +133,19 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
         if (customRows.length > 0) {
             const sortedRows = customRows.sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0));
             const rowsToBurn = sortedRows.slice(0, field.filledRows || 1);
+            const columns = field.columns || [];
 
             for (const row of rowsToBurn) {
                 const rIdx = row.rowIndex || 0;
-                (row.cells || []).forEach((cell, cIdx) => {
+                let currentX = 0;
+                columns.forEach((col, cIdx) => {
                     const cellValue = data[rIdx]?.[cIdx];
                     
-                    const uiCellLeft = row.x + (cell.x / 100 * row.width);
-                    const uiCellTop = row.y + (cell.y / 100 * row.height);
-                    const uiCellWidth = (cell.width / 100 * row.width);
-                    const uiCellHeight = (cell.height / 100 * row.height);
+                    const uiCellLeft = row.x + (currentX / 100 * row.width);
+                    const uiCellTop = row.y;
+                    const uiCellWidth = (col.width / 100 * row.width);
+                    const uiCellHeight = row.height;
+                    currentX += col.width;
 
                     const pdfX = originX + (uiCellLeft / 100) * width;
                     const pdfH = (uiCellHeight / 100) * height;
@@ -150,20 +153,49 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                     const pdfY = originY + height - ((uiCellTop / 100) * height) - pdfH;
                     
                     if (cellValue) {
-                        // Centered Vertical Alignment matches Flexbox 'center'
-                        const textHeight = fontSize * 0.7; // Cap height approx
+                        const colFontSize = col.fontSize || fontSize;
+                        const textHeight = colFontSize * 0.7;
                         const textY = pdfY + (pdfH / 2) - (textHeight / 2); 
 
-                        if (cell.type === 'checkbox') {
-                            if (cellValue === 'true') {
+                        if (col.type === 'checkbox' || col.type === 'radio') {
+                            if (cellValue === 'true' || (col.options?.some(o => o.value === cellValue))) {
                                 const centerX = pdfX + (pdfW / 2);
                                 const centerY = pdfY + (pdfH / 2);
-                                drawMark(page, centerX, centerY, pdfW, pdfH, field.markStyle || 'checkmark');
+                                drawMark(page, centerX, centerY, pdfW, pdfH, col.markStyle || field.markStyle || 'checkmark');
                             }
                         } else {
-                            const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
-                            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
-                            page.drawText(cellValue, { x: pdfX + 3, y: textY, size: fontSize, font: cellFont, color: textColor });
+                            let displayValue = cellValue;
+                            // Format date values from YYYY-MM-DD to user's format
+                            if (col.type === 'date' && cellValue.includes('-')) {
+                                const [y, m, d] = cellValue.split('-');
+                                const format = col.dateFormat || 'DD/MM/YYYY';
+                                if (format === 'DD/MM/YYYY') {
+                                    displayValue = `${d}/${m}/${y}`;
+                                } else if (format === 'MM/YYYY') {
+                                    displayValue = `${m}/${y}`;
+                                } else if (format === 'YYYY') {
+                                    displayValue = y;
+                                }
+                                // Remove separators if dateHideSeparator is true
+                                if (col.dateHideSeparator) {
+                                    displayValue = displayValue.replace(/\//g, '');
+                                }
+                            }
+                            const cellFont = (hebrewFont && containsHebrew(displayValue)) ? hebrewFont : font;
+                            const textColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
+                            const textX = pdfX + (col.padding || 3);
+                            
+                            // Apply letter spacing if set
+                            if (col.letterSpacing && col.letterSpacing > 0) {
+                                let currentX = textX;
+                                for (const char of displayValue) {
+                                    page.drawText(char, { x: currentX, y: textY, size: colFontSize, font: cellFont, color: textColor });
+                                    const charWidth = cellFont.widthOfTextAtSize(char, colFontSize);
+                                    currentX += charWidth + col.letterSpacing;
+                                }
+                            } else {
+                                page.drawText(displayValue, { x: textX, y: textY, size: colFontSize, font: cellFont, color: textColor });
+                            }
                         }
                     }
                 });
@@ -197,14 +229,43 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         if (col.type === 'checkbox' || col.type === 'radio') {
                             if (cellValue === 'true') {
                                  const centerX = currentColX + (colWidthAbs/2);
-                                 drawMark(page, centerX, cellCenterY, colWidthAbs, rowHeightAbs, field.markStyle || 'checkmark');
+                                 drawMark(page, centerX, cellCenterY, colWidthAbs, rowHeightAbs, col.markStyle || field.markStyle || 'checkmark');
                             }
                         } else {
-                            const textHeight = fontSize * 0.7;
+                            let displayValue = cellValue;
+                            // Format date values from YYYY-MM-DD to user's format
+                            if (col.type === 'date' && cellValue.includes('-')) {
+                                const [y, m, d] = cellValue.split('-');
+                                const format = col.dateFormat || 'DD/MM/YYYY';
+                                if (format === 'DD/MM/YYYY') {
+                                    displayValue = `${d}/${m}/${y}`;
+                                } else if (format === 'MM/YYYY') {
+                                    displayValue = `${m}/${y}`;
+                                } else if (format === 'YYYY') {
+                                    displayValue = y;
+                                }
+                                if (col.dateHideSeparator) {
+                                    displayValue = displayValue.replace(/\//g, '');
+                                }
+                            }
+                            const colFontSize = col.fontSize || fontSize;
+                            const textHeight = colFontSize * 0.7;
                             const textY = cellCenterY - (textHeight / 2);
-                            const cellFont = (hebrewFont && containsHebrew(cellValue)) ? hebrewFont : font;
-                            const textColor = hexToRgb(field.color) || rgb(0, 0, 0);
-                            page.drawText(cellValue, { x: currentColX + cellPadding + 1, y: textY, size: fontSize, font: cellFont, color: textColor, maxWidth: colWidthAbs - (cellPadding * 2) });
+                            const cellFont = (hebrewFont && containsHebrew(displayValue)) ? hebrewFont : font;
+                            const textColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
+                            const textX = currentColX + cellPadding + 1;
+                            
+                            // Apply letter spacing if set
+                            if (col.letterSpacing && col.letterSpacing > 0) {
+                                let charX = textX;
+                                for (const char of displayValue) {
+                                    page.drawText(char, { x: charX, y: textY, size: colFontSize, font: cellFont, color: textColor });
+                                    const charWidth = cellFont.widthOfTextAtSize(char, colFontSize);
+                                    charX += charWidth + col.letterSpacing;
+                                }
+                            } else {
+                                page.drawText(displayValue, { x: textX, y: textY, size: colFontSize, font: cellFont, color: textColor, maxWidth: colWidthAbs - (cellPadding * 2) });
+                            }
                         }
                     }
                     currentColX += colWidthAbs;

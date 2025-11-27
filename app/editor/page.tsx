@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AppMode, FormField, TableCell, FieldSection } from '../../types';
+import { AppMode, FormField, FieldSection } from '../../types';
 import Sidebar from '../../components/Sidebar';
 
 const PDFViewer = dynamic(() => import('../../components/PDFViewer'), { ssr: false });
@@ -128,7 +128,7 @@ function EditorContent() {
     setFields((prev) => {
       const targetField = prev.find(f => f.id === id);
       if (!targetField) return prev;
-      const syncKeys: (keyof FormField)[] = ['name', 'value', 'type', 'previewText', 'fontSize', 'letterSpacing', 'maxLength', 'options', 'maxRows', 'filledRows', 'showHeaders', 'columns', 'cells'];
+      const syncKeys: (keyof FormField)[] = ['name', 'value', 'type', 'previewText', 'fontSize', 'letterSpacing', 'maxLength', 'options', 'maxRows', 'filledRows', 'showHeaders', 'columns'];
       const shouldSync = targetField.groupId && Object.keys(updates).some(k => syncKeys.includes(k as keyof FormField));
       return prev.map((f) => {
         if (f.id === id) return { ...f, ...updates };
@@ -201,24 +201,23 @@ function EditorContent() {
     const lastRow = existingRows[existingRows.length - 1];
     let newY = lastRow ? lastRow.y + lastRow.height : (tableField.showHeaders ? tableField.y + 4 : tableField.y);
     if (newY > 95) newY = tableField.y;
-    let initialCells: TableCell[] = [];
-    if (tableField.columns && tableField.columns.length > 0) {
-      let currentX = 0;
-      initialCells = tableField.columns.map(col => {
-        const cell: TableCell = { id: crypto.randomUUID(), type: (col.type === 'radio' ? 'checkbox' : col.type) as 'text' | 'number' | 'checkbox', header: col.header, x: currentX, y: 0, width: col.width, height: 100 };
-        currentX += col.width;
-        return cell;
-      });
-    } else if (lastRow?.cells) {
-      initialCells = lastRow.cells.map(c => ({...c, id: crypto.randomUUID()}));
-    } else {
-      initialCells = [
-        { id: crypto.randomUUID(), type: 'text', x: 0, y: 0, width: 33, height: 100 },
-        { id: crypto.randomUUID(), type: 'text', x: 33, y: 0, width: 33, height: 100 },
-        { id: crypto.randomUUID(), type: 'text', x: 66, y: 0, width: 34, height: 100 }
-      ];
-    }
-    const newRow: FormField = { id: crypto.randomUUID(), page: tableField.page, x: tableField.x, y: newY, width: tableField.width, height: 5, name: `${tableField.name} Row ${nextIndex + 1}`, value: '', previewText: '', type: 'table-row', fontSize: 12, letterSpacing: 0, parentFieldId: tableId, rowIndex: nextIndex, cells: initialCells };
+    // Row only has position - cells are derived from parent table's columns
+    const newRow: FormField = { 
+      id: crypto.randomUUID(), 
+      page: tableField.page, 
+      x: tableField.x, 
+      y: newY, 
+      width: tableField.width, 
+      height: 5, 
+      name: `${tableField.name} Row ${nextIndex + 1}`, 
+      value: '', 
+      previewText: '', 
+      type: 'table-row', 
+      fontSize: 12, 
+      letterSpacing: 0, 
+      parentFieldId: tableId, 
+      rowIndex: nextIndex 
+    };
     setFields(prev => [...prev, newRow]);
     setSelectedFieldId(newRow.id);
   }, [fields, setFields]);
