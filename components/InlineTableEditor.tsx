@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
-import { FormField, TableColumn } from '../types';
+import { FormField, TableColumn, FieldOption } from '../types';
 import { Plus, Minus, Check, ChevronDown } from 'lucide-react';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface InlineTableEditorProps {
   field: FormField;
@@ -9,8 +12,32 @@ interface InlineTableEditorProps {
 }
 
 const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateField, customRows = [] }) => {
+  const { t, language } = useI18n();
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
+
+  // Helper to get translated column name based on current language
+  const getColumnName = (col: TableColumn) => {
+    switch (language) {
+      case 'he': return col.nameHe || col.name;
+      case 'ru': return col.nameRu || col.name;
+      case 'ar': return col.nameAr || col.name;
+      case 'am': return col.nameAm || col.name;
+      default: return col.name;
+    }
+  };
+
+  // Helper to get translated option label based on current language
+  const getOptionLabel = (opt: FieldOption) => {
+    const defaultLabel = opt.labelEn || opt.value;
+    switch (language) {
+      case 'he': return opt.labelHe || defaultLabel;
+      case 'ru': return opt.labelRu || defaultLabel;
+      case 'ar': return opt.labelAr || defaultLabel;
+      case 'am': return opt.labelAm || defaultLabel;
+      default: return defaultLabel;
+    }
+  };
 
   const getTableData = (): string[][] => {
     try {
@@ -73,7 +100,7 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
           {(col.options || []).map((opt) => (
             <button key={opt.id} onClick={() => updateCell(rowIdx, colIdx, opt.value)}
               className={`px-2 py-0.5 text-[10px] rounded border transition-all ${value === opt.value ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300 hover:border-blue-400'}`}>
-              {opt.value}
+              {getOptionLabel(opt)}
             </button>
           ))}
         </div>
@@ -85,8 +112,8 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
         <div className="relative">
           <select value={value} onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
             className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none pr-8">
-            <option value="">Select...</option>
-            {(col.options || []).map((opt) => (<option key={opt.id} value={opt.value}>{opt.value}</option>))}
+            <option value="">{t.common.select}</option>
+            {(col.options || []).map((opt) => (<option key={opt.id} value={opt.value}>{getOptionLabel(opt)}</option>))}
           </select>
           <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
@@ -115,7 +142,7 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
         onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
         onFocus={() => setEditingCell({ row: rowIdx, col: colIdx })}
         onBlur={() => setEditingCell(null)}
-        placeholder={`Enter ${col.name || 'value'}...`}
+        placeholder={`Enter ${getColumnName(col) || 'value'}...`}
         maxLength={col.maxLength}
         className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-colors" />
     );
@@ -147,7 +174,7 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
                     const isEditing = editingCell?.row === rIdx && editingCell?.col === cIdx;
                     return (
                       <div key={col.id} className="space-y-1" style={{ padding: col.padding ? `${col.padding}px` : undefined }}>
-                        <label className="text-xs font-medium text-slate-500">{col.name || `Field ${cIdx + 1}`}</label>
+                        <label className="text-xs font-medium text-slate-500">{getColumnName(col) || `Field ${cIdx + 1}`}</label>
                         {renderCellInput(col, cellValue, rIdx, cIdx, isEditing)}
                       </div>
                     );
@@ -188,7 +215,7 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
           <div className="flex bg-slate-100 border-b border-slate-200">
             {columns.map((col) => (
               <div key={col.id} className="px-3 py-2 text-xs font-semibold text-slate-600 border-r border-slate-200 last:border-r-0" style={{ width: `${col.width}%` }}>
-                {col.name}
+                {getColumnName(col)}
               </div>
             ))}
           </div>

@@ -1,67 +1,67 @@
+'use client';
+
 import React from 'react';
 import { X, Keyboard } from 'lucide-react';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface KeyboardShortcutsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface ShortcutGroup {
-  title: string;
-  shortcuts: { keys: string[]; description: string }[];
-}
-
-const shortcutGroups: ShortcutGroup[] = [
-  {
-    title: 'General',
-    shortcuts: [
-      { keys: ['⌘/Ctrl', 'Z'], description: 'Undo' },
-      { keys: ['⌘/Ctrl', 'Shift', 'Z'], description: 'Redo' },
-      { keys: ['⌘/Ctrl', 'Y'], description: 'Redo (alternative)' },
-      { keys: ['?'], description: 'Toggle keyboard shortcuts' },
-    ],
-  },
-  {
-    title: 'Field Selection',
-    shortcuts: [
-      { keys: ['Escape'], description: 'Deselect field' },
-      { keys: ['Delete/Backspace'], description: 'Delete selected field' },
-      { keys: ['⌘/Ctrl', 'D'], description: 'Duplicate field' },
-    ],
-  },
-  {
-    title: 'Field Movement',
-    shortcuts: [
-      { keys: ['↑'], description: 'Move field up' },
-      { keys: ['↓'], description: 'Move field down' },
-      { keys: ['←'], description: 'Move field left' },
-      { keys: ['→'], description: 'Move field right' },
-      { keys: ['Shift', '↑↓←→'], description: 'Move field faster (5x)' },
-    ],
-  },
-  {
-    title: 'Field Resizing',
-    shortcuts: [
-      { keys: ['⌘/Ctrl', '↑'], description: 'Decrease height' },
-      { keys: ['⌘/Ctrl', '↓'], description: 'Increase height' },
-      { keys: ['⌘/Ctrl', '←'], description: 'Decrease width' },
-      { keys: ['⌘/Ctrl', '→'], description: 'Increase width' },
-      { keys: ['Shift', '⌘/Ctrl', '↑↓←→'], description: 'Resize faster (5x)' },
-    ],
-  },
-];
-
 const KeyboardShortcutsPanel: React.FC<KeyboardShortcutsPanelProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
+
+  const shortcutGroups = [
+    {
+      title: t.shortcuts.groups.general,
+      shortcuts: [
+        { keys: ['⌘/Ctrl', 'Z'], description: t.shortcuts.actions.undo },
+        { keys: ['⌘/Ctrl', 'Shift', 'Z'], description: t.shortcuts.actions.redo },
+        { keys: ['⌘/Ctrl', 'Y'], description: t.shortcuts.actions.redoAlt },
+        { keys: ['?'], description: t.shortcuts.actions.toggleShortcuts },
+      ],
+    },
+    {
+      title: t.shortcuts.groups.fieldSelection,
+      shortcuts: [
+        { keys: ['Escape'], description: t.shortcuts.actions.deselectField },
+        { keys: ['Delete/Backspace'], description: t.shortcuts.actions.deleteField },
+        { keys: ['⌘/Ctrl', 'D'], description: t.shortcuts.actions.duplicateField },
+      ],
+    },
+    {
+      title: t.shortcuts.groups.fieldMovement,
+      shortcuts: [
+        { keys: ['↑'], description: t.shortcuts.actions.moveUp },
+        { keys: ['↓'], description: t.shortcuts.actions.moveDown },
+        { keys: ['←'], description: t.shortcuts.actions.moveLeft },
+        { keys: ['→'], description: t.shortcuts.actions.moveRight },
+        { keys: ['Shift', '↑↓←→'], description: t.shortcuts.actions.moveFaster },
+      ],
+    },
+    {
+      title: t.shortcuts.groups.fieldResizing,
+      shortcuts: [
+        { keys: ['⌘/Ctrl', '↑'], description: t.shortcuts.actions.decreaseHeight },
+        { keys: ['⌘/Ctrl', '↓'], description: t.shortcuts.actions.increaseHeight },
+        { keys: ['⌘/Ctrl', '←'], description: t.shortcuts.actions.decreaseWidth },
+        { keys: ['⌘/Ctrl', '→'], description: t.shortcuts.actions.increaseWidth },
+        { keys: ['Shift', '⌘/Ctrl', '↑↓←→'], description: t.shortcuts.actions.resizeFaster },
+      ],
+    },
+  ];
+
   if (!isOpen) return null;
 
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-50 w-full max-w-lg max-h-[80vh] overflow-hidden">
+      <div className="fixed top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-50 w-full max-w-lg max-h-[80vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2">
             <Keyboard size={20} className="text-blue-600" />
-            <h2 className="font-semibold text-slate-800">Keyboard Shortcuts</h2>
+            <h2 className="font-semibold text-slate-800">{t.shortcuts.title}</h2>
           </div>
           <button
             onClick={onClose}
@@ -108,7 +108,7 @@ const KeyboardShortcutsPanel: React.FC<KeyboardShortcutsPanelProps> = ({ isOpen,
           
           <div className="mt-6 pt-4 border-t border-slate-200">
             <p className="text-xs text-slate-400 text-center">
-              Press <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">?</kbd> anytime to toggle this panel
+              {t.shortcuts.pressToToggle.split('?')[0]}<kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono">?</kbd>{t.shortcuts.pressToToggle.split('?')[1] || ''}
             </p>
           </div>
         </div>

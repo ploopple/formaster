@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement, FieldPosition } from '../types';
 import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle } from 'lucide-react';
@@ -5,6 +7,7 @@ import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
 import TableBuilder from './TableBuilder';
 import InlineTableEditor from './InlineTableEditor';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface SidebarProps {
   mode: AppMode;
@@ -63,12 +66,49 @@ const Sidebar: React.FC<SidebarProps> = ({
   onFieldBlur,
   onSyncCompositeChildren
 }) => {
+  const { t, isRTL, language } = useI18n();
   const [draggedFieldId, setDraggedFieldId] = React.useState<string | null>(null);
   const [dragOverFieldId, setDragOverFieldId] = React.useState<string | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = React.useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = React.useState<Set<string>>(new Set());
   const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null);
   const [newSectionName, setNewSectionName] = React.useState('');
+
+  // Helper to get translated field name
+  // Helper to get translated field name based on current language
+  const getFieldName = (field: FormField) => {
+    switch (language) {
+      case 'he': return field.nameHe || field.name;
+      case 'ru': return field.nameRu || field.name;
+      case 'ar': return field.nameAr || field.name;
+      case 'am': return field.nameAm || field.name;
+      default: return field.name;
+    }
+  };
+
+  // Helper to get translated option label based on current language
+  // The label is what's displayed to users, value is what's stored
+  const getOptionLabel = (opt: FieldOption) => {
+    const defaultLabel = opt.labelEn || opt.value;
+    switch (language) {
+      case 'he': return opt.labelHe || defaultLabel;
+      case 'ru': return opt.labelRu || defaultLabel;
+      case 'ar': return opt.labelAr || defaultLabel;
+      case 'am': return opt.labelAm || defaultLabel;
+      default: return defaultLabel;
+    }
+  };
+
+  // Helper to get translated section name based on current language
+  const getSectionName = (section: FieldSection) => {
+    switch (language) {
+      case 'he': return section.nameHe || section.name;
+      case 'ru': return section.nameRu || section.name;
+      case 'ar': return section.nameAr || section.name;
+      case 'am': return section.nameAm || section.name;
+      default: return section.name;
+    }
+  };
   const [showNewSectionInput, setShowNewSectionInput] = React.useState(false);
   const [currentFillStep, setCurrentFillStep] = React.useState(0);
   const [sidebarWidth, setSidebarWidth] = React.useState(320);
@@ -179,6 +219,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   const updateOptionValue = (optId: string, newValue: string) => {
       if (!selectedField || !selectedField.options) return;
       onUpdateField(selectedField.id, { options: selectedField.options.map(o => o.id === optId ? { ...o, value: newValue } : o) });
+  };
+
+  const updateOptionLabelTranslation = (optId: string, lang: 'en' | 'he' | 'ru' | 'ar' | 'am', labelValue: string) => {
+      if (!selectedField || !selectedField.options) return;
+      const key = `label${lang.charAt(0).toUpperCase() + lang.slice(1)}` as 'labelEn' | 'labelHe' | 'labelRu' | 'labelAr' | 'labelAm';
+      onUpdateField(selectedField.id, { 
+        options: selectedField.options.map(o => o.id === optId ? { ...o, [key]: labelValue || undefined } : o) 
+      });
   };
 
   const deleteOption = (optId: string) => {
@@ -350,10 +398,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div>
             <h2 className="font-semibold text-slate-800 flex items-center gap-2">
             {mode === AppMode.EDITOR ? <Edit2 size={18} /> : <Type size={18} />}
-            {mode === AppMode.EDITOR ? 'Editor Mode' : 'Fill Form'}
+            {mode === AppMode.EDITOR ? t.sidebar.editorMode : t.sidebar.fillForm}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-            {mode === AppMode.EDITOR ? 'Configure fields.' : 'Fill information.'}
+            {mode === AppMode.EDITOR ? t.sidebar.configureFields : t.sidebar.fillInformation}
             </p>
         </div>
         <button onClick={onClose} className="md:hidden text-slate-500 hover:bg-slate-200 p-2 rounded-full"><X size={24} /></button>
@@ -365,27 +413,83 @@ const Sidebar: React.FC<SidebarProps> = ({
             {selectedField ? (
               <div className="animate-in slide-in-from-right-4 fade-in duration-200">
                 <button onClick={() => onSelectField(null)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium mb-6 transition-colors group">
-                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
+                    <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> {t.sidebar.back}
                 </button>
 
                 <div className="space-y-5">
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Name</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.name}</label>
                         <input type="text" value={selectedField.name} onChange={(e) => onUpdateField(selectedField.id, { name: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm" autoFocus />
-                        {selectedField.groupId && <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium"><MapPin size={10} /><span>Linked</span></div>}
+                        {selectedField.groupId && <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium"><MapPin size={10} /><span>{t.sidebar.linked}</span></div>}
+                    </div>
+
+                    {/* Translations Section */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">🌐 {t.sidebar.translations}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400">{t.sidebar.translationsHelp}</p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {/* Hebrew */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">עברית (Hebrew)</label>
+                                <input 
+                                    type="text" 
+                                    value={selectedField.nameHe || ''} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { nameHe: e.target.value || undefined })} 
+                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
+                                    dir="rtl"
+                                    placeholder="שם השדה"
+                                />
+                            </div>
+                            {/* Russian */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Русский (Russian)</label>
+                                <input 
+                                    type="text" 
+                                    value={selectedField.nameRu || ''} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { nameRu: e.target.value || undefined })} 
+                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
+                                    placeholder="Название поля"
+                                />
+                            </div>
+                            {/* Arabic */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">العربية (Arabic)</label>
+                                <input 
+                                    type="text" 
+                                    value={selectedField.nameAr || ''} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { nameAr: e.target.value || undefined })} 
+                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
+                                    dir="rtl"
+                                    placeholder="اسم الحقل"
+                                />
+                            </div>
+                            {/* Amharic */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase">አማርኛ (Amharic)</label>
+                                <input 
+                                    type="text" 
+                                    value={selectedField.nameAm || ''} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { nameAm: e.target.value || undefined })} 
+                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
+                                    placeholder="የመስክ ስም"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {sections.length > 0 && (
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Section</label>
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.section}</label>
                             <select 
                                 value={selectedField.sectionId || ''} 
                                 onChange={(e) => onUpdateField(selectedField.id, { sectionId: e.target.value || undefined })}
                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm"
                             >
-                                <option value="">No Section</option>
+                                <option value="">{t.sidebar.noSection}</option>
                                 {sections.sort((a, b) => a.order - b.order).map(section => (
-                                    <option key={section.id} value={section.id}>{section.name}</option>
+                                    <option key={section.id} value={section.id}>{getSectionName(section)}</option>
                                 ))}
                             </select>
                         </div>
@@ -393,18 +497,18 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {selectedField.type !== 'table-row' && (
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Type</label>
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.type}</label>
                             <select value={selectedField.type} onChange={(e) => handleTypeChange(e.target.value as FieldType)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
-                                <option value="text">Text</option>
-                                <option value="textarea">Text Area</option>
-                                <option value="number">Number</option>
-                                <option value="date">Date</option>
-                                <option value="signature">Signature</option>
-                                <option value="select">Select</option>
-                                <option value="radio">Radio</option>
-                                <option value="checkbox">Checkbox</option>
-                                <option value="table">Table</option>
-                                <option value="composite">Composite Text</option>
+                                <option value="text">{t.sidebar.fieldTypes.text}</option>
+                                <option value="textarea">{t.sidebar.fieldTypes.textarea}</option>
+                                <option value="number">{t.sidebar.fieldTypes.number}</option>
+                                <option value="date">{t.sidebar.fieldTypes.date}</option>
+                                <option value="signature">{t.sidebar.fieldTypes.signature}</option>
+                                <option value="select">{t.sidebar.fieldTypes.select}</option>
+                                <option value="radio">{t.sidebar.fieldTypes.radio}</option>
+                                <option value="checkbox">{t.sidebar.fieldTypes.checkbox}</option>
+                                <option value="table">{t.sidebar.fieldTypes.table}</option>
+                                <option value="composite">{t.sidebar.fieldTypes.composite}</option>
                             </select>
                         </div>
                     )}
@@ -412,7 +516,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {selectedField.type === 'date' && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Date Format</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.dateFormat}</label>
                                 <select 
                                     value={selectedField.dateFormat || 'DD/MM/YYYY'} 
                                     onChange={(e) => onUpdateField(selectedField.id, { dateFormat: e.target.value, previewText: e.target.value })} 
@@ -430,7 +534,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     onChange={(e) => onUpdateField(selectedField.id, { dateHideSeparator: e.target.checked })} 
                                     className="rounded border-slate-300" 
                                 />
-                                Hide "/" separator in PDF
+                                {t.sidebar.hideSeparator}
                             </label>
                         </div>
                     )}
@@ -440,10 +544,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                             <div className="flex items-center gap-2 mb-1">
                                 <FileText size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Composite Template</h3>
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.compositeTemplate}</h3>
                             </div>
                             <p className="text-[10px] text-slate-500 leading-relaxed">
-                                Use <code className="bg-slate-100 px-1 rounded">{'{text:name}'}</code> for text inputs, <code className="bg-slate-100 px-1 rounded">{'{date:name}'}</code> for dates, <code className="bg-slate-100 px-1 rounded">{'{number:name}'}</code> for numbers. Child fields will be created that you can position on the PDF.
+                                {t.sidebar.compositeHelp}
                             </p>
                             <div className="space-y-1">
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase">Template</label>
@@ -507,49 +611,49 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                              <div className="flex items-center gap-2 mb-1">
                                 <Palette size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Visual Styling</h3>
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.visualStyling}</h3>
                              </div>
                              
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Text Color</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.textColor}</label>
                                     <div className="flex items-center gap-2">
                                         <input type="color" value={selectedField.color || '#000000'} onChange={(e) => onUpdateField(selectedField.id, { color: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
-                                        <button onClick={() => onUpdateField(selectedField.id, { color: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">Clear</button>
+                                        <button onClick={() => onUpdateField(selectedField.id, { color: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">{t.common.clear}</button>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Background</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.background}</label>
                                     <div className="flex items-center gap-2">
                                         <input type="color" value={selectedField.backgroundColor || '#ffffff'} onChange={(e) => onUpdateField(selectedField.id, { backgroundColor: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
-                                        <button onClick={() => onUpdateField(selectedField.id, { backgroundColor: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">Clear</button>
+                                        <button onClick={() => onUpdateField(selectedField.id, { backgroundColor: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">{t.common.clear}</button>
                                     </div>
                                 </div>
                              </div>
                              
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Border Color</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.borderColor}</label>
                                     <div className="flex items-center gap-2">
                                         <input type="color" value={selectedField.borderColor || '#000000'} onChange={(e) => onUpdateField(selectedField.id, { borderColor: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
-                                        <button onClick={() => onUpdateField(selectedField.id, { borderColor: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">Clear</button>
+                                        <button onClick={() => onUpdateField(selectedField.id, { borderColor: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">{t.common.clear}</button>
                                     </div>
                                 </div>
                              </div>
 
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Border Width</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.borderWidth}</label>
                                     <input type="number" min="0" value={selectedField.borderWidth || 0} onChange={(e) => onUpdateField(selectedField.id, { borderWidth: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Radius</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.radius}</label>
                                     <input type="number" min="0" value={selectedField.borderRadius || 0} onChange={(e) => onUpdateField(selectedField.id, { borderRadius: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" />
                                 </div>
                              </div>
                              
                              <div className="space-y-1">
-                                 <label className="text-[10px] font-semibold text-slate-400 uppercase">Padding (px)</label>
+                                 <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.padding}</label>
                                  <input type="number" min="0" value={selectedField.padding || 3} onChange={(e) => onUpdateField(selectedField.id, { padding: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" />
                              </div>
                         </div>
@@ -559,29 +663,29 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                              <div className="flex items-center gap-2 mb-1">
                                 <Type size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Typography</h3>
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.typography}</h3>
                              </div>
                              
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Font Size</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.fontSize}</label>
                                     <input type="number" value={selectedField.fontSize || 12} onChange={(e) => onUpdateField(selectedField.id, { fontSize: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm" />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Letter Space</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.letterSpacing}</label>
                                     <input type="number" value={selectedField.letterSpacing || 0} onChange={(e) => onUpdateField(selectedField.id, { letterSpacing: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm" step="0.5" />
                                 </div>
                              </div>
 
                              {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'textarea') && (
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">Max Length</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.maxLength}</label>
                                     <input 
                                         type="number" 
                                         min="0" 
                                         value={selectedField.maxLength || ''} 
                                         onChange={(e) => onUpdateField(selectedField.id, { maxLength: e.target.value ? Number(e.target.value) : undefined })} 
-                                        placeholder="No limit"
+                                        placeholder=""
                                         className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm" 
                                     />
                                 </div>
@@ -755,14 +859,28 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select') && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center justify-between"><h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Options</h3><button onClick={addOption} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"><Plus size={12} /> Add</button></div>
-                             <div className="space-y-2 max-h-40 overflow-y-auto">
+                             <div className="flex items-center justify-between"><h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.options}</h3><button onClick={addOption} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"><Plus size={12} /> {t.common.add}</button></div>
+                             <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {(selectedField.options || []).map((opt, idx) => (
-                                    <div key={opt.id} className="flex items-center gap-2 p-1 hover:bg-slate-50 rounded">
-                                        {selectedField.type !== 'select' && <div className="text-slate-400 cursor-move"><GripVertical size={14} /></div>}
-                                        <input type="text" value={opt.value} onChange={(e) => updateOptionValue(opt.id, e.target.value)} className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs" />
-                                        <button onClick={() => onAddNestedField(selectedField.id, opt.id)} className="text-slate-400 hover:text-blue-500 p-1 rounded"><CornerDownRight size={14} /></button>
-                                        <button onClick={() => deleteOption(opt.id)} className="text-slate-400 hover:text-red-500 p-1 rounded"><Trash2 size={14} /></button>
+                                    <div key={opt.id} className="p-2 bg-slate-50 rounded border border-slate-200 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            {selectedField.type !== 'select' && <div className="text-slate-400 cursor-move"><GripVertical size={14} /></div>}
+                                            <div className="flex-1 space-y-1">
+                                                <input type="text" value={opt.value} onChange={(e) => updateOptionValue(opt.id, e.target.value)} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs font-mono" placeholder="Value (stored)" title="This value is stored when selected" />
+                                                <input type="text" value={opt.labelEn || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'en', e.target.value)} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" placeholder="English Label - defaults to value" title="English display text shown to users" />
+                                            </div>
+                                            <button onClick={() => onAddNestedField(selectedField.id, opt.id)} className="text-slate-400 hover:text-blue-500 p-1 rounded" title="Add nested field"><CornerDownRight size={14} /></button>
+                                            <button onClick={() => deleteOption(opt.id)} className="text-slate-400 hover:text-red-500 p-1 rounded" title="Delete option"><Trash2 size={14} /></button>
+                                        </div>
+                                        <div className="ps-6 space-y-1">
+                                            <span className="text-[9px] text-slate-400 uppercase">Label Translations:</span>
+                                            <div className="grid grid-cols-2 gap-1">
+                                                <input type="text" value={opt.labelHe || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'he', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" dir="rtl" placeholder="עברית" />
+                                                <input type="text" value={opt.labelRu || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'ru', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" placeholder="Русский" />
+                                                <input type="text" value={opt.labelAr || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'ar', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" dir="rtl" placeholder="العربية" />
+                                                <input type="text" value={opt.labelAm || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'am', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" placeholder="አማርኛ" />
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                              </div>
@@ -1468,7 +1586,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 {depth > 0 && <CornerDownRight size={10} className="inline mr-1 text-slate-400" />}
                                                 {field.type === 'table' && <Table size={12} className="text-slate-400" />}
                                                 {field.type === 'table-row' && <Rows size={12} className="text-slate-400" />}
-                                                <span className="truncate">{field.name}</span>
+                                                <span className="truncate">{getFieldName(field)}</span>
                                             </div>
                                             <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-2">
                                                 <span className="bg-slate-100 px-1 rounded uppercase text-[9px]">{field.type}</span>
@@ -1530,36 +1648,60 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 </button>
                                                 <Folder size={14} className={isDragOver ? 'text-blue-500' : 'text-slate-500'} />
                                                 {isEditing ? (
-                                                    <input
-                                                        type="text"
-                                                        defaultValue={section.name}
-                                                        className="flex-1 px-1 py-0.5 text-sm border border-blue-300 rounded bg-white"
-                                                        autoFocus
-                                                        onBlur={(e) => {
-                                                            if (e.target.value.trim() && onUpdateSection) {
-                                                                onUpdateSection(section.id, { name: e.target.value.trim() });
-                                                            }
-                                                            setEditingSectionId(null);
-                                                        }}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                if (e.currentTarget.value.trim() && onUpdateSection) {
-                                                                    onUpdateSection(section.id, { name: e.currentTarget.value.trim() });
+                                                    <div className="flex-1 flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="text"
+                                                            defaultValue={section.name}
+                                                            className="w-full px-1 py-0.5 text-sm border border-blue-300 rounded bg-white"
+                                                            autoFocus
+                                                            placeholder="Section name"
+                                                            onBlur={(e) => {
+                                                                if (e.target.value.trim() && onUpdateSection) {
+                                                                    onUpdateSection(section.id, { name: e.target.value.trim() });
                                                                 }
-                                                                setEditingSectionId(null);
-                                                            }
-                                                            if (e.key === 'Escape') {
-                                                                setEditingSectionId(null);
-                                                            }
-                                                        }}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    if (e.currentTarget.value.trim() && onUpdateSection) {
+                                                                        onUpdateSection(section.id, { name: e.currentTarget.value.trim() });
+                                                                    }
+                                                                    setEditingSectionId(null);
+                                                                }
+                                                                if (e.key === 'Escape') {
+                                                                    setEditingSectionId(null);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            defaultValue={section.nameHe || ''}
+                                                            className="w-full px-1 py-0.5 text-xs border border-slate-200 rounded bg-white"
+                                                            dir="rtl"
+                                                            placeholder="שם בעברית"
+                                                            onBlur={(e) => {
+                                                                if (onUpdateSection) {
+                                                                    onUpdateSection(section.id, { nameHe: e.target.value.trim() || undefined });
+                                                                }
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    if (onUpdateSection) {
+                                                                        onUpdateSection(section.id, { nameHe: e.currentTarget.value.trim() || undefined });
+                                                                    }
+                                                                    setEditingSectionId(null);
+                                                                }
+                                                                if (e.key === 'Escape') {
+                                                                    setEditingSectionId(null);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <span 
                                                         className={`flex-1 text-sm font-medium truncate ${isDragOver ? 'text-blue-700' : 'text-slate-700'}`}
                                                         onDoubleClick={() => setEditingSectionId(section.id)}
                                                     >
-                                                        {section.name}
+                                                        {getSectionName(section)}
                                                         {isDragOver && <span className="text-xs ml-2 text-blue-500">(drop here)</span>}
                                                     </span>
                                                 )}
@@ -1569,7 +1711,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (onDeleteSection && confirm(`Delete section "${section.name}"? Fields will be moved to unsectioned.`)) {
+                                                        if (onDeleteSection && confirm(`Delete section "${getSectionName(section)}"? Fields will be moved to unsectioned.`)) {
                                                             onDeleteSection(section.id);
                                                         }
                                                     }}
@@ -1654,7 +1796,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <div key={field.id} className="space-y-1">
                       <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
-                          <span className="truncate">{field.name}</span>
+                          <span className="truncate">{getFieldName(field)}</span>
                           {hasRequiredRule && <span className="text-red-500">*</span>}
                           {showSuccess && <CheckCircle2 size={14} className="text-green-500 shrink-0" />}
                       </label>
@@ -1701,7 +1843,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                               className={inputClassName}
                           >
                               <option value="">Select</option>
-                              {(field.options || []).map(opt => <option key={opt.id} value={opt.value}>{opt.value}</option>)}
+                              {(field.options || []).map(opt => <option key={opt.id} value={opt.value}>{getOptionLabel(opt)}</option>)}
                           </select>
                       )}
 
@@ -2099,13 +2241,13 @@ const Sidebar: React.FC<SidebarProps> = ({
               
               sectionsWithFields.forEach(section => {
                 const sectionFields = fields.filter(f => f.sectionId === section.id);
-                steps.push({ id: section.id, name: section.name, fields: sectionFields });
+                steps.push({ id: section.id, name: getSectionName(section), fields: sectionFields });
               });
               
               // Add unsectioned fields as a step if there are any
               if (unsectionedFields.length > 0) {
                 const unsectionedVisibleFields = fields.filter(f => !f.sectionId);
-                steps.push({ id: '__other__', name: sections.length > 0 ? 'Other Fields' : 'Form Fields', fields: unsectionedVisibleFields });
+                steps.push({ id: '__other__', name: sections.length > 0 ? (language === 'he' ? 'שדות נוספים' : 'Other Fields') : (language === 'he' ? 'שדות הטופס' : 'Form Fields'), fields: unsectionedVisibleFields });
               }
               
               const totalSteps = steps.length;
@@ -2235,7 +2377,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             if (totalSteps === 0) {
               return (
                 <button onClick={onDownload} disabled={fields.length === 0} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50">
-                  <Download size={18} /> Download PDF
+                  <Download size={18} /> {t.sidebar.downloadPdf}
                 </button>
               );
             }
@@ -2247,7 +2389,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => setCurrentFillStep(prev => Math.max(0, prev - 1))}
                     className="flex-1 flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 px-4 rounded-lg font-medium transition-colors"
                   >
-                    <ChevronRight size={18} className="rotate-180" /> Back
+                    <ChevronRight size={18} className={isRTL ? '' : 'rotate-180'} /> {t.sidebar.previousField}
                   </button>
                 )}
                 {isLastStep ? (
@@ -2256,14 +2398,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                     disabled={fields.length === 0} 
                     className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
                   >
-                    <Download size={18} /> Download PDF
+                    <Download size={18} /> {t.sidebar.downloadPdf}
                   </button>
                 ) : (
                   <button 
                     onClick={() => setCurrentFillStep(prev => prev + 1)}
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm"
                   >
-                    Next <ChevronRight size={18} />
+                    {t.sidebar.nextField} <ChevronRight size={18} className={isRTL ? 'rotate-180' : ''} />
                   </button>
                 )}
               </div>

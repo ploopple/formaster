@@ -10,6 +10,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 import { isFieldVisible } from '../services/formLogic';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface PDFViewerProps {
   file: any; // File or Blob

@@ -19,6 +19,48 @@
   }
 }
 
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .rotate-180 {
+  transform: rotate(0deg);
+}
+
+[dir="ltr"] .rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Logical properties for RTL support */
+.ms-auto {
+  margin-inline-start: auto;
+}
+
+.me-auto {
+  margin-inline-end: auto;
+}
+
+.ps-10 {
+  padding-inline-start: 2.5rem;
+}
+
+.pe-4 {
+  padding-inline-end: 1rem;
+}
+
+.start-3 {
+  inset-inline-start: 0.75rem;
+}
+
+.end-4 {
+  inset-inline-end: 1rem;
+}
+
+.start-1\/2 {
+  inset-inline-start: 50%;
+}
+
 /* body {
   background: var(--background);
   color: var(--foreground);

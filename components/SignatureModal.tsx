@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useRef, useState, useEffect } from 'react';
 import { X, Check, Eraser } from 'lucide-react';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface SignatureModalProps {
   isOpen: boolean;
@@ -8,6 +11,7 @@ interface SignatureModalProps {
 }
 
 export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave }) => {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
@@ -102,7 +106,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-          <h3 className="font-semibold text-slate-800">Sign Document</h3>
+          <h3 className="font-semibold text-slate-800">{t.signature.title}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
             <X size={20} />
           </button>
@@ -120,7 +124,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
             />
             {!hasSignature && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-300 select-none">
-                Draw your signature here
+                {t.signature.drawHere}
               </div>
             )}
           </div>
@@ -132,14 +136,14 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
             className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-sm"
           >
             <Eraser size={16} />
-            Clear
+            {t.signature.clear}
           </button>
           <div className="flex items-center gap-3">
             <button 
               onClick={onClose}
               className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium text-sm"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button 
               onClick={handleSave}
@@ -147,7 +151,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
               className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg shadow-sm transition-all font-medium text-sm"
             >
               <Check size={16} />
-              Save Signature
+              {t.signature.save}
             </button>
           </div>
         </div>

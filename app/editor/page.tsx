@@ -14,10 +14,12 @@ import { saveFilledPDF, downloadBlob } from '../../services/pdfUtils';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp } from 'lucide-react';
+import { useI18n, LanguageToggle } from '../../lib/i18n/I18nContext';
 
 function EditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const initialMode = searchParams.get('mode') === 'fill' ? AppMode.FILL : AppMode.EDITOR;
   
   const [mode, setMode] = useState<AppMode>(initialMode);
@@ -400,26 +402,29 @@ function EditorContent() {
   }, [mode, selectedFieldId, fields, deleteField, updateField, duplicateField, undo, redo, saveSnapshot]);
 
   if (isLoading || !isClient) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>;
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">{t.common.loading}</div></div>;
   }
 
   if (!file) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="absolute top-4 end-4">
+          <LanguageToggle />
+        </div>
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
           <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <FileUp size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Upload PDF</h1>
-          <p className="text-slate-500 mb-6">Select a PDF file to start editing</p>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">{t.editor.uploadPdf}</h1>
+          <p className="text-slate-500 mb-6">{t.editor.selectPdfToStart}</p>
           <label className="block w-full cursor-pointer">
             <div className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 active:scale-95 flex items-center justify-center gap-2">
               <FileUp size={20} />
-              <span>Choose PDF File</span>
+              <span>{t.editor.choosePdfFile}</span>
             </div>
             <input type="file" accept="application/pdf" onChange={handleFileUpload} className="hidden" />
           </label>
-          <button onClick={() => router.push('/')} className="mt-4 text-sm text-slate-500 hover:text-slate-700">← Back to Home</button>
+          <button onClick={() => router.push('/')} className="mt-4 text-sm text-slate-500 hover:text-slate-700">{t.editor.backToHome}</button>
         </div>
       </div>
     );
@@ -429,46 +434,47 @@ function EditorContent() {
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
       <header className="h-16 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-30 shadow-sm relative">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg cursor-pointer" onClick={() => { if(confirm('Go back to home? Unsaved changes will be lost.')) router.push('/'); }}>
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg cursor-pointer" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/'); }}>
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
               <PenTool size={16} />
             </div>
-            <span className="hidden sm:inline">SmartFiller</span>
+            <span className="hidden sm:inline">{t.home.title}</span>
           </div>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-lg absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className="flex bg-slate-100 p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
             <Pencil size={14} />
-            <span className="hidden sm:inline">Editor Mode</span>
-            <span className="sm:hidden">Edit</span>
+            <span className="hidden sm:inline">{t.editor.editorMode}</span>
+            <span className="sm:hidden">{t.editor.edit}</span>
           </button>
           <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
             <PenTool size={14} />
-            <span className="hidden sm:inline">Fill Mode</span>
-            <span className="sm:hidden">Fill</span>
+            <span className="hidden sm:inline">{t.editor.fillMode}</span>
+            <span className="sm:hidden">{t.editor.fill}</span>
           </button>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
           {mode === AppMode.EDITOR && (
-            <div className="flex items-center gap-1 mr-1 md:mr-2">
-              <button onClick={() => saveSnapshot()} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-medium rounded-lg transition-all" title="Save snapshot (⌘S)">
+            <div className="flex items-center gap-1 me-1 md:me-2">
+              <button onClick={() => saveSnapshot()} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-medium rounded-lg transition-all" title={t.editor.saveSnapshot}>
                 <Save size={16} />
-                <span className="hidden sm:inline">Save</span>
+                <span className="hidden sm:inline">{t.common.save}</span>
               </button>
-              <button onClick={undo} disabled={!canUndo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title="Undo (⌘Z)">
+              <button onClick={undo} disabled={!canUndo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.undo}>
                 <Undo2 size={18} />
               </button>
-              <button onClick={redo} disabled={!canRedo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title="Redo (⌘⇧Z)">
+              <button onClick={redo} disabled={!canRedo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.redo}>
                 <Redo2 size={18} />
               </button>
             </div>
           )}
-          <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Keyboard shortcuts (?)">
+          <LanguageToggle className="hidden md:block" />
+          <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
           </button>
-          <button onClick={handleCopyJSON} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Copy form configuration as JSON">
+          <button onClick={handleCopyJSON} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyFormConfig}>
             {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-            <span className="hidden sm:inline">{isCopied ? 'Copied!' : 'Copy JSON'}</span>
+            <span className="hidden sm:inline">{isCopied ? t.common.copied : t.common.copyJson}</span>
           </button>
           <button onClick={() => setIsSidebarOpen(prev => !prev)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg md:hidden">
             <Menu size={24} />
@@ -491,22 +497,22 @@ function EditorContent() {
                 <AlertTriangle className="text-amber-600" size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-800 text-lg">Validation Errors</h3>
-                <p className="text-sm text-slate-500">Some fields have issues</p>
+                <h3 className="font-semibold text-slate-800 text-lg">{t.validation.errors}</h3>
+                <p className="text-sm text-slate-500">{t.validation.someFieldsHaveIssues}</p>
               </div>
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-amber-800 mb-2">
-                <strong>{validationSummary.totalErrors}</strong> error(s) found in <strong>{validationSummary.invalidFields.length}</strong> field(s):
+                <strong>{validationSummary.totalErrors}</strong> {t.validation.errorsFound} <strong>{validationSummary.invalidFields.length}</strong> {t.validation.fieldsWithErrors}:
               </p>
               <ul className="text-sm text-amber-700 list-disc list-inside max-h-32 overflow-y-auto">
                 {validationSummary.invalidFields.slice(0, 5).map((name, idx) => (<li key={idx}>{name}</li>))}
-                {validationSummary.invalidFields.length > 5 && (<li className="text-amber-600">...and {validationSummary.invalidFields.length - 5} more</li>)}
+                {validationSummary.invalidFields.length > 5 && (<li className="text-amber-600">...{t.validation.andMore.replace('{count}', String(validationSummary.invalidFields.length - 5))}</li>)}
               </ul>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowValidationWarning(false)} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors">Fix Errors</button>
-              <button onClick={handleForceDownload} className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors">Download Anyway</button>
+              <button onClick={() => setShowValidationWarning(false)} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-colors">{t.validation.fixErrors}</button>
+              <button onClick={handleForceDownload} className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors">{t.validation.downloadAnyway}</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import { TableColumn, FormField, FieldOption, MarkStyle, ValidationRule, TableColumnType } from '../types';
 import { Plus, Trash2, GripVertical, Columns, LayoutGrid, Wand2, ChevronDown, ChevronUp, Settings2, X } from 'lucide-react';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface TableBuilderProps {
   field: FormField;
@@ -51,6 +54,7 @@ const COLUMN_TYPES: { value: TableColumnType; label: string; icon: string }[] = 
 ];
 
 const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => {
+  const { t } = useI18n();
   const [draggedColIndex, setDraggedColIndex] = useState<number | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [expandedColId, setExpandedColId] = useState<string | null>(null);
@@ -227,7 +231,15 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
               {/* Column header row */}
               <div className="flex items-center gap-2 p-2">
                 <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600"><GripVertical size={14} /></div>
-                <input type="text" value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} className="flex-1 min-w-0 px-2 py-1 text-xs border border-slate-200 rounded bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-200" placeholder="Column name" />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <input type="text" value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} className="w-full px-2 py-1 text-xs border border-slate-200 rounded bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-200" placeholder="Column name (English)" />
+                  <div className="grid grid-cols-2 gap-1">
+                    <input type="text" value={col.nameHe || ''} onChange={(e) => updateColumn(col.id, { nameHe: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="עברית" />
+                    <input type="text" value={col.nameRu || ''} onChange={(e) => updateColumn(col.id, { nameRu: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="Русский" />
+                    <input type="text" value={col.nameAr || ''} onChange={(e) => updateColumn(col.id, { nameAr: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="العربية" />
+                    <input type="text" value={col.nameAm || ''} onChange={(e) => updateColumn(col.id, { nameAm: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="አማርኛ" />
+                  </div>
+                </div>
                 <select value={col.type} onChange={(e) => {
                   const newType = e.target.value as TableColumnType;
                   const updates: Partial<TableColumn> = { type: newType };
