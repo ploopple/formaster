@@ -11,6 +11,11 @@ export const isFieldVisible = (field: FormField, allFields: FormField[]): boolea
   // Recursive step: Check if parent is visible first
   if (!isFieldVisible(parent, allFields)) return false;
 
+  // Handle useFieldAsCheckbox mode - nested fields visible when checkbox is checked
+  if (parent.type === 'checkbox' && parent.useFieldAsCheckbox) {
+    return parent.value === 'true';
+  }
+
   // If no parentOptionId, visibility depends only on parent being visible
   // This handles composite child fields that inherit visibility from their composite parent
   if (!field.parentOptionId) return true;

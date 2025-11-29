@@ -188,8 +188,35 @@ function EditorContent() {
 
   const addNestedField = useCallback((parentId: string, optionId: string) => {
     const parentField = fields.find(f => f.id === parentId);
+    if (!parentField) return;
+    
+    // Handle useFieldAsCheckbox mode - no options needed
+    if (parentField.type === 'checkbox' && parentField.useFieldAsCheckbox) {
+      const newField: FormField = { 
+        id: crypto.randomUUID(), 
+        page: parentField.page, 
+        x: Math.min(parentField.x + 5, 90), 
+        y: Math.min(parentField.y + 5, 95), 
+        width: 20, 
+        height: 3, 
+        name: `Nested: ${parentField.name}`, 
+        value: '', 
+        previewText: '', 
+        type: 'text', 
+        fontSize: 12, 
+        letterSpacing: 0, 
+        options: [], 
+        parentFieldId: parentId,
+        // No parentOptionId needed for useFieldAsCheckbox
+      };
+      setFields(prev => [...prev, newField]);
+      setSelectedFieldId(newField.id);
+      return;
+    }
+    
+    // Standard option-based nesting
     const parentOption = parentField?.options?.find(o => o.id === optionId);
-    if (!parentField || !parentOption) return;
+    if (!parentOption) return;
     const newField: FormField = { id: crypto.randomUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
