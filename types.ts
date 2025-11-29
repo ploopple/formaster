@@ -166,6 +166,10 @@ export interface FormField {
   // Mark style for radio/checkbox
   markStyle?: MarkStyle; // Style of mark when selected (checkmark, x, circle, etc.)
   
+  // Signature field canvas dimensions
+  signatureCanvasWidth?: number; // Width of the signature drawing canvas in pixels
+  signatureCanvasHeight?: number; // Height of the signature drawing canvas in pixels
+  
   // Checkbox: use field box as the clickable area instead of options
   useFieldAsCheckbox?: boolean; // When true, clicking the field box toggles the checkbox (no separate options needed)
   

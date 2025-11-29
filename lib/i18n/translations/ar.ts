@@ -150,6 +150,10 @@ export const ar: TranslationKeys = {
     center: 'وسط',
     right: 'يمين',
 
+    // Signature canvas
+    signatureCanvasSize: 'حجم لوحة الرسم',
+    signatureCanvasSizeHelp: 'تعيين حجم منطقة الرسم لنافذة التوقيع',
+
     // Position
     position: 'الموضع',
     page: 'الصفحة',

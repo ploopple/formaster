@@ -690,6 +690,42 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     )}
 
+                    {/* SIGNATURE CANVAS SIZE */}
+                    {selectedField.type === 'signature' && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                             <div className="flex items-center gap-2 mb-1">
+                                <PenTool size={14} className="text-slate-600" />
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.signatureCanvasSize || 'Canvas Size'}</h3>
+                             </div>
+                             <p className="text-[10px] text-slate-400">{t.sidebar.signatureCanvasSizeHelp || 'Set the drawing area size for the signature modal'}</p>
+                             
+                             <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.width || 'Width'} (px)</label>
+                                    <input 
+                                        type="number" 
+                                        min="200" 
+                                        max="800"
+                                        value={selectedField.signatureCanvasWidth || 500} 
+                                        onChange={(e) => onUpdateField(selectedField.id, { signatureCanvasWidth: Number(e.target.value) })} 
+                                        className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" 
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.height || 'Height'} (px)</label>
+                                    <input 
+                                        type="number" 
+                                        min="100" 
+                                        max="600"
+                                        value={selectedField.signatureCanvasHeight || 300} 
+                                        onChange={(e) => onUpdateField(selectedField.id, { signatureCanvasHeight: Number(e.target.value) })} 
+                                        className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" 
+                                    />
+                                </div>
+                             </div>
+                        </div>
+                    )}
+
                     {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'date' || selectedField.type === 'select' || selectedField.type === 'textarea') && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                              <div className="flex items-center gap-2 mb-1">

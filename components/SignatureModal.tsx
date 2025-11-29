@@ -8,9 +8,11 @@ interface SignatureModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (signatureDataUrl: string) => void;
+  canvasWidth?: number; // Optional width for the signature canvas (default: 500)
+  canvasHeight?: number; // Optional height for the signature canvas (default: 300)
 }
 
-export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave }) => {
+export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, canvasWidth = 500, canvasHeight = 300 }) => {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -113,7 +115,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
         </div>
         
         <div className="p-4 bg-slate-100 flex-1">
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden relative" style={{ height: '300px' }}>
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden relative" style={{ width: canvasWidth, height: canvasHeight, maxWidth: '100%' }}>
             <canvas
               ref={canvasRef}
               className="w-full h-full touch-none cursor-crosshair"

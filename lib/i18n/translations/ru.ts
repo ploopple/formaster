@@ -150,6 +150,10 @@ export const ru: TranslationKeys = {
     center: 'По центру',
     right: 'Справа',
 
+    // Signature canvas
+    signatureCanvasSize: 'Размер холста',
+    signatureCanvasSizeHelp: 'Установите размер области рисования для окна подписи',
+
     // Position
     position: 'Позиция',
     page: 'Страница',

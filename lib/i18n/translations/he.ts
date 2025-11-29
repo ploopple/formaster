@@ -149,6 +149,10 @@ export const he: TranslationKeys = {
     center: 'מרכז',
     right: 'ימין',
 
+    // Signature canvas
+    signatureCanvasSize: 'גודל אזור החתימה',
+    signatureCanvasSizeHelp: 'הגדר את גודל אזור הציור לחלון החתימה',
+
     // Position
     position: 'מיקום',
     page: 'עמוד',

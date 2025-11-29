@@ -150,6 +150,10 @@ export const am: TranslationKeys = {
     center: 'መሃል',
     right: 'ቀኝ',
 
+    // Signature canvas
+    signatureCanvasSize: 'የሸራ መጠን',
+    signatureCanvasSizeHelp: 'ለፊርማ መስኮት የስዕል ቦታ መጠን ያዘጋጁ',
+
     // Position
     position: 'ቦታ',
     page: 'ገጽ',

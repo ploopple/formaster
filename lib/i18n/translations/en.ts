@@ -147,6 +147,10 @@ export const en = {
     center: 'Center',
     right: 'Right',
 
+    // Signature canvas
+    signatureCanvasSize: 'Canvas Size',
+    signatureCanvasSizeHelp: 'Set the drawing area size for the signature modal',
+
     // Position
     position: 'Position',
     page: 'Page',

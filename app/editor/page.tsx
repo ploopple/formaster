@@ -514,7 +514,13 @@ function EditorContent() {
         )}
         <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} />
       </div>
-      <SignatureModal isOpen={!!signingFieldId} onClose={() => setSigningFieldId(null)} onSave={handleSaveSignature} />
+      <SignatureModal 
+        isOpen={!!signingFieldId} 
+        onClose={() => setSigningFieldId(null)} 
+        onSave={handleSaveSignature}
+        canvasWidth={signingFieldId ? fields.find(f => f.id === signingFieldId)?.signatureCanvasWidth : undefined}
+        canvasHeight={signingFieldId ? fields.find(f => f.id === signingFieldId)?.signatureCanvasHeight : undefined}
+      />
       <KeyboardShortcutsPanel isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       {showValidationWarning && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
