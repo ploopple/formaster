@@ -246,7 +246,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               }
           };
 
-          if ((field.type === 'radio' || field.type === 'checkbox') && field.options) {
+          // For checkbox with useFieldAsCheckbox, draw the field box itself
+          if (field.type === 'checkbox' && field.useFieldAsCheckbox) {
+              drawFieldBox(field.x, field.y, field.width, field.height);
+          } else if ((field.type === 'radio' || field.type === 'checkbox') && field.options) {
               field.options.forEach(opt => {
                   drawFieldBox(opt.x, opt.y, opt.width, opt.height, true);
               });
@@ -646,6 +649,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                              const next = isCurrentlyChecked ? current.filter(v => v !== option!.value) : [...current, option!.value];
                              onFieldUpdate(field.id, { value: next.join(separator) });
                          }
+                     } else if (field.type === 'checkbox' && field.useFieldAsCheckbox) {
+                         // Toggle checkbox when using field box as checkbox
+                         const isChecked = field.value === 'true';
+                         onFieldUpdate(field.id, { value: isChecked ? '' : 'true' });
                      } else if (field.type === 'signature') {
                          onOpenSignature?.(field.id);
                      } else if (field.type === 'text' || field.type === 'number' || field.type === 'textarea' || field.type === 'date' || field.type === 'select') {
@@ -744,6 +751,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                   {fields.filter(f => f.page === pageNumber).map(field => {
                       if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
                       if (mode === AppMode.FILL && field.type === 'table-row') return null;
+                      // For checkbox with useFieldAsCheckbox, render the field box itself
+                      if (field.type === 'checkbox' && field.useFieldAsCheckbox) return renderBox(field, null);
                       if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
                       return renderBox(field, null);
                     })}

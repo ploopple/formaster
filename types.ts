@@ -166,6 +166,9 @@ export interface FormField {
   // Mark style for radio/checkbox
   markStyle?: MarkStyle; // Style of mark when selected (checkmark, x, circle, etc.)
   
+  // Checkbox: use field box as the clickable area instead of options
+  useFieldAsCheckbox?: boolean; // When true, clicking the field box toggles the checkbox (no separate options needed)
+  
   // Validation rules
   validationRules?: ValidationRule[];
   

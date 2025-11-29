@@ -888,7 +888,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     )}
 
-                    {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select') && (
+                    {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select') && !(selectedField.type === 'checkbox' && selectedField.useFieldAsCheckbox) && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                              <div className="flex items-center justify-between"><h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.options}</h3><button onClick={addOption} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"><Plus size={12} /> {t.common.add}</button></div>
                              <div className="space-y-2 max-h-80 overflow-y-auto">
@@ -947,6 +947,34 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </button>
                                 ))}
                              </div>
+                        </div>
+                    )}
+
+                    {/* USE FIELD AS CHECKBOX - Only for checkbox type */}
+                    {selectedField.type === 'checkbox' && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                             <div className="flex items-center gap-2 mb-1">
+                                <BoxSelect size={14} className="text-slate-600" />
+                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Checkbox Mode</h3>
+                             </div>
+                             <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedField.useFieldAsCheckbox || false} 
+                                    onChange={(e) => onUpdateField(selectedField.id, { 
+                                        useFieldAsCheckbox: e.target.checked,
+                                        // Clear options when enabling field-as-checkbox mode
+                                        options: e.target.checked ? [] : selectedField.options,
+                                        // Reset value when toggling
+                                        value: ''
+                                    })} 
+                                    className="rounded border-slate-300" 
+                                />
+                                Use field box as checkbox
+                             </label>
+                             <p className="text-[10px] text-slate-500 leading-relaxed">
+                                When enabled, clicking the field box itself toggles the checkbox instead of using separate option boxes.
+                             </p>
                         </div>
                     )}
 
@@ -1951,43 +1979,61 @@ const Sidebar: React.FC<SidebarProps> = ({
                     
                     {(field.type === 'checkbox') && (
                         <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
-                             <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
-                                <Info size={10} />
-                                <span>You can select multiple options</span>
-                             </div>
-                             {(field.options || []).map((opt) => {
-                                // Use ||| as separator to handle option values containing commas
-                                const separator = '|||';
-                                const currentValues = field.value ? field.value.split(separator).filter(v => v) : [];
-                                const isChecked = currentValues.includes(opt.value);
-                                const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
-                                return (
-                                    <div key={opt.id}>
-                                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
-                                            <input 
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => {
-                                                    const separator = '|||';
-                                                    const current = field.value ? field.value.split(separator).filter(v => v) : [];
-                                                    let next;
-                                                    if (e.target.checked) next = [...current, opt.value];
-                                                    else next = current.filter(v => v !== opt.value);
-                                                    onUpdateField(field.id, { value: next.join(separator) });
-                                                }}
-                                                className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
-                                            />
-                                            <span className="text-sm text-slate-700">{opt.value}</span>
-                                        </label>
-                                        {/* Render nested fields when this option is checked */}
-                                        {isChecked && nestedFields.length > 0 && (
-                                            <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
-                                                {nestedFields.map(nestedField => renderFillField(nestedField, true))}
-                                            </div>
-                                        )}
+                             {field.useFieldAsCheckbox ? (
+                                // Simple checkbox toggle when using field as checkbox
+                                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                    <input 
+                                        type="checkbox"
+                                        checked={field.value === 'true'}
+                                        onChange={(e) => {
+                                            onUpdateField(field.id, { value: e.target.checked ? 'true' : '' });
+                                        }}
+                                        className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
+                                    />
+                                    <span className="text-sm text-slate-700">{getFieldName(field)}</span>
+                                </label>
+                             ) : (
+                                // Options-based checkbox
+                                <>
+                                    <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
+                                        <Info size={10} />
+                                        <span>You can select multiple options</span>
                                     </div>
-                                )
-                             })}
+                                    {(field.options || []).map((opt) => {
+                                        // Use ||| as separator to handle option values containing commas
+                                        const separator = '|||';
+                                        const currentValues = field.value ? field.value.split(separator).filter(v => v) : [];
+                                        const isChecked = currentValues.includes(opt.value);
+                                        const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
+                                        return (
+                                            <div key={opt.id}>
+                                                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={(e) => {
+                                                            const separator = '|||';
+                                                            const current = field.value ? field.value.split(separator).filter(v => v) : [];
+                                                            let next;
+                                                            if (e.target.checked) next = [...current, opt.value];
+                                                            else next = current.filter(v => v !== opt.value);
+                                                            onUpdateField(field.id, { value: next.join(separator) });
+                                                        }}
+                                                        className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
+                                                    />
+                                                    <span className="text-sm text-slate-700">{getOptionLabel(opt)}</span>
+                                                </label>
+                                                {/* Render nested fields when this option is checked */}
+                                                {isChecked && nestedFields.length > 0 && (
+                                                    <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
+                                                        {nestedFields.map(nestedField => renderFillField(nestedField, true))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </>
+                             )}
                         </div>
                     )}
 

@@ -445,8 +445,23 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
         }
     } 
     
+    // CHECKBOX with useFieldAsCheckbox - render mark on the field box itself
+    if (field.type === 'checkbox' && field.useFieldAsCheckbox) {
+        const isChecked = field.value === 'true';
+        if (isChecked) {
+            // Use the main field position (first position in the loop)
+            const mainX = originX + (field.x / 100) * width;
+            const mainH = (field.height / 100) * height;
+            const mainW = (field.width / 100) * width;
+            const mainY = originY + height - ((field.y / 100) * height) - mainH;
+            const centerX = mainX + mainW / 2;
+            const centerY = mainY + mainH / 2;
+            drawMark(page, centerX, centerY, mainW, mainH, field.markStyle || 'checkmark');
+        }
+    }
+    
     // RADIO & CHECKBOX OPTIONS
-    if ((field.type === 'radio' || field.type === 'checkbox') && field.options) {
+    if ((field.type === 'radio' || field.type === 'checkbox') && field.options && !field.useFieldAsCheckbox) {
          field.options.forEach(opt => {
             const optX = originX + (opt.x / 100) * width;
             const optH = (opt.height / 100) * height;
