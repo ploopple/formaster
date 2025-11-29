@@ -84,6 +84,8 @@ export const en = {
     configureFields: 'Configure fields.',
     fillInformation: 'Fill information.',
     back: 'Back',
+    backToParent: 'Back to Parent',
+    backToRoot: 'Back to All Fields',
     linked: 'Linked',
     
     // Field properties

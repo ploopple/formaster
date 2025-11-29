@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement, FieldPosition } from '../types';
-import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle } from 'lucide-react';
+import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle, Home } from 'lucide-react';
 import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
 import TableBuilder from './TableBuilder';
@@ -412,9 +412,40 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="h-full flex flex-col">
             {selectedField ? (
               <div className="animate-in slide-in-from-right-4 fade-in duration-200">
-                <button onClick={() => onSelectField(null)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium mb-6 transition-colors group">
-                    <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> {t.sidebar.back}
-                </button>
+                {/* Navigation buttons for nested fields */}
+                <div className="flex items-center gap-2 mb-6">
+                  {selectedField.parentFieldId ? (
+                    <>
+                      {/* Back to Parent button */}
+                      <button 
+                        onClick={() => onSelectField(selectedField.parentFieldId!)} 
+                        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors group"
+                      >
+                        <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> 
+                        {t.sidebar.backToParent}
+                      </button>
+                      {/* Separator */}
+                      <span className="text-slate-300">|</span>
+                      {/* Back to Root button */}
+                      <button 
+                        onClick={() => onSelectField(null)} 
+                        className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm font-medium transition-colors group"
+                      >
+                        <Home size={14} /> 
+                        {t.sidebar.backToRoot}
+                      </button>
+                    </>
+                  ) : (
+                    /* Regular back button for non-nested fields */
+                    <button 
+                      onClick={() => onSelectField(null)} 
+                      className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors group"
+                    >
+                      <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> 
+                      {t.sidebar.back}
+                    </button>
+                  )}
+                </div>
 
                 <div className="space-y-5">
                     <div className="space-y-1">

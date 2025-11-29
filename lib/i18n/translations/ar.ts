@@ -86,6 +86,8 @@ export const ar: TranslationKeys = {
     configureFields: 'إعداد الحقول.',
     fillInformation: 'املأ المعلومات.',
     back: 'رجوع',
+    backToParent: 'العودة للحقل الأب',
+    backToRoot: 'العودة لجميع الحقول',
     linked: 'مرتبط',
 
     // Field properties

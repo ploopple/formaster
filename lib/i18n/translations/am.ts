@@ -86,6 +86,8 @@ export const am: TranslationKeys = {
     configureFields: 'መስኮችን አዋቅር።',
     fillInformation: 'መረጃ ሙላ።',
     back: 'ተመለስ',
+    backToParent: 'ወደ ወላጅ ተመለስ',
+    backToRoot: 'ወደ ሁሉም መስኮች ተመለስ',
     linked: 'የተገናኘ',
 
     // Field properties

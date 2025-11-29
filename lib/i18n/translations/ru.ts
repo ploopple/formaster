@@ -86,6 +86,8 @@ export const ru: TranslationKeys = {
     configureFields: 'Настройка полей.',
     fillInformation: 'Заполните информацию.',
     back: 'Назад',
+    backToParent: 'К родителю',
+    backToRoot: 'Ко всем полям',
     linked: 'Связано',
 
     // Field properties

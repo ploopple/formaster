@@ -86,6 +86,8 @@ export const he: TranslationKeys = {
     configureFields: 'הגדר שדות.',
     fillInformation: 'מלא מידע.',
     back: 'חזור',
+    backToParent: 'חזור להורה',
+    backToRoot: 'חזור לכל השדות',
     linked: 'מקושר',
     
     // Field properties
