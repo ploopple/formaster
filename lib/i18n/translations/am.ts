@@ -41,7 +41,8 @@ export const am: TranslationKeys = {
     title: 'ብልጥ PDF መሙያ',
     subtitle: 'መስኮችን ለማርትዕ እና መረጃ ለመሙላት PDF ይስቀሉ።',
     browseTemplates: 'የቅጽ አብነቶችን ያስሱ',
-    uploadNewPdf: 'አዲስ PDF ይስቀሉ',
+    createNewForm: 'አዲስ ቅጽ ይፍጠሩ',
+    uploadNewPdf: 'ያለ PDF ይስቀሉ',
     supportedFormats: 'የሚደገፉ ቅርጸቶች: PDF ብቻ',
   },
 

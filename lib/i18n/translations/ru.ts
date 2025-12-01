@@ -41,7 +41,8 @@ export const ru: TranslationKeys = {
     title: 'Умное заполнение PDF',
     subtitle: 'Загрузите PDF, чтобы начать редактирование полей и заполнение информации.',
     browseTemplates: 'Просмотр шаблонов форм',
-    uploadNewPdf: 'Загрузить новый PDF',
+    createNewForm: 'Создать новую форму',
+    uploadNewPdf: 'Загрузить существующий PDF',
     supportedFormats: 'Поддерживаемые форматы: только PDF',
   },
 

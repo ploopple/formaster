@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FileUp, List, PenTool } from 'lucide-react';
+import { FileUp, List, PenTool, FilePlus2 } from 'lucide-react';
 import { useI18n, LanguageToggle } from '../lib/i18n/I18nContext';
 
 export default function Home() {
@@ -37,6 +37,16 @@ export default function Home() {
               <span className="bg-white px-2 text-slate-500">{t.common.or}</span>
             </div>
           </div>
+          
+          <Link
+            href="/create"
+            className="block w-full"
+          >
+            <div className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-green-500/30 active:scale-95 flex items-center justify-center gap-2">
+              <FilePlus2 size={20} />
+              <span>{t.home.createNewForm}</span>
+            </div>
+          </Link>
           
           <Link
             href="/editor"
