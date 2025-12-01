@@ -147,6 +147,12 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
     updateColumn(colId, { options: col.options.map(o => o.id === optId ? { ...o, value } : o) });
   };
 
+  const updateColumnOptionField = (colId: string, optId: string, field: keyof FieldOption, value: string | undefined) => {
+    const col = columns.find(c => c.id === colId);
+    if (!col?.options) return;
+    updateColumn(colId, { options: col.options.map(o => o.id === optId ? { ...o, [field]: value } : o) });
+  };
+
   const deleteColumnOption = (colId: string, optId: string) => {
     const col = columns.find(c => c.id === colId);
     if (!col?.options) return;
@@ -354,11 +360,20 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Options</label>
                         <button onClick={() => addColumnOption(col.id)} className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-0.5"><Plus size={10} /> Add</button>
                       </div>
-                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
                         {(col.options || []).map((opt) => (
-                          <div key={opt.id} className="flex items-center gap-1">
-                            <input type="text" value={opt.value} onChange={(e) => updateColumnOption(col.id, opt.id, e.target.value)} placeholder="Option value" className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded bg-white" />
-                            <button onClick={() => deleteColumnOption(col.id, opt.id)} className="p-1 text-slate-400 hover:text-red-500"><X size={12} /></button>
+                          <div key={opt.id} className="p-2 bg-white border border-slate-200 rounded space-y-1">
+                            <div className="flex items-center gap-1">
+                              <input type="text" value={opt.value} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'value', e.target.value)} placeholder="Value (stored)" className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded bg-white" />
+                              <button onClick={() => deleteColumnOption(col.id, opt.id)} className="p-1 text-slate-400 hover:text-red-500"><X size={12} /></button>
+                            </div>
+                            <input type="text" value={opt.labelEn || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelEn', e.target.value || undefined)} placeholder="English label (display)" className="w-full px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" />
+                            <div className="grid grid-cols-2 gap-1">
+                              <input type="text" value={opt.labelHe || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelHe', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="עברית" />
+                              <input type="text" value={opt.labelRu || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelRu', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="Русский" />
+                              <input type="text" value={opt.labelAr || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelAr', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="العربية" />
+                              <input type="text" value={opt.labelAm || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelAm', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="አማርኛ" />
+                            </div>
                           </div>
                         ))}
                       </div>
