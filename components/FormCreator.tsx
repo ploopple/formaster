@@ -193,11 +193,10 @@ const FormCreator: React.FC<FormCreatorProps> = ({
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, elemX: 0, elemY: 0, elemW: 0, elemH: 0 });
   const [showTemplates, setShowTemplates] = useState(elements.length === 0);
-  
+
   // Advanced features state
-  const [snapToGrid, setSnapToGrid] = useState(true);
   const [gridSize, setGridSize] = useState(5); // 5% grid
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(true); // Grid visible = snap enabled
   const [clipboard, setClipboard] = useState<FormElement | null>(null);
   const [history, setHistory] = useState<FormElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -209,11 +208,11 @@ const FormCreator: React.FC<FormCreatorProps> = ({
   const size = PAGE_SIZES[pageSize];
   const aspectRatio = size.width / size.height;
 
-  // Snap value to grid
+  // Snap value to grid - only snaps when grid is visible
   const snapValue = useCallback((value: number) => {
-    if (!snapToGrid) return value;
+    if (!showGrid) return value;
     return Math.round(value / gridSize) * gridSize;
-  }, [snapToGrid, gridSize]);
+  }, [showGrid, gridSize]);
 
   // Save to history for undo/redo
   const saveToHistory = useCallback((newElements: FormElement[]) => {
@@ -486,11 +485,12 @@ const FormCreator: React.FC<FormCreatorProps> = ({
       if (isDragging && selectedElementId) {
         const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
         const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
-        
-        updateElement(selectedElementId, {
-          x: Math.max(0, Math.min(100 - dragStart.elemW, dragStart.elemX + deltaX)),
-          y: Math.max(0, Math.min(100 - dragStart.elemH, dragStart.elemY + deltaY)),
-        });
+
+        // Apply snap to grid when grid is visible
+        const newX = snapValue(Math.max(0, Math.min(100 - dragStart.elemW, dragStart.elemX + deltaX)));
+        const newY = snapValue(Math.max(0, Math.min(100 - dragStart.elemH, dragStart.elemY + deltaY)));
+
+        updateElement(selectedElementId, { x: newX, y: newY });
       }
 
       if (isResizing && selectedElementId && resizeHandle) {
@@ -513,7 +513,13 @@ const FormCreator: React.FC<FormCreatorProps> = ({
           newY = dragStart.elemY + deltaY;
         }
 
-        updateElement(selectedElementId, { x: newX, y: newY, width: newW, height: newH });
+        // Apply snap to grid when grid is visible
+        updateElement(selectedElementId, {
+          x: snapValue(newX),
+          y: snapValue(newY),
+          width: snapValue(newW),
+          height: snapValue(newH)
+        });
       }
     };
 
@@ -532,7 +538,7 @@ const FormCreator: React.FC<FormCreatorProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing, selectedElementId, dragStart, resizeHandle, updateElement]);
+  }, [isDragging, isResizing, selectedElementId, dragStart, resizeHandle, updateElement, snapValue]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -580,23 +586,23 @@ const FormCreator: React.FC<FormCreatorProps> = ({
         if (e.key === 'Escape') {
           setSelectedElementId(null);
         }
-        // Arrow keys for nudging
-        const step = e.shiftKey ? 5 : 1;
+        // Arrow keys for nudging - use grid size when grid is visible
+        const step = showGrid ? gridSize : (e.shiftKey ? 5 : 1);
         if (e.key === 'ArrowUp') {
           e.preventDefault();
-          updateElement(selectedElementId, { y: Math.max(0, elem.y - step) });
+          updateElement(selectedElementId, { y: snapValue(Math.max(0, elem.y - step)) });
         }
         if (e.key === 'ArrowDown') {
           e.preventDefault();
-          updateElement(selectedElementId, { y: Math.min(100 - elem.height, elem.y + step) });
+          updateElement(selectedElementId, { y: snapValue(Math.min(100 - elem.height, elem.y + step)) });
         }
         if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          updateElement(selectedElementId, { x: Math.max(0, elem.x - step) });
+          updateElement(selectedElementId, { x: snapValue(Math.max(0, elem.x - step)) });
         }
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          updateElement(selectedElementId, { x: Math.min(100 - elem.width, elem.x + step) });
+          updateElement(selectedElementId, { x: snapValue(Math.min(100 - elem.width, elem.x + step)) });
         }
         // Lock/unlock with L
         if (e.key === 'l') {
@@ -607,7 +613,7 @@ const FormCreator: React.FC<FormCreatorProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElementId, deleteElement, duplicateElement, undo, redo, copyElement, pasteElement, showGrid, elements, updateElement, toggleLock]);
+  }, [selectedElementId, deleteElement, duplicateElement, undo, redo, copyElement, pasteElement, showGrid, gridSize, snapValue, elements, updateElement, toggleLock]);
 
   const renderElement = (elem: FormElement) => {
     const isSelected = elem.id === selectedElementId;
