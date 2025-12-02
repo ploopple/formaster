@@ -9,9 +9,8 @@ export default function TemplatesPage() {
   const router = useRouter();
 
   const handleSelectForm = async (form: FormTemplate) => {
-    // Store form data in sessionStorage to pass to editor
-    sessionStorage.setItem('selectedForm', JSON.stringify(form));
-    router.push('/editor?mode=fill');
+    // Navigate directly to the form using its ID in the URL
+    router.push(`/editor/${form.id}`);
   };
 
   return <FormsList onSelectForm={handleSelectForm} />;

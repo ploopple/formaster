@@ -75,6 +75,10 @@ export const en = {
     failedToLoadForm: 'Failed to load form. Make sure the PDF file exists.',
     failedToGeneratePdf: 'Failed to generate PDF. Please try again.',
     failedToCopyJson: 'Failed to copy JSON to clipboard',
+    share: 'Share',
+    copyShareLink: 'Copy share link',
+    formNotFound: 'Form Not Found',
+    formNotFoundDesc: 'The form you are looking for does not exist or has been removed.',
   },
 
   // Sidebar
