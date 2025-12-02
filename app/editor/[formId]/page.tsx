@@ -14,7 +14,7 @@ import { formService } from '../../../services/formService';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp, Share2, HardDrive } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp, Share2, HardDrive, Bug } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 
 // LocalStorage key prefix for saved form states
@@ -517,6 +517,10 @@ function EditorContent() {
             {isLinkCopied ? <Check size={16} className="text-green-600" /> : <Share2 size={16} />}
             <span className="hidden sm:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
           </button>
+          <a href="https://twitter.com/messages/compose?recipient_id=YOUR_TWITTER_ID&text=Feedback%20for%20Smart%20PDF%20Filler%3A%20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Report Bug / Request Feature">
+            <Bug size={16} />
+            <span className="hidden sm:inline">Feedback</span>
+          </a>
           <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
           </button>
