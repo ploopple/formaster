@@ -793,16 +793,22 @@ const FormCreator: React.FC<FormCreatorProps> = ({
             <Grid3X3 size={16} />
           </button>
           {showGrid && (
-            <select
-              value={gridSize}
-              onChange={(e) => setGridSize(parseInt(e.target.value))}
-              className="text-xs border border-slate-200 rounded px-1 py-0.5 bg-white"
-              title="Grid Size"
-            >
-              <option value="2">2%</option>
-              <option value="5">5%</option>
-              <option value="10">10%</option>
-            </select>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={gridSize}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (val >= 0.5 && val <= 50) setGridSize(val);
+                }}
+                className="w-12 text-xs border border-slate-200 rounded px-1 py-0.5 bg-white text-center"
+                title="Grid Size (%)"
+                min="0.5"
+                max="50"
+                step="0.5"
+              />
+              <span className="text-xs text-slate-400">%</span>
+            </div>
           )}
         </div>
 
