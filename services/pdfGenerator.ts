@@ -13,7 +13,7 @@ export interface PageSettings {
 
 export interface FormElement {
   id: string;
-  type: 'text-label' | 'text-field' | 'checkbox' | 'radio-group' | 'line' | 'rectangle' | 'image' | 'date-field' | 'signature-field' | 'number-field' | 'textarea-field' | 'select-field' | 'divider' | 'circle';
+  type: 'text-label' | 'text-field' | 'checkbox' | 'radio-group' | 'line' | 'vertical-line' | 'rectangle' | 'image' | 'date-field' | 'signature-field' | 'number-field' | 'textarea-field' | 'select-field' | 'divider' | 'circle';
   x: number; // percentage
   y: number; // percentage
   width: number; // percentage
@@ -44,6 +44,9 @@ export interface FormElement {
   // Line properties
   lineWidth?: number;
   lineStyle?: 'solid' | 'dashed' | 'dotted';
+  dashLength?: number; // Length of dash segment
+  gapLength?: number; // Length of gap between dashes
+  segmentCount?: number; // Fixed number of segments (overrides dashLength/gapLength)
   // Date field
   dateFormat?: string;
   // Select field
@@ -224,12 +227,101 @@ export const generateBlankPDF = async (
         break;
 
       case 'line':
-        page.drawLine({
-          start: { x, y: y + height / 2 },
-          end: { x: x + width, y: y + height / 2 },
-          thickness: element.lineWidth || 1,
-          color: element.color ? hexToRgb(element.color) : rgb(0, 0, 0),
-        });
+        if (element.lineStyle === 'dashed' || element.lineStyle === 'dotted') {
+          // Draw dashed/dotted horizontal line
+          const lineY = y + height / 2;
+          const lineColor = element.color ? hexToRgb(element.color) : rgb(0, 0, 0);
+          
+          if (element.segmentCount && element.segmentCount > 0) {
+            // Fixed segment count mode
+            const segCount = element.segmentCount;
+            const totalGaps = segCount - 1;
+            const gapLen = element.gapLength || 6;
+            const totalGapSpace = totalGaps * gapLen;
+            const dashLen = (width - totalGapSpace) / segCount;
+            
+            for (let i = 0; i < segCount; i++) {
+              const segX = x + i * (dashLen + gapLen);
+              page.drawLine({
+                start: { x: segX, y: lineY },
+                end: { x: segX + dashLen, y: lineY },
+                thickness: element.lineWidth || 1,
+                color: lineColor,
+              });
+            }
+          } else {
+            // Auto mode with dash/gap lengths
+            const dashLen = element.dashLength || (element.lineStyle === 'dotted' ? 2 : 8);
+            const gapLen = element.gapLength || (element.lineStyle === 'dotted' ? 4 : 6);
+            let currentX = x;
+            while (currentX < x + width) {
+              const segmentEnd = Math.min(currentX + dashLen, x + width);
+              page.drawLine({
+                start: { x: currentX, y: lineY },
+                end: { x: segmentEnd, y: lineY },
+                thickness: element.lineWidth || 1,
+                color: lineColor,
+              });
+              currentX += dashLen + gapLen;
+            }
+          }
+        } else {
+          page.drawLine({
+            start: { x, y: y + height / 2 },
+            end: { x: x + width, y: y + height / 2 },
+            thickness: element.lineWidth || 1,
+            color: element.color ? hexToRgb(element.color) : rgb(0, 0, 0),
+          });
+        }
+        break;
+
+      case 'vertical-line':
+        if (element.lineStyle === 'dashed' || element.lineStyle === 'dotted') {
+          // Draw dashed/dotted vertical line
+          const lineX = x + width / 2;
+          const vLineColor = element.color ? hexToRgb(element.color) : rgb(0, 0, 0);
+          
+          if (element.segmentCount && element.segmentCount > 0) {
+            // Fixed segment count mode
+            const vSegCount = element.segmentCount;
+            const vTotalGaps = vSegCount - 1;
+            const vGapLen = element.gapLength || 6;
+            const vTotalGapSpace = vTotalGaps * vGapLen;
+            const vDashLen = (height - vTotalGapSpace) / vSegCount;
+            
+            for (let i = 0; i < vSegCount; i++) {
+              const segY = y + i * (vDashLen + vGapLen);
+              page.drawLine({
+                start: { x: lineX, y: segY },
+                end: { x: lineX, y: segY + vDashLen },
+                thickness: element.lineWidth || 1,
+                color: vLineColor,
+              });
+            }
+          } else {
+            // Auto mode with dash/gap lengths
+            const vDashLen = element.dashLength || (element.lineStyle === 'dotted' ? 2 : 8);
+            const vGapLen = element.gapLength || (element.lineStyle === 'dotted' ? 4 : 6);
+            let currentY = y;
+            while (currentY < y + height) {
+              const segmentEnd = Math.min(currentY + vDashLen, y + height);
+              page.drawLine({
+                start: { x: lineX, y: currentY },
+                end: { x: lineX, y: segmentEnd },
+                thickness: element.lineWidth || 1,
+                color: vLineColor,
+              });
+              currentY += vDashLen + vGapLen;
+            }
+          }
+        } else {
+          page.drawLine({
+            start: { x: x + width / 2, y },
+            end: { x: x + width / 2, y: y + height },
+            thickness: element.lineWidth || 1,
+            color: element.color ? hexToRgb(element.color) : rgb(0, 0, 0),
+          });
+        }
         break;
 
       case 'rectangle':

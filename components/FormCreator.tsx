@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Plus, Type, Square, Minus,
+  Plus, Type, Square, Minus, GripVertical,
   Trash2, Copy, Move, FileText, LayoutTemplate,
   AlignLeft, AlignCenter, AlignRight,
   Calendar, PenTool,
@@ -49,6 +49,7 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
     name: 'Shapes',
     items: [
       { type: 'line', icon: Minus, label: 'Line', color: 'bg-gray-500', description: 'Horizontal line' },
+      { type: 'vertical-line', icon: GripVertical, label: 'Vertical Line', color: 'bg-gray-600', description: 'Vertical line' },
       { type: 'rectangle', icon: Square, label: 'Rectangle', color: 'bg-orange-500', description: 'Box/Border' },
       { type: 'circle', icon: Circle, label: 'Circle', color: 'bg-rose-500', description: 'Circle shape' },
     ],
@@ -251,6 +252,7 @@ const FormCreator: React.FC<FormCreatorProps> = ({
       'signature-field': { width: 30, height: 12 },
       'image': { width: 20, height: 15 },
       'line': { width: 40, height: 0.5 },
+      'vertical-line': { width: 0.5, height: 30 },
       'divider': { width: 90, height: 2 },
       'rectangle': { width: 20, height: 15 },
       'circle': { width: 10, height: 10 },
@@ -648,14 +650,66 @@ const FormCreator: React.FC<FormCreatorProps> = ({
             </div>
           )}
           {(elem.type === 'line' || elem.type === 'divider') && (
-            <div
-              className="w-full"
-              style={{
-                height: elem.lineWidth || 1,
-                backgroundColor: elem.color || '#e2e8f0',
-                borderStyle: elem.lineStyle === 'dashed' ? 'dashed' : elem.lineStyle === 'dotted' ? 'dotted' : 'solid',
-              }}
-            />
+            <div className="w-full flex items-center justify-center h-full">
+              {elem.segmentCount && elem.segmentCount > 0 && (elem.lineStyle === 'dashed' || elem.lineStyle === 'dotted') ? (
+                <div className="w-full h-full flex items-center justify-between" style={{ gap: elem.gapLength || 6 }}>
+                  {Array.from({ length: elem.segmentCount }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex-1"
+                      style={{
+                        height: elem.lineWidth || 1,
+                        backgroundColor: elem.color || '#e2e8f0',
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="w-full"
+                  style={{
+                    height: elem.lineWidth || 1,
+                    backgroundColor: elem.lineStyle === 'solid' || !elem.lineStyle ? (elem.color || '#e2e8f0') : 'transparent',
+                    backgroundImage: elem.lineStyle === 'dashed' 
+                      ? `repeating-linear-gradient(to right, ${elem.color || '#e2e8f0'} 0, ${elem.color || '#e2e8f0'} ${elem.dashLength || 8}px, transparent ${elem.dashLength || 8}px, transparent ${(elem.dashLength || 8) + (elem.gapLength || 6)}px)`
+                      : elem.lineStyle === 'dotted'
+                      ? `repeating-linear-gradient(to right, ${elem.color || '#e2e8f0'} 0, ${elem.color || '#e2e8f0'} ${elem.dashLength || 2}px, transparent ${elem.dashLength || 2}px, transparent ${(elem.dashLength || 2) + (elem.gapLength || 4)}px)`
+                      : 'none',
+                  }}
+                />
+              )}
+            </div>
+          )}
+          {elem.type === 'vertical-line' && (
+            <div className="h-full flex items-center justify-center w-full">
+              {elem.segmentCount && elem.segmentCount > 0 && (elem.lineStyle === 'dashed' || elem.lineStyle === 'dotted') ? (
+                <div className="h-full flex flex-col items-center justify-between" style={{ gap: elem.gapLength || 6 }}>
+                  {Array.from({ length: elem.segmentCount }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex-1"
+                      style={{
+                        width: elem.lineWidth || 1,
+                        backgroundColor: elem.color || '#e2e8f0',
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="h-full"
+                  style={{
+                    width: elem.lineWidth || 1,
+                    backgroundColor: elem.lineStyle === 'solid' || !elem.lineStyle ? (elem.color || '#e2e8f0') : 'transparent',
+                    backgroundImage: elem.lineStyle === 'dashed' 
+                      ? `repeating-linear-gradient(to bottom, ${elem.color || '#e2e8f0'} 0, ${elem.color || '#e2e8f0'} ${elem.dashLength || 8}px, transparent ${elem.dashLength || 8}px, transparent ${(elem.dashLength || 8) + (elem.gapLength || 6)}px)`
+                      : elem.lineStyle === 'dotted'
+                      ? `repeating-linear-gradient(to bottom, ${elem.color || '#e2e8f0'} 0, ${elem.color || '#e2e8f0'} ${elem.dashLength || 2}px, transparent ${elem.dashLength || 2}px, transparent ${(elem.dashLength || 2) + (elem.gapLength || 4)}px)`
+                      : 'none',
+                  }}
+                />
+              )}
+            </div>
           )}
           {elem.type === 'rectangle' && (
             <div
@@ -1282,17 +1336,85 @@ const FormCreator: React.FC<FormCreatorProps> = ({
                 </div>
               )}
 
-              {selectedElement.type === 'line' && (
-                <div>
-                  <label className="text-xs text-slate-500">Line Width</label>
-                  <input
-                    type="number"
-                    value={selectedElement.lineWidth || 1}
-                    onChange={(e) => updateElement(selectedElement.id, { lineWidth: parseInt(e.target.value) || 1 })}
-                    className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
-                    min="1"
-                    max="20"
-                  />
+              {(selectedElement.type === 'line' || selectedElement.type === 'vertical-line') && (
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-slate-500">Line Width</label>
+                    <input
+                      type="number"
+                      value={selectedElement.lineWidth || 1}
+                      onChange={(e) => updateElement(selectedElement.id, { lineWidth: parseInt(e.target.value) || 1 })}
+                      className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                      min="1"
+                      max="20"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500">Line Style</label>
+                    <select
+                      value={selectedElement.lineStyle || 'solid'}
+                      onChange={(e) => updateElement(selectedElement.id, { lineStyle: e.target.value as 'solid' | 'dashed' | 'dotted' })}
+                      className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                    >
+                      <option value="solid">Solid</option>
+                      <option value="dashed">Dashed</option>
+                      <option value="dotted">Dotted</option>
+                    </select>
+                  </div>
+                  {(selectedElement.lineStyle === 'dashed' || selectedElement.lineStyle === 'dotted') && (
+                    <>
+                      <div>
+                        <label className="text-xs text-slate-500">Segment Count</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={selectedElement.segmentCount || ''}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseInt(e.target.value) : undefined;
+                              updateElement(selectedElement.id, { segmentCount: val });
+                            }}
+                            className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                            min="1"
+                            max="100"
+                            placeholder="Auto"
+                          />
+                          {selectedElement.segmentCount && (
+                            <button
+                              onClick={() => updateElement(selectedElement.id, { segmentCount: undefined })}
+                              className="text-xs text-slate-400 hover:text-slate-600 whitespace-nowrap"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Leave empty for auto</p>
+                      </div>
+                      {!selectedElement.segmentCount && (
+                        <div>
+                          <label className="text-xs text-slate-500">Dash Length</label>
+                          <input
+                            type="number"
+                            value={selectedElement.dashLength || (selectedElement.lineStyle === 'dotted' ? 2 : 8)}
+                            onChange={(e) => updateElement(selectedElement.id, { dashLength: parseInt(e.target.value) || 1 })}
+                            className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                            min="1"
+                            max="50"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs text-slate-500">Gap Length</label>
+                        <input
+                          type="number"
+                          value={selectedElement.gapLength || (selectedElement.lineStyle === 'dotted' ? 4 : 6)}
+                          onChange={(e) => updateElement(selectedElement.id, { gapLength: parseInt(e.target.value) || 1 })}
+                          className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                          min="1"
+                          max="50"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
