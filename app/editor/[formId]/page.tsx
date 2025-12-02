@@ -73,6 +73,9 @@ function EditorContent() {
         setFile(pdfFile);
         setFields(form.fields);
         setSections(form.sections || []);
+        if (form.globalDrawColor) {
+          setGlobalDrawColor(form.globalDrawColor);
+        }
         
         const bytes = await blob.arrayBuffer();
         setPdfBytes(bytes);
@@ -345,7 +348,17 @@ function EditorContent() {
 
   const handleCopyJSON = async () => {
     try {
-      const formTemplate = { id: formId, title: currentForm?.title || "EDIT_THIS_TITLE", description: currentForm?.description || "EDIT_THIS_DESCRIPTION", fileName: currentForm?.fileName || `/forms/${file?.name || 'document.pdf'}`, fields: fields, sections: sections.length > 0 ? sections : undefined, createdAt: new Date().toISOString(), category: currentForm?.category || "EDIT_THIS_CATEGORY" };
+      const formTemplate = { 
+        id: formId, 
+        title: currentForm?.title || "EDIT_THIS_TITLE", 
+        description: currentForm?.description || "EDIT_THIS_DESCRIPTION", 
+        fileName: currentForm?.fileName || `/forms/${file?.name || 'document.pdf'}`, 
+        fields: fields, 
+        sections: sections.length > 0 ? sections : undefined, 
+        globalDrawColor: globalDrawColor !== '#000000' ? globalDrawColor : undefined,
+        createdAt: new Date().toISOString(), 
+        category: currentForm?.category || "EDIT_THIS_CATEGORY" 
+      };
       await navigator.clipboard.writeText(JSON.stringify(formTemplate, null, 2));
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
