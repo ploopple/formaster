@@ -99,6 +99,12 @@ export const en = {
     type: 'Type',
     value: 'Value',
     placeholder: 'Placeholder',
+    enterValue: 'Enter value...',
+    selectOption: 'Select...',
+    checked: 'Checked',
+    addSignature: 'Add Signature',
+    editSignature: 'Edit Signature',
+    tableData: 'Table Data',
     
     // Field types
     fieldTypes: {

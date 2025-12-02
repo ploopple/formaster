@@ -1613,6 +1613,320 @@ const Sidebar: React.FC<SidebarProps> = ({
                             const depth = getFieldDepth(field, fields);
                             const isDragging = draggedFieldId === field.id;
                             const isDragOver = dragOverFieldId === field.id;
+                            
+                            // Render inline value input based on field type
+                            const renderValueInput = () => {
+                                // Skip value input for certain types
+                                if (field.type === 'table-row' || field.type === 'composite') {
+                                    return null;
+                                }
+                                
+                                const stopPropagation = (e: React.MouseEvent | React.KeyboardEvent) => {
+                                    e.stopPropagation();
+                                };
+                                
+                                // Table inline editor
+                                if (field.type === 'table' && field.columns && field.columns.length > 0) {
+                                    const tableData = getTableData(field.value);
+                                    const filledRows = field.filledRows || 1;
+                                    
+                                    return (
+                                        <div className="mt-2" onClick={stopPropagation}>
+                                            <div className="text-[10px] text-slate-500 mb-1 flex items-center justify-between">
+                                                <span>{t.sidebar.tableData || 'Table Data'} ({filledRows} {t.common.row || 'row'}{filledRows > 1 ? 's' : ''})</span>
+                                                <div className="flex gap-1">
+                                                    {filledRows < (field.maxRows || 10) && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onUpdateField(field.id, { filledRows: filledRows + 1 });
+                                                            }}
+                                                            className="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                                        >
+                                                            + {t.common.row || 'Row'}
+                                                        </button>
+                                                    )}
+                                                    {filledRows > 1 && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onUpdateField(field.id, { filledRows: filledRows - 1 });
+                                                            }}
+                                                            className="text-[9px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                                        >
+                                                            - {t.common.row || 'Row'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="border border-slate-200 rounded overflow-hidden bg-slate-50">
+                                                {/* Header row */}
+                                                <div className="flex bg-slate-100 border-b border-slate-200">
+                                                    {field.columns.map((col) => (
+                                                        <div 
+                                                            key={col.id} 
+                                                            className="px-1 py-0.5 text-[9px] font-medium text-slate-600 truncate border-r border-slate-200 last:border-r-0"
+                                                            style={{ width: `${col.width}%` }}
+                                                        >
+                                                            {col.name}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {/* Data rows */}
+                                                {Array.from({ length: filledRows }).map((_, rowIdx) => (
+                                                    <div key={rowIdx} className="flex border-b border-slate-200 last:border-b-0">
+                                                        {field.columns!.map((col, colIdx) => {
+                                                            const cellValue = tableData[rowIdx]?.[colIdx] || '';
+                                                            
+                                                            // Render cell based on column type
+                                                            const renderCell = () => {
+                                                                // Date column
+                                                                if (col.type === 'date') {
+                                                                    const format = col.dateFormat || 'DD/MM/YYYY';
+                                                                    const inputType = format === 'YYYY' ? 'number' : format === 'MM/YYYY' ? 'month' : 'date';
+                                                                    return (
+                                                                        <input
+                                                                            type={inputType}
+                                                                            value={formatDateForInput(cellValue, format)}
+                                                                            onChange={(e) => {
+                                                                                const newVal = e.target.value;
+                                                                                let formatted = newVal;
+                                                                                if (format === 'MM/YYYY' && newVal) {
+                                                                                    const [y, m] = newVal.split('-');
+                                                                                    formatted = `${m}/${y}`;
+                                                                                } else if (format === 'DD/MM/YYYY' && newVal) {
+                                                                                    const [y, m, d] = newVal.split('-');
+                                                                                    formatted = `${d}/${m}/${y}`;
+                                                                                }
+                                                                                updateTableCell(field, rowIdx, colIdx, formatted);
+                                                                            }}
+                                                                            onClick={stopPropagation}
+                                                                            onKeyDown={stopPropagation}
+                                                                            className="w-full px-1 py-0.5 text-[10px] bg-white border-0 focus:outline-none focus:bg-blue-50"
+                                                                        />
+                                                                    );
+                                                                }
+                                                                
+                                                                // Select column
+                                                                if (col.type === 'select' && col.options && col.options.length > 0) {
+                                                                    return (
+                                                                        <select
+                                                                            value={cellValue}
+                                                                            onChange={(e) => updateTableCell(field, rowIdx, colIdx, e.target.value)}
+                                                                            onClick={stopPropagation}
+                                                                            className="w-full px-0.5 py-0.5 text-[10px] bg-white border-0 focus:outline-none focus:bg-blue-50"
+                                                                        >
+                                                                            <option value="">...</option>
+                                                                            {col.options.map(opt => (
+                                                                                <option key={opt.id} value={opt.value}>{opt.label || opt.value}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    );
+                                                                }
+                                                                
+                                                                // Checkbox column
+                                                                if (col.type === 'checkbox') {
+                                                                    const isChecked = cellValue === 'true' || cellValue === 'checked';
+                                                                    return (
+                                                                        <div className="flex items-center justify-center h-full py-0.5">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={isChecked}
+                                                                                onChange={(e) => updateTableCell(field, rowIdx, colIdx, e.target.checked ? 'checked' : '')}
+                                                                                onClick={stopPropagation}
+                                                                                className="w-3 h-3"
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                
+                                                                // Radio column (single selection per row for this column)
+                                                                if (col.type === 'radio' && col.options && col.options.length > 0) {
+                                                                    return (
+                                                                        <select
+                                                                            value={cellValue}
+                                                                            onChange={(e) => updateTableCell(field, rowIdx, colIdx, e.target.value)}
+                                                                            onClick={stopPropagation}
+                                                                            className="w-full px-0.5 py-0.5 text-[10px] bg-white border-0 focus:outline-none focus:bg-blue-50"
+                                                                        >
+                                                                            <option value="">...</option>
+                                                                            {col.options.map(opt => (
+                                                                                <option key={opt.id} value={opt.value}>{opt.label || opt.value}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    );
+                                                                }
+                                                                
+                                                                // Default: text/number/textarea input
+                                                                return (
+                                                                    <input
+                                                                        type={col.type === 'number' ? 'number' : 'text'}
+                                                                        value={cellValue}
+                                                                        onChange={(e) => updateTableCell(field, rowIdx, colIdx, e.target.value)}
+                                                                        onClick={stopPropagation}
+                                                                        onKeyDown={stopPropagation}
+                                                                        className="w-full px-1 py-0.5 text-[10px] bg-white border-0 focus:outline-none focus:bg-blue-50"
+                                                                        placeholder="..."
+                                                                    />
+                                                                );
+                                                            };
+                                                            
+                                                            return (
+                                                                <div 
+                                                                    key={col.id} 
+                                                                    className="border-r border-slate-200 last:border-r-0"
+                                                                    style={{ width: `${col.width}%` }}
+                                                                >
+                                                                    {renderCell()}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                
+                                if (field.type === 'signature') {
+                                    return (
+                                        <button
+                                            onClick={(e) => {
+                                                stopPropagation(e);
+                                                onOpenSignature?.(field.id);
+                                            }}
+                                            className="w-full mt-2 px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <PenTool size={12} />
+                                            {field.value ? t.sidebar.editSignature || 'Edit Signature' : t.sidebar.addSignature || 'Add Signature'}
+                                        </button>
+                                    );
+                                }
+                                
+                                if (field.type === 'date') {
+                                    const format = field.dateFormat || 'DD/MM/YYYY';
+                                    const inputType = format === 'YYYY' ? 'number' : format === 'MM/YYYY' ? 'month' : 'date';
+                                    return (
+                                        <input
+                                            type={inputType}
+                                            value={formatDateForInput(field.value, format)}
+                                            onChange={(e) => handleDateChange(e.target.value, format, field.id)}
+                                            onClick={stopPropagation}
+                                            onKeyDown={stopPropagation}
+                                            placeholder={format}
+                                            className="w-full mt-2 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                                        />
+                                    );
+                                }
+                                
+                                if (field.type === 'select' && field.options && field.options.length > 0) {
+                                    return (
+                                        <select
+                                            value={field.value || ''}
+                                            onChange={(e) => {
+                                                onUpdateField(field.id, { value: e.target.value });
+                                            }}
+                                            onClick={stopPropagation}
+                                            className="w-full mt-2 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                                        >
+                                            <option value="">{t.sidebar.selectOption || 'Select...'}</option>
+                                            {field.options.map(opt => (
+                                                <option key={opt.id} value={opt.value}>{getOptionLabel(opt)}</option>
+                                            ))}
+                                        </select>
+                                    );
+                                }
+                                
+                                if (field.type === 'radio' && field.options && field.options.length > 0) {
+                                    return (
+                                        <div className="mt-2 flex flex-wrap gap-2" onClick={stopPropagation}>
+                                            {field.options.map(opt => (
+                                                <label key={opt.id} className="flex items-center gap-1 text-xs cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name={`radio-${field.id}`}
+                                                        checked={field.value === opt.value}
+                                                        onChange={() => onUpdateField(field.id, { value: opt.value })}
+                                                        className="w-3 h-3"
+                                                    />
+                                                    <span className="text-slate-600">{getOptionLabel(opt)}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    );
+                                }
+                                
+                                if (field.type === 'checkbox') {
+                                    if (field.useFieldAsCheckbox) {
+                                        return (
+                                            <label className="mt-2 flex items-center gap-2 cursor-pointer" onClick={stopPropagation}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={field.value === 'true' || field.value === 'checked'}
+                                                    onChange={(e) => onUpdateField(field.id, { value: e.target.checked ? 'checked' : '' })}
+                                                    className="w-4 h-4 rounded border-slate-300"
+                                                />
+                                                <span className="text-xs text-slate-600">{t.sidebar.checked || 'Checked'}</span>
+                                            </label>
+                                        );
+                                    }
+                                    if (field.options && field.options.length > 0) {
+                                        const selectedValues = field.value ? field.value.split(',').filter(Boolean) : [];
+                                        return (
+                                            <div className="mt-2 flex flex-wrap gap-2" onClick={stopPropagation}>
+                                                {field.options.map(opt => (
+                                                    <label key={opt.id} className="flex items-center gap-1 text-xs cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedValues.includes(opt.value)}
+                                                            onChange={(e) => {
+                                                                let newValues = [...selectedValues];
+                                                                if (e.target.checked) {
+                                                                    newValues.push(opt.value);
+                                                                } else {
+                                                                    newValues = newValues.filter(v => v !== opt.value);
+                                                                }
+                                                                onUpdateField(field.id, { value: newValues.join(',') });
+                                                            }}
+                                                            className="w-3 h-3 rounded"
+                                                        />
+                                                        <span className="text-slate-600">{getOptionLabel(opt)}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        );
+                                    }
+                                }
+                                
+                                if (field.type === 'textarea') {
+                                    return (
+                                        <textarea
+                                            value={field.value || ''}
+                                            onChange={(e) => onUpdateField(field.id, { value: e.target.value })}
+                                            onClick={stopPropagation}
+                                            onKeyDown={stopPropagation}
+                                            placeholder={t.sidebar.enterValue || 'Enter value...'}
+                                            rows={2}
+                                            className="w-full mt-2 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 resize-none"
+                                        />
+                                    );
+                                }
+                                
+                                // Default: text/number input
+                                return (
+                                    <input
+                                        type={field.type === 'number' ? 'number' : 'text'}
+                                        value={field.value || ''}
+                                        onChange={(e) => onUpdateField(field.id, { value: e.target.value })}
+                                        onClick={stopPropagation}
+                                        onKeyDown={stopPropagation}
+                                        placeholder={t.sidebar.enterValue || 'Enter value...'}
+                                        maxLength={field.maxLength}
+                                        className="w-full mt-2 px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                                    />
+                                );
+                            };
+                            
                             return (
                                 <div 
                                     key={field.id} 
@@ -1623,7 +1937,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     onDrop={(e) => handleDrop(e, field.id)}
                                     onClick={() => onSelectField(field.id)} 
                                     style={{ marginLeft: `${depth * 16}px` }} 
-                                    className={`group p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-md cursor-move transition-all flex items-center justify-between relative overflow-hidden ${depth > 0 ? 'border-l-4 border-l-slate-300' : ''} ${isDragging ? 'opacity-50' : ''} ${isDragOver ? 'border-blue-500 border-2' : ''}`}
+                                    className={`group p-3 bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-md cursor-move transition-all relative overflow-hidden ${depth > 0 ? 'border-l-4 border-l-slate-300' : ''} ${isDragging ? 'opacity-50' : ''} ${isDragOver ? 'border-blue-500 border-2' : ''}`}
                                 >
                                     <div className="relative z-10 w-full flex items-center gap-2">
                                         <div className="text-slate-400 cursor-grab active:cursor-grabbing">
@@ -1645,6 +1959,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                     </span>
                                                 )}
                                             </div>
+                                            {renderValueInput()}
                                         </div>
                                     </div>
                                 </div>
