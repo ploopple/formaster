@@ -53,6 +53,8 @@ export const en = {
     noFormsFound: 'No forms found',
     tryAdjustingSearch: 'Try adjusting your search',
     addFormTemplates: 'Add form templates to formsData.ts',
+    duplicateForm: 'Duplicate',
+    formDuplicated: 'Form duplicated successfully',
   },
 
   // Editor page

@@ -13,5 +13,15 @@ export default function TemplatesPage() {
     router.push(`/editor/${form.id}`);
   };
 
-  return <FormsList onSelectForm={handleSelectForm} />;
+  const handleDuplicateForm = (duplicatedForm: FormTemplate) => {
+    // Optionally navigate to the duplicated form
+    router.push(`/editor/${duplicatedForm.id}`);
+  };
+
+  return (
+    <FormsList 
+      onSelectForm={handleSelectForm} 
+      onDuplicateForm={handleDuplicateForm}
+    />
+  );
 }

@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { formsData, FormTemplate } from '../formsData';
-import { FileText, Search, Calendar, FolderOpen, ArrowLeft } from 'lucide-react';
+import { FormTemplate } from '../formsData';
+import { formService } from '../services/formService';
+import { FileText, Search, Calendar, FolderOpen, ArrowLeft, Copy } from 'lucide-react';
 import { useI18n } from '../lib/i18n/I18nContext';
 
 interface FormsListProps {
   onSelectForm: (form: FormTemplate) => void;
+  onDuplicateForm?: (form: FormTemplate) => void;
 }
 
-const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
+const FormsList: React.FC<FormsListProps> = ({ onSelectForm, onDuplicateForm }) => {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [forms, setForms] = useState<FormTemplate[]>([]);
 
-  const categories = ['all', ...Array.from(new Set(formsData.map(f => f.category).filter(Boolean)))] as string[];
+  useEffect(() => {
+    setForms(formService.getForms());
+  }, []);
 
-  const filteredForms = formsData.filter(form => {
+  const handleDuplicate = (e: React.MouseEvent, form: FormTemplate) => {
+    e.stopPropagation();
+    const duplicatedForm = formService.duplicateForm(form);
+    setForms(formService.getForms());
+    if (onDuplicateForm) {
+      onDuplicateForm(duplicatedForm);
+    }
+  };
+
+  const categories = ['all', ...Array.from(new Set(forms.map(f => f.category).filter(Boolean)))] as string[];
+
+  const filteredForms = forms.filter(form => {
     const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          form.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || form.category === selectedCategory;
@@ -95,6 +111,15 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                       </span>
                     )}
                   </div>
+                  {onDuplicateForm && (
+                    <button
+                      onClick={(e) => handleDuplicate(e, form)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      title={t.templates.duplicateForm}
+                    >
+                      <Copy size={18} />
+                    </button>
+                  )}
                 </div>
                 <p className="text-sm text-slate-600 mb-4 line-clamp-2">{form.description}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-500">

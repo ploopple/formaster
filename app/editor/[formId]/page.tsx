@@ -9,7 +9,8 @@ import Sidebar from '../../../components/Sidebar';
 const PDFViewer = dynamic(() => import('../../../components/PDFViewer'), { ssr: false });
 import { SignatureModal } from '../../../components/SignatureModal';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
-import { formsData, FormTemplate } from '../../../formsData';
+import { FormTemplate } from '../../../formsData';
+import { formService } from '../../../services/formService';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
@@ -66,7 +67,7 @@ function EditorContent() {
     setCurrentForm(null);
     
     const loadForm = async () => {
-      const form = formsData.find(f => f.id === formId);
+      const form = formService.getFormById(formId);
       if (!form) {
         setFormNotFound(true);
         setIsLoading(false);
