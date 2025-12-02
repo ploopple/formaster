@@ -240,6 +240,62 @@ export const generateBlankPDF = async (
           borderWidth: element.borderWidth || 1,
         });
         break;
+
+      case 'circle':
+        const radius = Math.min(width, height) / 2;
+        page.drawCircle({
+          x: x + width / 2,
+          y: y + height / 2,
+          size: radius,
+          color: element.backgroundColor ? hexToRgb(element.backgroundColor) : undefined,
+          borderColor: element.borderColor ? hexToRgb(element.borderColor) : rgb(0, 0, 0),
+          borderWidth: element.borderWidth || 1,
+        });
+        break;
+
+      case 'image':
+        if (element.imageData) {
+          try {
+            // Extract base64 data from data URL
+            const base64Data = element.imageData.split(',')[1];
+            const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+            
+            // Determine image type and embed
+            let image;
+            if (element.imageData.includes('image/png')) {
+              image = await pdfDoc.embedPng(imageBytes);
+            } else if (element.imageData.includes('image/jpeg') || element.imageData.includes('image/jpg')) {
+              image = await pdfDoc.embedJpg(imageBytes);
+            } else {
+              // Try PNG first, then JPG
+              try {
+                image = await pdfDoc.embedPng(imageBytes);
+              } catch {
+                image = await pdfDoc.embedJpg(imageBytes);
+              }
+            }
+            
+            // Draw the image
+            page.drawImage(image, {
+              x,
+              y,
+              width,
+              height,
+            });
+          } catch (error) {
+            console.error('Failed to embed image:', error);
+            // Draw placeholder rectangle if image fails
+            page.drawRectangle({
+              x,
+              y,
+              width,
+              height,
+              borderColor: rgb(0.8, 0.8, 0.8),
+              borderWidth: 1,
+            });
+          }
+        }
+        break;
     }
   }
 

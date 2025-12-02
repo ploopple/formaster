@@ -2,15 +2,13 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Plus, Type, Square, Minus, CheckSquare,
-  AlignLeft, AlignCenter, AlignRight, Trash2, Copy,
-  Move, FileText, LayoutTemplate, Calendar, PenTool,
-  Hash, List, Circle, Image, AlignVerticalJustifyCenter,
-  AlignHorizontalJustifyCenter, ArrowUp, ArrowDown,
-  Lock, Unlock, Grid3X3, Undo2, Redo2, Clipboard, Layers,
-  TextCursorInput, AlignStartVertical, AlignEndVertical,
-  AlignCenterVertical, AlignStartHorizontal, AlignEndHorizontal,
-  AlignCenterHorizontal
+  Plus, Type, Square, Minus,
+  Trash2, Copy, Move, FileText, LayoutTemplate,
+  AlignLeft, AlignCenter, AlignRight,
+  Calendar, PenTool,
+  List, Circle, Image,
+  ArrowUp, ArrowDown,
+  Lock, Grid3X3, Undo2, Redo2, Clipboard,
 } from 'lucide-react';
 import { PAGE_SIZES, PageSizeKey, FormElement } from '../services/pdfGenerator';
 
@@ -45,34 +43,20 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
     name: 'Text',
     items: [
       { type: 'text-label', icon: Type, label: 'Text Label', color: 'bg-blue-500', description: 'Static text' },
-      { type: 'text-field', icon: TextCursorInput, label: 'Text Input', color: 'bg-green-500', description: 'Single line input' },
-      { type: 'textarea-field', icon: Square, label: 'Text Area', color: 'bg-green-600', description: 'Multi-line input' },
-      { type: 'number-field', icon: Hash, label: 'Number', color: 'bg-cyan-500', description: 'Numeric input' },
-    ],
-  },
-  {
-    name: 'Selection',
-    items: [
-      { type: 'checkbox', icon: CheckSquare, label: 'Checkbox', color: 'bg-purple-500', description: 'Yes/No option' },
-      { type: 'radio-group', icon: Circle, label: 'Radio Group', color: 'bg-purple-600', description: 'Single choice' },
-      { type: 'select-field', icon: List, label: 'Dropdown', color: 'bg-indigo-500', description: 'Select from list' },
-    ],
-  },
-  {
-    name: 'Special',
-    items: [
-      { type: 'date-field', icon: Calendar, label: 'Date', color: 'bg-amber-500', description: 'Date picker' },
-      { type: 'signature-field', icon: PenTool, label: 'Signature', color: 'bg-pink-500', description: 'Signature area' },
-      { type: 'image', icon: Image, label: 'Image', color: 'bg-teal-500', description: 'Upload image' },
     ],
   },
   {
     name: 'Shapes',
     items: [
       { type: 'line', icon: Minus, label: 'Line', color: 'bg-gray-500', description: 'Horizontal line' },
-      { type: 'divider', icon: Minus, label: 'Divider', color: 'bg-gray-400', description: 'Section divider' },
       { type: 'rectangle', icon: Square, label: 'Rectangle', color: 'bg-orange-500', description: 'Box/Border' },
       { type: 'circle', icon: Circle, label: 'Circle', color: 'bg-rose-500', description: 'Circle shape' },
+    ],
+  },
+  {
+    name: 'Media',
+    items: [
+      { type: 'image', icon: Image, label: 'Image', color: 'bg-teal-500', description: 'Upload image' },
     ],
   },
 ];
@@ -81,91 +65,13 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
 const ELEMENT_TYPES = ELEMENT_CATEGORIES.flatMap(cat => cat.items);
 
 // Quick start templates
-const FORM_TEMPLATES = [
-  {
-    id: 'contact',
-    name: 'Contact Form',
-    description: 'Name, email, phone fields',
-    icon: '📧',
-    elements: [
-      { id: '1', type: 'text-label' as const, x: 5, y: 3, width: 90, height: 4, page: 1, text: 'Contact Information', fontSize: 18, fontWeight: 'bold' as const, color: '#1e293b' },
-      { id: '2', type: 'divider' as const, x: 5, y: 8, width: 90, height: 0.5, page: 1, color: '#e2e8f0' },
-      { id: '3', type: 'text-label' as const, x: 5, y: 12, width: 20, height: 3, page: 1, text: 'Full Name:', fontSize: 12, color: '#475569' },
-      { id: '4', type: 'text-field' as const, x: 5, y: 16, width: 40, height: 5, page: 1, fieldName: 'full_name', placeholder: 'Enter your name', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '5', type: 'text-label' as const, x: 5, y: 24, width: 20, height: 3, page: 1, text: 'Email:', fontSize: 12, color: '#475569' },
-      { id: '6', type: 'text-field' as const, x: 5, y: 28, width: 40, height: 5, page: 1, fieldName: 'email', placeholder: 'Enter your email', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '7', type: 'text-label' as const, x: 5, y: 36, width: 20, height: 3, page: 1, text: 'Phone:', fontSize: 12, color: '#475569' },
-      { id: '8', type: 'text-field' as const, x: 5, y: 40, width: 40, height: 5, page: 1, fieldName: 'phone', placeholder: 'Enter your phone', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '9', type: 'text-label' as const, x: 5, y: 48, width: 20, height: 3, page: 1, text: 'Message:', fontSize: 12, color: '#475569' },
-      { id: '10', type: 'textarea-field' as const, x: 5, y: 52, width: 60, height: 15, page: 1, fieldName: 'message', placeholder: 'Your message...', borderColor: '#cbd5e1', borderRadius: 4 },
-    ],
-  },
-  {
-    id: 'registration',
-    name: 'Registration Form',
-    description: 'Personal details with checkboxes',
-    icon: '📝',
-    elements: [
-      { id: '1', type: 'text-label' as const, x: 5, y: 3, width: 90, height: 4, page: 1, text: 'Registration Form', fontSize: 20, fontWeight: 'bold' as const, color: '#1e293b' },
-      { id: '2', type: 'divider' as const, x: 5, y: 8, width: 90, height: 0.5, page: 1, color: '#e2e8f0' },
-      { id: '3', type: 'text-label' as const, x: 5, y: 12, width: 20, height: 3, page: 1, text: 'First Name:', fontSize: 12, color: '#475569' },
-      { id: '4', type: 'text-field' as const, x: 5, y: 16, width: 35, height: 5, page: 1, fieldName: 'first_name', placeholder: 'First name', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '5', type: 'text-label' as const, x: 50, y: 12, width: 20, height: 3, page: 1, text: 'Last Name:', fontSize: 12, color: '#475569' },
-      { id: '6', type: 'text-field' as const, x: 50, y: 16, width: 35, height: 5, page: 1, fieldName: 'last_name', placeholder: 'Last name', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '7', type: 'text-label' as const, x: 5, y: 25, width: 20, height: 3, page: 1, text: 'Date of Birth:', fontSize: 12, color: '#475569' },
-      { id: '8', type: 'date-field' as const, x: 5, y: 29, width: 25, height: 5, page: 1, fieldName: 'dob', dateFormat: 'DD/MM/YYYY', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '9', type: 'text-label' as const, x: 50, y: 25, width: 20, height: 3, page: 1, text: 'Gender:', fontSize: 12, color: '#475569' },
-      { id: '10', type: 'select-field' as const, x: 50, y: 29, width: 25, height: 5, page: 1, fieldName: 'gender', selectOptions: ['Male', 'Female', 'Other'], borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '11', type: 'checkbox' as const, x: 5, y: 40, width: 3, height: 3, page: 1, borderColor: '#64748b' },
-      { id: '12', type: 'text-label' as const, x: 10, y: 40, width: 50, height: 3, page: 1, text: 'I agree to the terms and conditions', fontSize: 11, color: '#475569' },
-    ],
-  },
-  {
-    id: 'application',
-    name: 'Job Application',
-    description: 'Resume & cover letter',
-    icon: '💼',
-    elements: [
-      { id: '1', type: 'text-label' as const, x: 5, y: 3, width: 90, height: 5, page: 1, text: 'Job Application Form', fontSize: 22, fontWeight: 'bold' as const, color: '#1e293b' },
-      { id: '2', type: 'divider' as const, x: 5, y: 9, width: 90, height: 0.5, page: 1, color: '#3b82f6' },
-      { id: '3', type: 'text-label' as const, x: 5, y: 13, width: 90, height: 3, page: 1, text: 'Personal Information', fontSize: 14, fontWeight: 'bold' as const, color: '#3b82f6' },
-      { id: '4', type: 'text-label' as const, x: 5, y: 18, width: 15, height: 3, page: 1, text: 'Full Name:', fontSize: 11, color: '#475569' },
-      { id: '5', type: 'text-field' as const, x: 5, y: 22, width: 40, height: 5, page: 1, fieldName: 'full_name', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '6', type: 'text-label' as const, x: 50, y: 18, width: 15, height: 3, page: 1, text: 'Email:', fontSize: 11, color: '#475569' },
-      { id: '7', type: 'text-field' as const, x: 50, y: 22, width: 40, height: 5, page: 1, fieldName: 'email', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '8', type: 'text-label' as const, x: 5, y: 30, width: 90, height: 3, page: 1, text: 'Position Applied For', fontSize: 14, fontWeight: 'bold' as const, color: '#3b82f6' },
-      { id: '9', type: 'text-field' as const, x: 5, y: 35, width: 50, height: 5, page: 1, fieldName: 'position', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '10', type: 'text-label' as const, x: 5, y: 43, width: 90, height: 3, page: 1, text: 'Cover Letter', fontSize: 14, fontWeight: 'bold' as const, color: '#3b82f6' },
-      { id: '11', type: 'textarea-field' as const, x: 5, y: 48, width: 85, height: 20, page: 1, fieldName: 'cover_letter', placeholder: 'Tell us why you are the best candidate...', borderColor: '#cbd5e1', borderRadius: 4 },
-      { id: '12', type: 'text-label' as const, x: 5, y: 72, width: 90, height: 3, page: 1, text: 'Signature', fontSize: 14, fontWeight: 'bold' as const, color: '#3b82f6' },
-      { id: '13', type: 'signature-field' as const, x: 5, y: 77, width: 40, height: 12, page: 1, fieldName: 'signature', borderColor: '#94a3b8' },
-      { id: '14', type: 'text-label' as const, x: 50, y: 72, width: 20, height: 3, page: 1, text: 'Date:', fontSize: 11, color: '#475569' },
-      { id: '15', type: 'date-field' as const, x: 50, y: 77, width: 25, height: 5, page: 1, fieldName: 'date', borderColor: '#cbd5e1', borderRadius: 4 },
-    ],
-  },
-  {
-    id: 'survey',
-    name: 'Survey Form',
-    description: 'Questions with radio & checkboxes',
-    icon: '📊',
-    elements: [
-      { id: '1', type: 'text-label' as const, x: 5, y: 3, width: 90, height: 5, page: 1, text: 'Customer Satisfaction Survey', fontSize: 20, fontWeight: 'bold' as const, color: '#1e293b' },
-      { id: '2', type: 'divider' as const, x: 5, y: 9, width: 90, height: 0.5, page: 1, color: '#10b981' },
-      { id: '3', type: 'text-label' as const, x: 5, y: 14, width: 90, height: 3, page: 1, text: '1. How satisfied are you with our service?', fontSize: 12, color: '#1e293b' },
-      { id: '4', type: 'radio-group' as const, x: 5, y: 19, width: 50, height: 15, page: 1, fieldName: 'satisfaction', options: [
-        { id: 'r1', label: 'Very Satisfied', x: 0, y: 0, value: '5' },
-        { id: 'r2', label: 'Satisfied', x: 0, y: 33, value: '4' },
-        { id: 'r3', label: 'Neutral', x: 0, y: 66, value: '3' },
-      ], borderColor: '#10b981' },
-      { id: '5', type: 'text-label' as const, x: 5, y: 38, width: 90, height: 3, page: 1, text: '2. What features do you use most? (Select all that apply)', fontSize: 12, color: '#1e293b' },
-      { id: '6', type: 'checkbox' as const, x: 5, y: 43, width: 3, height: 3, page: 1, borderColor: '#10b981' },
-      { id: '7', type: 'text-label' as const, x: 10, y: 43, width: 30, height: 3, page: 1, text: 'Feature A', fontSize: 11, color: '#475569' },
-      { id: '8', type: 'checkbox' as const, x: 5, y: 49, width: 3, height: 3, page: 1, borderColor: '#10b981' },
-      { id: '9', type: 'text-label' as const, x: 10, y: 49, width: 30, height: 3, page: 1, text: 'Feature B', fontSize: 11, color: '#475569' },
-      { id: '10', type: 'text-label' as const, x: 5, y: 58, width: 90, height: 3, page: 1, text: '3. Additional comments:', fontSize: 12, color: '#1e293b' },
-      { id: '11', type: 'textarea-field' as const, x: 5, y: 63, width: 85, height: 15, page: 1, fieldName: 'comments', borderColor: '#cbd5e1', borderRadius: 4 },
-    ],
-  },
+const FORM_TEMPLATES: Array<{
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  elements: Partial<FormElement>[];
+}> = [
   {
     id: 'blank',
     name: 'Blank Form',
@@ -1022,7 +928,7 @@ const FormCreator: React.FC<FormCreatorProps> = ({
                 <button
                   key={template.id}
                   onClick={() => {
-                    const newElements = template.elements.map(e => ({ ...e, id: crypto.randomUUID() }));
+                    const newElements = template.elements.map(e => ({ ...e, id: crypto.randomUUID() })) as FormElement[];
                     onElementsChange(newElements);
                     if (newElements.length > 0) saveToHistory(newElements);
                     setShowTemplates(false);
@@ -1292,6 +1198,49 @@ const FormCreator: React.FC<FormCreatorProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Image Upload */}
+            {selectedElement.type === 'image' && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 uppercase">Image</h4>
+                <div>
+                  <label className="text-xs text-slate-500 block mb-1">Upload Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const imageData = event.target?.result as string;
+                          updateElement(selectedElement.id, { imageData }, true);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                </div>
+                {selectedElement.imageData && (
+                  <div className="mt-2">
+                    <div className="relative aspect-video bg-slate-100 rounded overflow-hidden">
+                      <img 
+                        src={selectedElement.imageData} 
+                        alt="Preview" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <button
+                      onClick={() => updateElement(selectedElement.id, { imageData: undefined }, true)}
+                      className="mt-2 w-full text-xs text-red-500 hover:text-red-600 py-1"
+                    >
+                      Remove Image
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="pt-4 border-t border-slate-100 space-y-2">
