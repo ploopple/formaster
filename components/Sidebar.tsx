@@ -1680,25 +1680,38 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                             
                                                             // Render cell based on column type
                                                             const renderCell = () => {
-                                                                // Date column
+                                                                // Date column - store in YYYY-MM-DD format for PDF renderer
                                                                 if (col.type === 'date') {
                                                                     const format = col.dateFormat || 'DD/MM/YYYY';
                                                                     const inputType = format === 'YYYY' ? 'number' : format === 'MM/YYYY' ? 'month' : 'date';
+                                                                    
+                                                                    // Convert stored value to input format
+                                                                    // Stored: YYYY-MM-DD or YYYY-MM or YYYY
+                                                                    // Input expects: YYYY-MM-DD (date), YYYY-MM (month), YYYY (number)
+                                                                    const getInputValue = () => {
+                                                                        if (!cellValue) return '';
+                                                                        // If already in correct format, return as-is
+                                                                        if (cellValue.includes('-')) return cellValue;
+                                                                        // Convert from display format to input format
+                                                                        if (format === 'YYYY') return cellValue;
+                                                                        if (format === 'MM/YYYY') {
+                                                                            const parts = cellValue.split('/');
+                                                                            if (parts.length === 2) return `${parts[1]}-${parts[0]}`;
+                                                                        }
+                                                                        if (format === 'DD/MM/YYYY') {
+                                                                            const parts = cellValue.split('/');
+                                                                            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                                                        }
+                                                                        return cellValue;
+                                                                    };
+                                                                    
                                                                     return (
                                                                         <input
                                                                             type={inputType}
-                                                                            value={formatDateForInput(cellValue, format)}
+                                                                            value={getInputValue()}
                                                                             onChange={(e) => {
-                                                                                const newVal = e.target.value;
-                                                                                let formatted = newVal;
-                                                                                if (format === 'MM/YYYY' && newVal) {
-                                                                                    const [y, m] = newVal.split('-');
-                                                                                    formatted = `${m}/${y}`;
-                                                                                } else if (format === 'DD/MM/YYYY' && newVal) {
-                                                                                    const [y, m, d] = newVal.split('-');
-                                                                                    formatted = `${d}/${m}/${y}`;
-                                                                                }
-                                                                                updateTableCell(field, rowIdx, colIdx, formatted);
+                                                                                // Store in YYYY-MM-DD format (what PDF renderer expects)
+                                                                                updateTableCell(field, rowIdx, colIdx, e.target.value);
                                                                             }}
                                                                             onClick={stopPropagation}
                                                                             onKeyDown={stopPropagation}
