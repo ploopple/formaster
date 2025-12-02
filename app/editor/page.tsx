@@ -14,7 +14,7 @@ import { saveFilledPDF, downloadBlob } from '../../services/pdfUtils';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp } from 'lucide-react';
-import { useI18n, LanguageToggle } from '../../lib/i18n/I18nContext';
+import { useI18n } from '../../lib/i18n/I18nContext';
 
 function EditorContent() {
   const router = useRouter();
@@ -435,9 +435,7 @@ function EditorContent() {
   if (!file) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="absolute top-4 end-4">
-          <LanguageToggle />
-        </div>
+  
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
           <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <FileUp size={32} />
@@ -495,7 +493,7 @@ function EditorContent() {
               </button>
             </div>
           )}
-          <LanguageToggle className="hidden md:block" />
+
           <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
           </button>

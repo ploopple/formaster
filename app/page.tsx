@@ -1,18 +1,14 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { FileUp, List, PenTool } from 'lucide-react';
-import { useI18n, LanguageToggle } from '../lib/i18n/I18nContext';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 export default function Home() {
   const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="absolute top-4 end-4">
-        <LanguageToggle />
-      </div>
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
         <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <PenTool size={32} />

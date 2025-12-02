@@ -2,41 +2,28 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { formsData, FormTemplate } from '../formsData';
 import { FileText, Search, Calendar, FolderOpen, ArrowLeft } from 'lucide-react';
-import { useI18n, LanguageToggle } from '../lib/i18n/I18nContext';
+import { useI18n } from '../lib/i18n/I18nContext';
 
 interface FormsListProps {
   onSelectForm: (form: FormTemplate) => void;
 }
 
 const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = ['all', ...Array.from(new Set(formsData.map(f => f.category).filter(Boolean)))] as string[];
 
   const filteredForms = formsData.filter(form => {
-    const title = form.titleHe && language === 'he' ? form.titleHe : form.title;
-    const description = form.descriptionHe && language === 'he' ? form.descriptionHe : form.description;
-    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         form.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || form.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const getFormTitle = (form: FormTemplate) => {
-    return form.titleHe && language === 'he' ? form.titleHe : form.title;
-  };
-
-  const getFormDescription = (form: FormTemplate) => {
-    return form.descriptionHe && language === 'he' ? form.descriptionHe : form.description;
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="absolute top-4 end-4">
-        <LanguageToggle />
-      </div>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -101,7 +88,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                     <FileText size={24} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-800 mb-1 truncate">{getFormTitle(form)}</h3>
+                    <h3 className="font-semibold text-slate-800 mb-1 truncate">{form.title}</h3>
                     {form.category && (
                       <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
                         {form.category}
@@ -109,10 +96,10 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-slate-600 mb-4 line-clamp-2">{getFormDescription(form)}</p>
+                <p className="text-sm text-slate-600 mb-4 line-clamp-2">{form.description}</p>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Calendar size={14} />
-                  <span>{new Date(form.createdAt).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                  <span>{new Date(form.createdAt).toLocaleDateString('en-US')}</span>
                   <span className="ms-auto">{form.fields.length} {t.common.fields}</span>
                 </div>
               </div>

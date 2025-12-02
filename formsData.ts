@@ -11,15 +11,12 @@ export interface FieldSection {
 export interface FormTemplate {
   id: string;
   title: string;
-  titleHe?: string; // Hebrew title
   description: string;
-  descriptionHe?: string; // Hebrew description
   fileName: string; // Path to PDF in public folder, e.g., "/forms/application.pdf"
   fields: any[]; // FormField array
   sections?: FieldSection[]; // Named sections for grouping fields
   createdAt: string;
   category?: string;
-  categoryHe?: string; // Hebrew category
 }
 
 export const formsData: FormTemplate[] = [
@@ -55,11 +52,7 @@ export const formsData: FormTemplate[] = [
             "height": 1.3531799729364005,
             "letterSpacing": 2
           }
-        ],
-        "nameHe": "מספר זהות",
-        "nameAr": "رقم الهوية",
-        "nameRu": "Номер удостоверения",
-        "nameAm": "የመታወቂያ ቁጥር"
+        ]
       },
       {
         "id": "94928b80-768c-4601-b456-318468792e95",
@@ -79,11 +72,7 @@ export const formsData: FormTemplate[] = [
         "parentOptionId": "6d232fc4-3114-4098-b685-29c857021775",
         "dateFormat": "DD/MM/YYYY",
         "dateHideSeparator": true,
-        "hidden": true,
-        "nameHe": "תאריך עלייה",
-        "nameAr": "تاريخ الهجرة",
-        "nameRu": "Дата иммиграции",
-        "nameAm": "የስደት ቀን"
+        "hidden": true
       },
       {
         "id": "e46a0822-621e-4165-8a09-6fccec57ea1f",
@@ -102,11 +91,7 @@ export const formsData: FormTemplate[] = [
         "borderWidth": 0,
         "padding": 2,
         "maxLength": 4,
-        "color": "#000000",
-        "nameAr": "السنة الضريبية",
-        "nameHe": "שנת מס",
-        "nameRu": "Налоговый год",
-        "nameAm": "የግብር ዓመት"
+        "color": "#000000"
       },
       {
         "id": "5c974c78-97d5-414f-aae7-cdc442fde4cd",
@@ -128,11 +113,7 @@ export const formsData: FormTemplate[] = [
             "y": 25.11452695083446,
             "width": 3.9094906668793925,
             "height": 3,
-            "value": "Yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "Yes"
           },
           {
             "id": "ff7ec086-5380-4fd9-9b3b-63d9418fbb30",
@@ -140,20 +121,12 @@ export const formsData: FormTemplate[] = [
             "y": 29.92606844835363,
             "width": 3.9094906668793925,
             "height": 3,
-            "value": "No",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "No"
           }
         ],
         "borderWidth": 0,
         "padding": 2,
-        "markStyle": "none",
-        "nameHe": "האם יש לך תעודת זהות?",
-        "nameAr": "هل لديك هوية؟",
-        "nameRu": "Есть ли у вас удостоверение?",
-        "nameAm": "መታወቂያ አለዎት?"
+        "markStyle": "none"
       },
       {
         "id": "9cf42279-3985-4526-a757-365838251de9",
@@ -171,11 +144,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "textAlign": "center",
-        "nameHe": "שם משפחה",
-        "nameAr": "اسم العائلة",
-        "nameRu": "Фамилия",
-        "nameAm": "የቤተሰብ ስም"
+        "textAlign": "center"
       },
       {
         "id": "52c4c8be-aafa-4183-b6a2-8a00f1eb945e",
@@ -204,11 +173,7 @@ export const formsData: FormTemplate[] = [
             "letterSpacing": 0,
             "fontSize": 10
           }
-        ],
-        "nameHe": "מספר דרכון",
-        "nameAr": "رقم جواز السفر",
-        "nameRu": "Номер паспорта",
-        "nameAm": "የፓስፖርት ቁጥር"
+        ]
       },
       {
         "id": "782e5037-1b2f-46ac-82a3-e8f4f5425fd0",
@@ -226,11 +191,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "textAlign": "center",
-        "nameHe": "שם פרטי",
-        "nameAr": "الاسم الأول",
-        "nameRu": "Имя",
-        "nameAm": "የመጀመሪያ ስም"
+        "textAlign": "center"
       },
       {
         "id": "88788452-0328-4388-8668-3cda4b92e7bd",
@@ -250,11 +211,7 @@ export const formsData: FormTemplate[] = [
         "padding": 2,
         "dateFormat": "DD/MM/YYYY",
         "dateHideSeparator": true,
-        "hidden": true,
-        "nameHe": "תאריך לידה",
-        "nameAr": "تاريخ الميلاد",
-        "nameRu": "Дата рождения",
-        "nameAm": "የልደት ቀን"
+        "hidden": true
       },
       {
         "id": "43adc68b-7645-400f-950e-81e648d662e3",
@@ -276,11 +233,7 @@ export const formsData: FormTemplate[] = [
             "y": 22.902923432566528,
             "width": 5,
             "height": 1.916476375732973,
-            "value": "Yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "Yes"
           },
           {
             "id": "99ac94ac-b29b-4d4e-89d4-9a26f5f817a6",
@@ -288,20 +241,12 @@ export const formsData: FormTemplate[] = [
             "y": 28.13839084348218,
             "width": 5,
             "height": 1.916476375732973,
-            "value": "No",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "No"
           }
         ],
         "borderWidth": 0,
         "padding": 2,
-        "markStyle": "none",
-        "nameHe": "האם אתה עולה חדש?",
-        "nameAr": "هل أنت مهاجر؟",
-        "nameRu": "Вы иммигрант?",
-        "nameAm": "ስደተኛ ነዎት?"
+        "markStyle": "none"
       },
       {
         "id": "31bfc862-6f12-467e-a84d-090f86b94322",
@@ -319,11 +264,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "textAlign": "center",
-        "nameHe": "כתובת רחוב",
-        "nameAr": "عنوان الشارع",
-        "nameRu": "Адрес улицы",
-        "nameAm": "የጎዳና አድራሻ"
+        "textAlign": "center"
       },
       {
         "id": "f68d234c-e1ba-4b43-a22d-5eac2e4c6b57",
@@ -342,11 +283,7 @@ export const formsData: FormTemplate[] = [
         "borderWidth": 0,
         "padding": 2,
         "hidden": true,
-        "textAlign": "center",
-        "nameHe": "מספר בית",
-        "nameAr": "رقم المنزل",
-        "nameRu": "Номер дома",
-        "nameAm": "የቤት ቁጥር"
+        "textAlign": "center"
       },
       {
         "id": "c80b6b8b-b291-4dff-8b5c-d272302345e7",
@@ -364,11 +301,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "textAlign": "center",
-        "nameHe": "עיר",
-        "nameAr": "المدينة",
-        "nameRu": "Город",
-        "nameAm": "ከተማ"
+        "textAlign": "center"
       },
       {
         "id": "f0de98b7-10c5-45a5-a8d0-ea08df712781",
@@ -387,11 +320,7 @@ export const formsData: FormTemplate[] = [
         "borderWidth": 0,
         "padding": 2,
         "maxLength": 7,
-        "hidden": true,
-        "nameHe": "מיקוד",
-        "nameAr": "الرمز البريدي",
-        "nameRu": "Почтовый индекс",
-        "nameAm": "የፖስታ ኮድ"
+        "hidden": true
       },
       {
         "id": "4c7ec6fd-0838-4909-a6b8-fe981cf36563",
@@ -413,11 +342,7 @@ export const formsData: FormTemplate[] = [
             "y": 32.302766971132165,
             "width": 3.9870173899170283,
             "height": 3,
-            "value": "Male",
-            "valueHe": "זכר",
-            "valueAr": "ذكر",
-            "valueRu": "Мужской",
-            "valueAm": "ወንድ"
+            "value": "Male"
           },
           {
             "id": "68e7a6f0-d6cf-4de2-8868-983e03052efc",
@@ -425,19 +350,11 @@ export const formsData: FormTemplate[] = [
             "y": 33.83214225304466,
             "width": 3.9870173899170283,
             "height": 3,
-            "value": "Female",
-            "valueHe": "נקבה",
-            "valueAr": "أنثى",
-            "valueRu": "Женский",
-            "valueAm": "ሴት"
+            "value": "Female"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "מין",
-        "nameAr": "الجنس",
-        "nameRu": "Пол",
-        "nameAm": "ጾታ"
+        "padding": 2
       },
       {
         "id": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
@@ -459,11 +376,7 @@ export const formsData: FormTemplate[] = [
             "y": 31.98473443843031,
             "width": 5,
             "height": 3,
-            "value": "Single",
-            "valueHe": "רווק/ה",
-            "valueAr": "أعزب/عزباء",
-            "valueRu": "Холост/Не замужем",
-            "valueAm": "ያላገባ"
+            "value": "Single"
           },
           {
             "id": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
@@ -471,11 +384,7 @@ export const formsData: FormTemplate[] = [
             "y": 32.0430550857014,
             "width": 5,
             "height": 3,
-            "value": "married",
-            "valueHe": "נשוי/אה",
-            "valueAr": "متزوج/ة",
-            "valueRu": "Женат/Замужем",
-            "valueAm": "ያገባ"
+            "value": "married"
           },
           {
             "id": "72c94d86-6a96-4e2a-a7ad-b1f3367f471b",
@@ -483,11 +392,7 @@ export const formsData: FormTemplate[] = [
             "y": 33.70263870094722,
             "width": 5,
             "height": 3,
-            "value": "Separated",
-            "valueHe": "פרוד/ה",
-            "valueAr": "منفصل/ة",
-            "valueRu": "В разводе",
-            "valueAm": "የተለያየ"
+            "value": "Separated"
           },
           {
             "id": "005bc2d2-b435-4508-bd19-8ba5fc1080b0",
@@ -495,11 +400,7 @@ export const formsData: FormTemplate[] = [
             "y": 33.554106055480375,
             "width": 5,
             "height": 3,
-            "value": "Widowed",
-            "valueHe": "אלמן/ה",
-            "valueAr": "أرمل/ة",
-            "valueRu": "Вдовец/Вдова",
-            "valueAm": "መበለት"
+            "value": "Widowed"
           },
           {
             "id": "70c1048c-258c-41d8-a49d-2b5a25a50bb9",
@@ -507,19 +408,11 @@ export const formsData: FormTemplate[] = [
             "y": 31.958128946774917,
             "width": 5,
             "height": 3,
-            "value": "Divorced",
-            "valueHe": "גרוש/ה",
-            "valueAr": "مطلق/ة",
-            "valueRu": "Разведен/а",
-            "valueAm": "የተፋታ"
+            "value": "Divorced"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "מצב משפחתי",
-        "nameAr": "الحالة الاجتماعية",
-        "nameRu": "Семейное положение",
-        "nameAm": "የጋብቻ ሁኔታ"
+        "padding": 2
       },
       {
         "id": "6089204b-600e-4d30-b73c-789ab56613ec",
@@ -541,11 +434,7 @@ export const formsData: FormTemplate[] = [
             "y": 37.0430550857014,
             "width": 5,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           },
           {
             "id": "17c205a0-48dc-401f-88b3-249edc990456",
@@ -553,20 +442,12 @@ export const formsData: FormTemplate[] = [
             "y": 37.0430550857014,
             "width": 5,
             "height": 3,
-            "value": "No",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "No"
           }
         ],
         "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
         "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
-        "markStyle": "none",
-        "nameHe": "האם לבן/בת הזוג יש תעודת זהות?",
-        "nameAr": "هل لدى الزوج/ة هوية؟",
-        "nameRu": "Есть ли у супруга удостоверение?",
-        "nameAm": "የትዳር ጓደኛ መታወቂያ አለው?"
+        "markStyle": "none"
       },
       {
         "id": "658425b2-b615-4ab6-a473-be24d2a4bbad",
@@ -585,11 +466,7 @@ export const formsData: FormTemplate[] = [
         "parentFieldId": "6089204b-600e-4d30-b73c-789ab56613ec",
         "parentOptionId": "a1bf67ac-0b1e-4377-b16d-1935373868f5",
         "maxLength": 9,
-        "textAlign": "center",
-        "nameHe": "מספר זהות בן/בת זוג",
-        "nameAr": "رقم هوية الزوج/ة",
-        "nameRu": "Номер удостоверения супруга",
-        "nameAm": "የትዳር ጓደኛ መታወቂያ ቁጥር"
+        "textAlign": "center"
       },
       {
         "id": "d0bb1e69-3fa0-4eed-b372-cfaa16733dee",
@@ -609,11 +486,7 @@ export const formsData: FormTemplate[] = [
         "parentOptionId": "17c205a0-48dc-401f-88b3-249edc990456",
         "maxLength": 13,
         "textAlign": "left",
-        "hidden": true,
-        "nameHe": "מספר דרכון בן/בת זוג",
-        "nameAr": "رقم جواز سفر الزوج/ة",
-        "nameRu": "Номер паспорта супруга",
-        "nameAm": "የትዳር ጓደኛ ፓስፖርት"
+        "hidden": true
       },
       {
         "id": "df6023dc-4d98-4b84-8b78-1ce82d40e747",
@@ -631,11 +504,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
         "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
-        "textAlign": "center",
-        "nameHe": "שם משפחה בן/בת זוג",
-        "nameAr": "اسم عائلة الزوج/ة",
-        "nameRu": "Фамилия супруга",
-        "nameAm": "የትዳር ጓደኛ የቤተሰብ ስም"
+        "textAlign": "center"
       },
       {
         "id": "883cd8aa-e6e5-401c-b4fc-393c0e579009",
@@ -653,11 +522,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
         "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
-        "textAlign": "center",
-        "nameHe": "שם פרטי בן/בת זוג",
-        "nameAr": "الاسم الأول للزوج/ة",
-        "nameRu": "Имя супруга",
-        "nameAm": "የትዳር ጓደኛ የመጀመሪያ ስም"
+        "textAlign": "center"
       },
       {
         "id": "7cc45361-13d6-4ec3-9657-856de4567c91",
@@ -677,11 +542,7 @@ export const formsData: FormTemplate[] = [
         "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
         "dateFormat": "DD/MM/YYYY",
         "dateHideSeparator": true,
-        "hidden": true,
-        "nameHe": "תאריך לידה בן/בת זוג",
-        "nameAr": "تاريخ ميلاد الزوج/ة",
-        "nameRu": "Дата рождения супруга",
-        "nameAm": "የትዳር ጓደኛ የልደት ቀን"
+        "hidden": true
       },
       {
         "id": "a7952b49-7890-4e92-8310-36fc3a8c84d5",
@@ -703,11 +564,7 @@ export const formsData: FormTemplate[] = [
             "y": 37.0430550857014,
             "width": 5,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           },
           {
             "id": "79225587-de82-40a3-81a9-8f1df8f6e538",
@@ -715,20 +572,12 @@ export const formsData: FormTemplate[] = [
             "y": 37.0430550857014,
             "width": 5,
             "height": 3,
-            "value": "no",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "no"
           }
         ],
         "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
         "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
-        "markStyle": "none",
-        "nameHe": "האם בן/בת הזוג עולה חדש?",
-        "nameAr": "هل الزوج/ة مهاجر؟",
-        "nameRu": "Супруг иммигрант?",
-        "nameAm": "የትዳር ጓደኛ ስደተኛ ነው?"
+        "markStyle": "none"
       },
       {
         "id": "7b8b37cc-8cd5-4633-ac49-25d277af37cc",
@@ -748,11 +597,7 @@ export const formsData: FormTemplate[] = [
         "parentOptionId": "f5263e1a-0325-4c14-b545-b5828d6458d5",
         "dateFormat": "DD/MM/YYYY",
         "dateHideSeparator": true,
-        "hidden": true,
-        "nameHe": "תאריך עלייה בן/בת זוג",
-        "nameAr": "تاريخ هجرة الزوج/ة",
-        "nameRu": "Дата иммиграции супруга",
-        "nameAm": "የትዳር ጓደኛ የስደት ቀን"
+        "hidden": true
       },
       {
         "id": "2d560c9b-dc95-48bd-aeb9-d6ae201220d8",
@@ -774,11 +619,7 @@ export const formsData: FormTemplate[] = [
             "y": 84.12261783942265,
             "width": 5,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           },
           {
             "id": "e4401983-441f-4b3e-813b-507ee0f882db",
@@ -786,19 +627,11 @@ export const formsData: FormTemplate[] = [
             "y": 84.11733198015337,
             "width": 5,
             "height": 3,
-            "value": "no",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "no"
           }
         ],
         "parentFieldId": "2977b150-5e7d-4fe8-a31b-d0c2a20e5e1b",
-        "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562",
-        "nameHe": "האם לבן/בת הזוג יש הכנסה?",
-        "nameAr": "هل لدى الزوج/ة دخل؟",
-        "nameRu": "Есть ли у супруга доход?",
-        "nameAm": "የትዳር ጓደኛ ገቢ አለው?"
+        "parentOptionId": "a0e6a8cd-3d53-4fdc-9894-9b8505091562"
       },
       {
         "id": "5591cc53-a085-45ca-8f3e-cd6d8e7ce254",
@@ -820,11 +653,7 @@ export const formsData: FormTemplate[] = [
             "y": 84.36411112990528,
             "width": 5,
             "height": 3,
-            "value": "job/busniss/allownce",
-            "valueHe": "עבודה/עסק/קצבה",
-            "valueAr": "عمل/تجارة/بدل",
-            "valueRu": "Работа/бизнес/пособие",
-            "valueAm": "ስራ/ንግድ/አበል"
+            "value": "job/busniss/allownce"
           },
           {
             "id": "31c302b4-0045-4db7-881e-5af8eb9c8fa0",
@@ -832,19 +661,11 @@ export const formsData: FormTemplate[] = [
             "y": 84.2916948579161,
             "width": 5,
             "height": 3,
-            "value": "other income",
-            "valueHe": "הכנסה אחרת",
-            "valueAr": "دخل آخر",
-            "valueRu": "Другой доход",
-            "valueAm": "ሌላ ገቢ"
+            "value": "other income"
           }
         ],
         "parentFieldId": "2d560c9b-dc95-48bd-aeb9-d6ae201220d8",
-        "parentOptionId": "e48d33d9-7ac3-465c-b9f3-1d9d39247e6b",
-        "nameHe": "סוג הכנסה בן/בת זוג",
-        "nameAr": "نوع دخل الزوج/ة",
-        "nameRu": "Тип дохода супруга",
-        "nameAm": "የትዳር ጓደኛ የገቢ አይነት"
+        "parentOptionId": "e48d33d9-7ac3-465c-b9f3-1d9d39247e6b"
       },
       {
         "id": "452e894c-f90a-4560-b46a-76ec959f7f30",
@@ -866,11 +687,7 @@ export const formsData: FormTemplate[] = [
             "y": 32.19240263447226,
             "width": 5,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           },
           {
             "id": "e86b4599-8171-4855-8ed2-4970d1b70b5f",
@@ -878,19 +695,11 @@ export const formsData: FormTemplate[] = [
             "y": 33.840181164016684,
             "width": 4.764927010210593,
             "height": 3.0667780221019396,
-            "value": "no",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "no"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "מתגורר בישראל?",
-        "nameAr": "هل تعيش في إسرائيل؟",
-        "nameRu": "Проживаете в Израиле?",
-        "nameAm": "በእስራኤል ይኖራሉ?"
+        "padding": 2
       },
       {
         "id": "d2059596-c801-4a2f-94d2-3472a3741569",
@@ -912,11 +721,7 @@ export const formsData: FormTemplate[] = [
             "y": 32.063427668301756,
             "width": 5,
             "height": 3,
-            "value": "No. You are not a member of a kibbutz or cooperative moshav",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "No. You are not a member of a kibbutz or cooperative moshav"
           },
           {
             "id": "7342bef8-d69b-44a4-a5a0-6093f52596e3",
@@ -924,11 +729,7 @@ export const formsData: FormTemplate[] = [
             "y": 33.81586621137799,
             "width": 5,
             "height": 3,
-            "value": "Yes. My income from this employer is not transferred to the kibbutz",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "Yes. My income from this employer is not transferred to the kibbutz"
           },
           {
             "id": "37d244e3-66ee-472e-b490-0f4f623b8f43",
@@ -936,19 +737,11 @@ export const formsData: FormTemplate[] = [
             "y": 32.22834647750338,
             "width": 5,
             "height": 3,
-            "value": "Yes. My income from this employer is transferred to the kibbutz",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "Yes. My income from this employer is transferred to the kibbutz"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם אתה חבר קיבוץ או מושב שיתופי?",
-        "nameAr": "هل أنت عضو في كيبوتس أو موشاف تعاوني؟",
-        "nameRu": "Вы член кибуца или кооперативного мошава?",
-        "nameAm": "የኪቡትዝ ወይም የትብብር ሞሻቭ አባል ነዎት?"
+        "padding": 2
       },
       {
         "id": "b94fd952-d35d-4705-a8c4-ce3ed194c053",
@@ -970,11 +763,7 @@ export const formsData: FormTemplate[] = [
             "y": 33.6086605280221,
             "width": 5,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           },
           {
             "id": "66a0b08b-98ef-4ded-ad04-64167929bf34",
@@ -982,19 +771,11 @@ export const formsData: FormTemplate[] = [
             "y": 32.022021770692376,
             "width": 5,
             "height": 3,
-            "value": "no",
-            "valueHe": "לא",
-            "valueAr": "لا",
-            "valueRu": "Нет",
-            "valueAm": "አይ"
+            "value": "no"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם אתה חבר בקופת חולים?",
-        "nameAr": "هل أنت عضو في صندوق صحي؟",
-        "nameRu": "Вы член больничной кассы?",
-        "nameAm": "የጤና መድን አባል ነዎት?"
+        "padding": 2
       },
       {
         "id": "e4e10fc5-d6de-463f-913b-97a1fdbd69c3",
@@ -1016,11 +797,7 @@ export const formsData: FormTemplate[] = [
             "y": 36.728480385938205,
             "width": 0,
             "height": 0,
-            "value": "Clalit",
-            "valueHe": "כללית",
-            "valueAr": "كلاليت",
-            "valueRu": "Клалит",
-            "valueAm": "ክላሊት"
+            "value": "Clalit"
           },
           {
             "id": "99ba6da5-93e3-4007-8783-27ed2ef26c9c",
@@ -1028,11 +805,7 @@ export const formsData: FormTemplate[] = [
             "y": 36.728480385938205,
             "width": 0,
             "height": 0,
-            "value": "Macabit",
-            "valueHe": "מכבי",
-            "valueAr": "مكابي",
-            "valueRu": "Маккаби",
-            "valueAm": "ማካቢ"
+            "value": "Macabit"
           },
           {
             "id": "0c694802-d3b0-4731-b663-71a77688cb9d",
@@ -1040,11 +813,7 @@ export const formsData: FormTemplate[] = [
             "y": 36.728480385938205,
             "width": 0,
             "height": 0,
-            "value": "meuhadet",
-            "valueHe": "מאוחדת",
-            "valueAr": "ميؤحيدت",
-            "valueRu": "Меухедет",
-            "valueAm": "መውሀደት"
+            "value": "meuhadet"
           },
           {
             "id": "055feb12-db4b-406b-af28-393c46a08a19",
@@ -1052,20 +821,12 @@ export const formsData: FormTemplate[] = [
             "y": 36.728480385938205,
             "width": 0,
             "height": 0,
-            "value": "Luimet",
-            "valueHe": "לאומית",
-            "valueAr": "ليئوميت",
-            "valueRu": "Леумит",
-            "valueAm": "ሉሚት"
+            "value": "Luimet"
           }
         ],
         "parentFieldId": "b94fd952-d35d-4705-a8c4-ce3ed194c053",
         "parentOptionId": "11be068a-01b9-460f-b25a-08c5559ec31d",
-        "hidden": true,
-        "nameHe": "בחר קופת חולים",
-        "nameAr": "اختر صندوقك الصحي",
-        "nameRu": "Выберите больничную кассу",
-        "nameAm": "የጤና መድንዎን ይምረጡ"
+        "hidden": true
       },
       {
         "id": "5a2d574d-ee1b-4dd6-9964-3c3adfa5af56",
@@ -1083,11 +844,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "textAlign": "center",
-        "nameHe": "דואר אלקטרוני",
-        "nameAr": "البريد الإلكتروني",
-        "nameRu": "Электронная почта",
-        "nameAm": "ኢሜይል"
+        "textAlign": "center"
       },
       {
         "id": "4b8d8216-9d90-4186-886f-f1204d7d51be",
@@ -1105,11 +862,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "maxLength": 9,
-        "nameHe": "מספר טלפון",
-        "nameAr": "رقم الهاتف",
-        "nameRu": "Номер телефона",
-        "nameAm": "ስልክ ቁጥር"
+        "maxLength": 9
       },
       {
         "id": "0823963d-e806-4088-957e-45bfe05cb73d",
@@ -1127,11 +880,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "maxLength": 10,
-        "nameHe": "מספר טלפון נייד",
-        "nameAr": "رقم الهاتف المحمول",
-        "nameRu": "Номер мобильного телефона",
-        "nameAm": "የሞባይል ስልክ ቁጥር"
+        "maxLength": 10
       },
       {
         "id": "187d4351-8ff2-4a68-afa6-2ecc20b2b9af",
@@ -1153,20 +902,12 @@ export const formsData: FormTemplate[] = [
             "y": 42.66272627882555,
             "width": 2.7216616145500865,
             "height": 3,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           }
         ],
         "borderWidth": 0,
         "padding": 2,
-        "markStyle": "none",
-        "nameHe": "האם יש לך ילדים?",
-        "nameAr": "هل لديك أطفال؟",
-        "nameRu": "Есть ли у вас дети?",
-        "nameAm": "ልጆች አሉዎት?"
+        "markStyle": "none"
       },
       {
         "id": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
@@ -1278,11 +1019,7 @@ export const formsData: FormTemplate[] = [
             ],
             "markStyle": "checkmark"
           }
-        ],
-        "nameHe": "ילדים",
-        "nameAr": "الأطفال",
-        "nameRu": "Дети",
-        "nameAm": "ልጆች"
+        ]
       },
       {
         "id": "42ba31d4-f2d4-4e76-9ab2-c4bf8b6b6ab3",
@@ -1298,11 +1035,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 0,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 0
       },
       {
         "id": "8a188266-18bb-4153-8ce5-868e35a0ab2c",
@@ -1318,11 +1051,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 1,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 1
       },
       {
         "id": "fd443ddf-faba-41ac-bc1a-1e82b497670b",
@@ -1338,11 +1067,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 2,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 2
       },
       {
         "id": "f4e91b1a-6702-4a75-986d-838b3607d6b8",
@@ -1358,11 +1083,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 3,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 3
       },
       {
         "id": "2b854b50-209a-414c-97af-27ad5d434053",
@@ -1378,11 +1099,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 4,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 4
       },
       {
         "id": "9e147738-082f-45be-a529-4e7122b792c5",
@@ -1398,11 +1115,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 5,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 5
       },
       {
         "id": "7585805c-d7f3-4c42-bec0-37c127361080",
@@ -1418,11 +1131,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 6,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 6
       },
       {
         "id": "db82c094-1662-41e2-9b08-e7bde758b3a8",
@@ -1438,11 +1147,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 7,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 7
       },
       {
         "id": "9757a13e-da41-4ce8-8610-a0fa614bfa96",
@@ -1458,11 +1163,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 8,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 8
       },
       {
         "id": "c13edcd5-9a1b-4211-bf2f-16773d22055e",
@@ -1478,11 +1179,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 9,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 9
       },
       {
         "id": "8bc96997-e01a-4f57-b30e-6198c407cf9b",
@@ -1498,11 +1195,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 10,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 10
       },
       {
         "id": "44d3d45e-233a-40fa-ad46-4f1f3c706910",
@@ -1518,11 +1211,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 11,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 11
       },
       {
         "id": "98e6e2c9-a86d-4e15-80e3-bb3da590461e",
@@ -1538,11 +1227,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "6e446a67-58c4-4337-bde4-20f86c6fa82c",
-        "rowIndex": 12,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 12
       },
       {
         "id": "5a154326-f708-4447-91d0-6b99a299b064",
@@ -1564,11 +1249,7 @@ export const formsData: FormTemplate[] = [
             "y": 41.39118058887905,
             "width": 5,
             "height": 3,
-            "value": "Monthly salary",
-            "valueHe": "משכורת חודשית",
-            "valueAr": "راتب شهري",
-            "valueRu": "Ежемесячная зарплата",
-            "valueAm": "ወርሃዊ ደመወዝ"
+            "value": "Monthly salary"
           },
           {
             "id": "f628208d-ae77-463a-9010-13d805fa12a9",
@@ -1576,11 +1257,7 @@ export const formsData: FormTemplate[] = [
             "y": 42.84954802752217,
             "width": 5,
             "height": 3,
-            "value": "Salary for additional employment",
-            "valueHe": "משכורת לעבודה נוספת",
-            "valueAr": "راتب لعمل إضافي",
-            "valueRu": "Зарплата за дополнительную работу",
-            "valueAm": "ለተጨማሪ ስራ ደመወዝ"
+            "value": "Salary for additional employment"
           },
           {
             "id": "46632cf5-40ce-4afa-8b52-975d80a4c634",
@@ -1588,11 +1265,7 @@ export const formsData: FormTemplate[] = [
             "y": 44.31297221298583,
             "width": 5,
             "height": 3,
-            "value": "Partial salary",
-            "valueHe": "משכורת חלקית",
-            "valueAr": "راتب جزئي",
-            "valueRu": "Частичная зарплата",
-            "valueAm": "ከፊል ደመወዝ"
+            "value": "Partial salary"
           },
           {
             "id": "a74151cf-9a95-4144-bec2-2e8d8985cfe5",
@@ -1600,20 +1273,12 @@ export const formsData: FormTemplate[] = [
             "y": 45.62758687463997,
             "width": 5,
             "height": 3,
-            "value": "Wage (Daily rate of pay)",
-            "valueHe": "שכר יומי",
-            "valueAr": "أجر يومي",
-            "valueRu": "Дневная ставка",
-            "valueAm": "የቀን ክፍያ"
+            "value": "Wage (Daily rate of pay)"
           }
         ],
         "borderWidth": 0,
         "padding": 2,
-        "markStyle": "checkmark",
-        "nameHe": "פרטי הכנסותיי ממעסיק זה",
-        "nameAr": "تفاصيل دخلي من هذا المشغل",
-        "nameRu": "Детали моего дохода от этого работодателя",
-        "nameAm": "ከዚህ አሰሪ የገቢዬ ዝርዝሮች"
+        "markStyle": "checkmark"
       },
       {
         "id": "ec5e4af6-98ca-4287-b6cd-5763366d7ce6",
@@ -1635,11 +1300,7 @@ export const formsData: FormTemplate[] = [
             "y": 47.467166451284456,
             "width": 5.325290131112687,
             "height": 2.428336466165414,
-            "value": "Allowance",
-            "valueHe": "קצבה",
-            "valueAr": "بدل",
-            "valueRu": "Пособие",
-            "valueAm": "አበል"
+            "value": "Allowance"
           },
           {
             "id": "1320241a-dcdb-47a8-bb7f-fd8663cc03fe",
@@ -1647,19 +1308,11 @@ export const formsData: FormTemplate[] = [
             "y": 48.83464765429199,
             "width": 5.426337703756201,
             "height": 2.3453164160401005,
-            "value": "Scholarship",
-            "valueHe": "מלגה",
-            "valueAr": "منحة دراسية",
-            "valueRu": "Стипендия",
-            "valueAm": "ስኮላርሺፕ"
+            "value": "Scholarship"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "אם יש לך גם קצבה/מלגה",
-        "nameAr": "إذا كان لديك أيضًا بدل/منحة",
-        "nameRu": "Если у вас также есть пособие/стипендия",
-        "nameAm": "አበል/ስኮላርሺፕ ካለዎት"
+        "padding": 2
       },
       {
         "id": "2ef095a7-3ca7-4cae-b282-bda4d16323bd",
@@ -1679,11 +1332,7 @@ export const formsData: FormTemplate[] = [
         "padding": 2,
         "dateFormat": "DD/MM/YYYY",
         "dateHideSeparator": true,
-        "hidden": true,
-        "nameHe": "תאריך תחילת עבודה בשנת המס",
-        "nameAr": "تاريخ بدء العمل في السنة الضريبية",
-        "nameRu": "Дата начала работы в налоговом году",
-        "nameAm": "በግብር ዓመቱ የስራ መጀመሪያ ቀን"
+        "hidden": true
       },
       {
         "id": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
@@ -1705,11 +1354,7 @@ export const formsData: FormTemplate[] = [
             "y": 52.785658847118846,
             "width": 5,
             "height": 3,
-            "value": "I have no other income including scholarships",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I have no other income including scholarships"
           },
           {
             "id": "c15e06a4-73d9-446a-840e-530add632441",
@@ -1717,19 +1362,11 @@ export const formsData: FormTemplate[] = [
             "y": 55.7533164362032,
             "width": 5,
             "height": 3,
-            "value": "I have other incomes as follows",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I have other incomes as follows"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם יש לך הכנסות נוספות?",
-        "nameAr": "هل لديك دخل آخر؟",
-        "nameRu": "Есть ли у вас другие доходы?",
-        "nameAm": "ሌላ ገቢ አለዎት?"
+        "padding": 2
       },
       {
         "id": "bf578394-cbc2-4fd6-a6e9-37cd17c43f6a",
@@ -1751,11 +1388,7 @@ export const formsData: FormTemplate[] = [
             "y": 57.24544402979814,
             "width": 5,
             "height": 3,
-            "value": "Monthly salary",
-            "valueHe": "משכורת חודשית",
-            "valueAr": "راتب شهري",
-            "valueRu": "Ежемесячная зарплата",
-            "valueAm": "ወርሃዊ ደመወዝ"
+            "value": "Monthly salary"
           },
           {
             "id": "9c3d38fe-cfcd-48b0-8ff4-dab41f689d3a",
@@ -1763,11 +1396,7 @@ export const formsData: FormTemplate[] = [
             "y": 58.53114119939669,
             "width": 5,
             "height": 3,
-            "value": "Salary for additional employment",
-            "valueHe": "משכורת לעבודה נוספת",
-            "valueAr": "راتب لعمل إضافي",
-            "valueRu": "Зарплата за дополнительную работу",
-            "valueAm": "ለተጨማሪ ስራ ደመወዝ"
+            "value": "Salary for additional employment"
           },
           {
             "id": "0a0cebd3-b853-4e2e-a4f6-74a0d2b92545",
@@ -1775,11 +1404,7 @@ export const formsData: FormTemplate[] = [
             "y": 59.81067153318109,
             "width": 5,
             "height": 3,
-            "value": "Partial salary",
-            "valueHe": "משכורת חלקית",
-            "valueAr": "راتب جزئي",
-            "valueRu": "Частичная зарплата",
-            "valueAm": "ከፊል ደመወዝ"
+            "value": "Partial salary"
           },
           {
             "id": "fe0b9b99-9fca-4fb0-a055-ba96577f74bb",
@@ -1787,11 +1412,7 @@ export const formsData: FormTemplate[] = [
             "y": 57.21901473345172,
             "width": 5,
             "height": 3,
-            "value": "Wage (Daily rate of pay)",
-            "valueHe": "שכר יומי",
-            "valueAr": "أجر يومي",
-            "valueRu": "Дневная ставка",
-            "valueAm": "የቀን ክፍያ"
+            "value": "Wage (Daily rate of pay)"
           },
           {
             "id": "21f9bc9a-9f0f-4d21-ad9c-c2fcd14fb39d",
@@ -1799,11 +1420,7 @@ export const formsData: FormTemplate[] = [
             "y": 58.575542417258674,
             "width": 5,
             "height": 3,
-            "value": "Allowance",
-            "valueHe": "קצבה",
-            "valueAr": "بدل",
-            "valueRu": "Пособие",
-            "valueAm": "አበል"
+            "value": "Allowance"
           },
           {
             "id": "658e5f97-1420-4622-9058-d04303dc5f1c",
@@ -1811,19 +1428,11 @@ export const formsData: FormTemplate[] = [
             "y": 59.80626665045669,
             "width": 5,
             "height": 3,
-            "value": "Scholarship",
-            "valueHe": "מלגה",
-            "valueAr": "منحة دراسية",
-            "valueRu": "Стипендия",
-            "valueAm": "ስኮላርሺፕ"
+            "value": "Scholarship"
           }
         ],
         "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
-        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441",
-        "nameHe": "סוגי הכנסה",
-        "nameAr": "أنواع الدخل",
-        "nameRu": "Виды дохода",
-        "nameAm": "የገቢ አይነቶች"
+        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
       },
       {
         "id": "6df48cdf-0e9d-4e6e-b366-6a46db577c6b",
@@ -1845,11 +1454,7 @@ export const formsData: FormTemplate[] = [
             "y": 62.66891183539129,
             "width": 5,
             "height": 3,
-            "value": "I request to receive tax credits and tax bracket for this income (section D). I do not receive them against any other income.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I request to receive tax credits and tax bracket for this income (section D). I do not receive them against any other income."
           },
           {
             "id": "dbfef74a-fc70-4022-9654-9fd81d20fc76",
@@ -1857,19 +1462,11 @@ export const formsData: FormTemplate[] = [
             "y": 65.43588296755188,
             "width": 5,
             "height": 3,
-            "value": "I receive tax credits and tax bracket against another income, therefore I'm not entitled to them against this income",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I receive tax credits and tax bracket against another income, therefore I'm not entitled to them against this income"
           }
         ],
         "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
-        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441",
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
       },
       {
         "id": "28bce723-c8bb-4803-8935-06050207060e",
@@ -1891,11 +1488,7 @@ export const formsData: FormTemplate[] = [
             "y": 68.32045388615315,
             "width": 5,
             "height": 3,
-            "value": "No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "No payments are made on my behalf to a Study fund from anther income, or all the employer contributions made to a Study fund from another income are attached to my other income"
           },
           {
             "id": "0f2343ec-2a53-4c57-ad33-672f922b833a",
@@ -1903,19 +1496,11 @@ export const formsData: FormTemplate[] = [
             "y": 72.45036504731432,
             "width": 5,
             "height": 3,
-            "value": "No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "No payments are made on my behalf to pension / loss of working capacity insurance / severance pay from another income, or all the employer contributions to pension / loss of working capacity insurance / severance pay from my other income are attached to my other income."
           }
         ],
         "parentFieldId": "555b3795-b5eb-4b6f-ac3c-6c62cebcfc87",
-        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441",
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "parentOptionId": "c15e06a4-73d9-446a-840e-530add632441"
       },
       {
         "id": "0047181e-043a-4f9d-9949-b7b6e615ffc2",
@@ -1937,19 +1522,11 @@ export const formsData: FormTemplate[] = [
             "y": 4.613272219990412,
             "width": 3.9361638481174266,
             "height": 2.7750761163734787,
-            "value": "Yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "Yes"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם אתה מתגורר בישראל?",
-        "nameAr": "هل تعيش في إسرائيل؟",
-        "nameRu": "Вы проживаете в Израиле?",
-        "nameAm": "በእስራኤል ይኖራሉ?"
+        "padding": 2
       },
       {
         "id": "30fe436b-7984-4021-be1f-b72b786db9eb",
@@ -1971,11 +1548,7 @@ export const formsData: FormTemplate[] = [
             "y": 6.338576685484326,
             "width": 5,
             "height": 3,
-            "value": "100% disabled or permanently blind",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "100% disabled or permanently blind"
           },
           {
             "id": "457f2379-2a63-454a-b9ee-85850229438f",
@@ -1983,19 +1556,11 @@ export const formsData: FormTemplate[] = [
             "y": 8.986263593468086,
             "width": 5,
             "height": 3,
-            "value": "In addition, I receive a monthly compensation in accordance with Disabled Law (compensation and rehabilitation) or the Compensation for Victims of Hostile Acts Law",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "In addition, I receive a monthly compensation in accordance with Disabled Law (compensation and rehabilitation) or the Compensation for Victims of Hostile Acts Law"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם אתה",
-        "nameAr": "هل أنت",
-        "nameRu": "Вы",
-        "nameAm": "እርስዎ"
+        "padding": 2
       },
       {
         "id": "cd9aa84e-9e86-4799-aeb8-69d459202748",
@@ -2016,11 +1581,7 @@ export const formsData: FormTemplate[] = [
         "compositeTemplate": "I am a permanent resident of a recognized settlement (eligible for tax benefits) since {date:since_date}. My immediate family and I live in the settlement of {text:location} , and I do not have another \"center of life.\" A certificate from the local authority is attached on Form 1312A.",
         "compositeValues": {},
         "parentFieldId": "ad917e94-28fa-40bd-8ca7-bf429871cb62",
-        "parentOptionId": "3d99897f-1900-4531-a923-27d15d70cf19",
-        "nameHe": "האם אתה תושב קבע ביישוב מוכר?",
-        "nameAr": "هل أنت مقيم دائم في مستوطنة معترف بها؟",
-        "nameRu": "Вы постоянный житель признанного поселения?",
-        "nameAm": "እውቅና ባለው ሰፈራ ቋሚ ነዋሪ ነዎት?"
+        "parentOptionId": "3d99897f-1900-4531-a923-27d15d70cf19"
       },
       {
         "id": "97a02527-eb5e-43e5-b18e-9c9b15466bf2",
@@ -2038,11 +1599,7 @@ export const formsData: FormTemplate[] = [
         "parentFieldId": "cd9aa84e-9e86-4799-aeb8-69d459202748",
         "dateFormat": "DD/MM/YYYY",
         "textAlign": "center",
-        "dateHideSeparator": false,
-        "nameHe": "מתאריך",
-        "nameAr": "منذ تاريخ",
-        "nameRu": "С даты",
-        "nameAm": "ከቀን ጀምሮ"
+        "dateHideSeparator": false
       },
       {
         "id": "6c374195-2a43-4e8f-844c-6961b4cab14d",
@@ -2058,11 +1615,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "cd9aa84e-9e86-4799-aeb8-69d459202748",
-        "textAlign": "center",
-        "nameHe": "מיקום",
-        "nameAr": "الموقع",
-        "nameRu": "Местоположение",
-        "nameAm": "ቦታ"
+        "textAlign": "center"
       },
       {
         "id": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
@@ -2092,11 +1645,7 @@ export const formsData: FormTemplate[] = [
           "label": "Immigrant Certificate"
         },
         "parentFieldId": "ba5b1361-1fed-4e73-8697-805e16f0e02b",
-        "parentOptionId": "8dfce569-6d3d-48fd-9beb-d39629d3f791",
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "parentOptionId": "8dfce569-6d3d-48fd-9beb-d39629d3f791"
       },
       {
         "id": "f48fe24b-546f-4bf5-aade-8c6d4e742cdc",
@@ -2113,11 +1662,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "parentFieldId": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
         "dateFormat": "DD/MM/YYYY",
-        "textAlign": "center",
-        "nameHe": "מתאריך",
-        "nameAr": "منذ تاريخ",
-        "nameRu": "С даты",
-        "nameAm": "ከቀን ጀምሮ"
+        "textAlign": "center"
       },
       {
         "id": "feda4ab6-be0f-42f7-972a-08f11b926a0e",
@@ -2133,11 +1678,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "177ef34f-8f2f-45cc-9a85-7ea513fda125",
-        "dateFormat": "DD/MM/YYYY",
-        "nameHe": "מיקום",
-        "nameAr": "الموقع",
-        "nameRu": "Местоположение",
-        "nameAm": "ቦታ"
+        "dateFormat": "DD/MM/YYYY"
       },
       {
         "id": "ad917e94-28fa-40bd-8ca7-bf429871cb62",
@@ -2159,19 +1700,11 @@ export const formsData: FormTemplate[] = [
             "y": 11.438918812725529,
             "width": 4.960713146139128,
             "height": 2.3597837731168254,
-            "value": "yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "yes"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "האם אתה תושב קבע ביישוב זכאי?",
-        "nameAr": "هل أنت مقيم دائم في منطقة مؤهلة؟",
-        "nameRu": "Вы постоянный житель подходящего населенного пункта?",
-        "nameAm": "ብቁ በሆነ አካባቢ ቋሚ ነዋሪ ነዎት?"
+        "padding": 2
       },
       {
         "id": "ba5b1361-1fed-4e73-8697-805e16f0e02b",
@@ -2193,19 +1726,11 @@ export const formsData: FormTemplate[] = [
             "y": 14.67555657643372,
             "width": 3.794479927007302,
             "height": 2.300506052565246,
-            "value": "Yes",
-            "valueHe": "כן",
-            "valueAr": "نعم",
-            "valueRu": "Да",
-            "valueAm": "አዎ"
+            "value": "Yes"
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "אני עולה חדש",
-        "nameAr": "أنا مهاجر جديد",
-        "nameRu": "Я новый иммигрант",
-        "nameAm": "አዲስ ስደተኛ ነኝ"
+        "padding": 2
       },
       {
         "id": "22a7700c-aa2b-46e0-ba17-1a8388b40c91",
@@ -2227,19 +1752,11 @@ export const formsData: FormTemplate[] = [
             "y": 19.569332133609237,
             "width": 2.931253131262517,
             "height": 2.3675416076487275,
-            "value": "Regarding my spouse who lives with me and has no income during the tax year. Only if the employee or the spouse has reached retirement age or is disabled or blind according to Section 9(5) of the Ordinance.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "Regarding my spouse who lives with me and has no income during the tax year. Only if the employee or the spouse has reached retirement age or is disabled or blind according to Section 9(5) of the Ordinance."
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "הצהרה על בן/בת זוג ללא הכנסה",
-        "nameAr": "إعلان الزوج/ة بدون دخل",
-        "nameRu": "Декларация о супруге без дохода",
-        "nameAm": "ገቢ የሌለው የትዳር ጓደኛ መግለጫ"
+        "padding": 2
       },
       {
         "id": "ce423572-e615-4d87-aa50-157418c42290",
@@ -2261,19 +1778,11 @@ export const formsData: FormTemplate[] = [
             "y": 22.21822333403417,
             "width": 3.2118925350701346,
             "height": 1.8861765226628862,
-            "value": "I am a parent in a single-parent family (Section 11) living separately. This section should be filled out only by a parent who lives separately and is requesting tax credit points for their children, who are in their custody and for whom they receive child allowance from the National Insurance Institute (as per Section 7 below), and who does not maintain a shared household with another individual.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I am a parent in a single-parent family (Section 11) living separately. This section should be filled out only by a parent who lives separately and is requesting tax credit points for their children, who are in their custody and for whom they receive child allowance from the National Insurance Institute (as per Section 7 below), and who does not maintain a shared household with another individual."
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "הצהרת משפחה חד הורית",
-        "nameAr": "إعلان الأسرة ذات الوالد الواحد",
-        "nameRu": "Декларация неполной семьи",
-        "nameAm": "ነጠላ ወላጅ ቤተሰብ መግለጫ"
+        "padding": 2
       },
       {
         "id": "cb4b8998-4235-4fad-8f49-264f6e986709",
@@ -2295,11 +1804,7 @@ export const formsData: FormTemplate[] = [
             "y": 24.97071303598613,
             "width": 3.294013241863439,
             "height": 2.0623660915651776,
-            "value": "will be filled only by a parent in a single-parent family who receives the child allowance for them, or by a married woman or by a single parent)",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "will be filled only by a parent in a single-parent family who receives the child allowance for them, or by a married woman or by a single parent)"
           },
           {
             "id": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
@@ -2307,21 +1812,13 @@ export const formsData: FormTemplate[] = [
             "y": 31.948047271439442,
             "width": 3.294013241863439,
             "height": 2.0623660915651776,
-            "value": "To be completed by a parent (excluding a parent who has checked clause 7 above), an unmarried woman who does not have custody of her children and a single parent",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "To be completed by a parent (excluding a parent who has checked clause 7 above), an unmarried woman who does not have custody of her children and a single parent"
           }
         ],
         "borderWidth": 0,
         "padding": 2,
         "parentFieldId": "187d4351-8ff2-4a68-afa6-2ecc20b2b9af",
-        "parentOptionId": "2ea868eb-9508-43d3-adf3-7b24f154c0f2",
-        "nameHe": "האם אתה...",
-        "nameAr": "هل أنت...",
-        "nameRu": "Вы...",
-        "nameAm": "እርስዎ..."
+        "parentOptionId": "2ea868eb-9508-43d3-adf3-7b24f154c0f2"
       },
       {
         "id": "d4f438a6-e63f-475b-8435-bd584ac026d3",
@@ -2339,11 +1836,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שנולדו בשנת המס",
-        "nameAr": "عدد الأطفال المولودين خلال السنة الضريبية",
-        "nameRu": "Количество детей, родившихся в налоговом году",
-        "nameAm": "በግብር ዓመቱ የተወለዱ ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "72a6b873-54e1-4ff6-94d6-bd50b320d0da",
@@ -2361,11 +1854,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שימלאו להם 1-2 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 1-2 سنة خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 1-2 года в налоговом году",
-        "nameAm": "በግብር ዓመቱ 1-2 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "469406d7-1ac9-4301-ac20-d61c85a2e8c0",
@@ -2382,11 +1871,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
-        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "nameHe": "מספר ילדים שימלאו להם 3 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 3 سنوات خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 3 года в налоговом году",
-        "nameAm": "በግብር ዓመቱ 3 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c"
       },
       {
         "id": "229e2e21-0aa8-4dbb-9532-c5c6cf2ff472",
@@ -2403,11 +1888,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
-        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "nameHe": "מספר ילדים שימלאו להם 4-5 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 4-5 سنوات خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 4-5 лет в налоговом году",
-        "nameAm": "በግብር ዓመቱ 4-5 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c"
       },
       {
         "id": "238d40ef-2fc9-43dd-bc7f-eacb14f688ee",
@@ -2424,11 +1905,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
-        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "nameHe": "מספר ילדים שימלאו להם 6-17 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 6-17 سنة خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 6-17 лет в налоговом году",
-        "nameAm": "በግብር ዓመቱ 6-17 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c"
       },
       {
         "id": "c2963ec3-b0f8-46f5-ad19-8a61f0024c59",
@@ -2445,11 +1922,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
-        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c",
-        "nameHe": "מספר ילדים שימלאו להם 18 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 18 سنة خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 18 лет в налоговом году",
-        "nameAm": "በግብር ዓመቱ 18 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "parentOptionId": "70233259-b6f8-47c4-b47a-4d0be87d677c"
       },
       {
         "id": "f9c5ad5a-424f-4481-9320-47d5c2a9be97",
@@ -2467,11 +1940,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שנולדו בשנת המס",
-        "nameAr": "عدد الأطفال المولودين في السنة الضريبية",
-        "nameRu": "Количество детей, родившихся в налоговом году",
-        "nameAm": "በግብር ዓመቱ የተወለዱ ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "cec45067-1f7a-4f33-8132-9e866e5ed83b",
@@ -2489,11 +1958,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שימלאו להם 1-2 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 1-2 سنة خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 1-2 года в налоговом году",
-        "nameAm": "በግብር ዓመቱ 1-2 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "12d8ea69-bcb6-4dbc-9b8e-005a78969e7d",
@@ -2511,11 +1976,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שימלאו להם 3 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 3 سنوات خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 3 года в налоговом году",
-        "nameAm": "በግብር ዓመቱ 3 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "d117a346-b871-49ea-9fd8-899990cc7225",
@@ -2532,11 +1993,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
-        "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
-        "nameHe": "מספר ילדים שימלאו להם 4-5 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 4-5 سنوات خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 4-5 лет в налоговом году",
-        "nameAm": "በግብር ዓመቱ 4-5 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41"
       },
       {
         "id": "ab855325-51f9-4d05-87b9-a0a1b3fee8c4",
@@ -2554,11 +2011,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "cb4b8998-4235-4fad-8f49-264f6e986709",
         "parentOptionId": "eb657d5f-dac7-4efd-90bd-f2b2af851f41",
-        "maxLength": 2,
-        "nameHe": "מספר ילדים שימלאו להם 6-17 שנים בשנת המס",
-        "nameAr": "عدد الأطفال الذين سيبلغون 6-17 سنة خلال السنة الضريبية",
-        "nameRu": "Количество детей, которым исполнится 6-17 лет в налоговом году",
-        "nameAm": "በግብር ዓመቱ 6-17 ዓመት የሚሞላቸው ልጆች ብዛት"
+        "maxLength": 2
       },
       {
         "id": "c4d65dcf-9ecf-4f14-ab73-855fc58379b1",
@@ -2576,11 +2029,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "useFieldAsCheckbox": true
       },
       {
         "id": "74db1051-47f9-45d9-a3b7-ffebeadd10f3",
@@ -2598,11 +2047,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "useFieldAsCheckbox": true
       },
       {
         "id": "e4b4ce23-a35f-47de-a48e-87d74bd2485d",
@@ -2620,11 +2065,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "ילדים עם מוגבלויות",
-        "nameAr": "الأطفال ذوي الإعاقة",
-        "nameRu": "Дети с инвалидностью",
-        "nameAm": "አካል ጉዳተኛ ልጆች"
+        "useFieldAsCheckbox": true
       },
       {
         "id": "cd06f5e9-aae8-46fd-9a70-65462581e11d",
@@ -2642,11 +2083,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "e4b4ce23-a35f-47de-a48e-87d74bd2485d",
         "compositeTemplate": "I am a parent of {number:ch} children with disabilities who are under 19 years old, for whom I receive a Disabled Child Allowance from the National Insurance Institute (Bituach Leumi).",
-        "compositeValues": {},
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "compositeValues": {}
       },
       {
         "id": "b920a0f5-034a-4c26-af36-bfef27eff071",
@@ -2662,11 +2099,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "cd06f5e9-aae8-46fd-9a70-65462581e11d",
-        "maxLength": 2,
-        "nameHe": "מספר",
-        "nameAr": "عدد",
-        "nameRu": "Количество",
-        "nameAm": "ቁጥር"
+        "maxLength": 2
       },
       {
         "id": "d4d973dd-f705-40bd-b97c-bee35423cc43",
@@ -2684,11 +2117,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "useFieldAsCheckbox": true
       },
       {
         "id": "d54fdf2b-406c-45ff-ad70-588466ea6e99",
@@ -2706,11 +2135,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "useFieldAsCheckbox": true
       },
       {
         "id": "53b79e94-52bf-4486-bdda-5bc7605aa1e7",
@@ -2728,11 +2153,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "אני חייל משוחרר",
-        "nameAr": "أنا جندي مسرح",
-        "nameRu": "Я демобилизованный солдат",
-        "nameAm": "የተሰናበተ ወታደር ነኝ"
+        "useFieldAsCheckbox": true
       },
       {
         "id": "1816f009-ff7d-45ec-9627-f5cd59fa541b",
@@ -2750,11 +2171,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "parentFieldId": "53b79e94-52bf-4486-bdda-5bc7605aa1e7",
         "compositeTemplate": "I am a discharged soldier / I served in national service. The date of the start of the service {date:start} the date of the end of the service {date:end}. Attached is a photocopy of a discharge/termination certificate",
-        "compositeValues": {},
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "compositeValues": {}
       },
       {
         "id": "3934c001-256d-4bea-9636-5c13bebeb4fd",
@@ -2771,11 +2188,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "parentFieldId": "1816f009-ff7d-45ec-9627-f5cd59fa541b",
         "dateFormat": "DD/MM/YYYY",
-        "hidden": true,
-        "nameHe": "תחילה",
-        "nameAr": "البداية",
-        "nameRu": "Начало",
-        "nameAm": "መጀመሪያ"
+        "hidden": true
       },
       {
         "id": "d1a4fc93-b494-4a00-9f84-53b61cef964b",
@@ -2792,11 +2205,7 @@ export const formsData: FormTemplate[] = [
         "letterSpacing": 0,
         "parentFieldId": "1816f009-ff7d-45ec-9627-f5cd59fa541b",
         "dateFormat": "DD/MM/YYYY",
-        "hidden": true,
-        "nameHe": "סיום",
-        "nameAr": "النهاية",
-        "nameRu": "Конец",
-        "nameAm": "መጨረሻ"
+        "hidden": true
       },
       {
         "id": "1602d673-73ee-4b31-ac57-670018bfd440",
@@ -2814,11 +2223,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "useFieldAsCheckbox": true,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "useFieldAsCheckbox": true
       },
       {
         "id": "a2ec2a73-0d4b-4c12-9731-691971087bb6",
@@ -2840,11 +2245,7 @@ export const formsData: FormTemplate[] = [
             "y": 56.09250305492495,
             "width": 5,
             "height": 2.224738232023725,
-            "value": "I had no income from the beginning of the current tax year until I started working for this employer.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I had no income from the beginning of the current tax year until I started working for this employer."
           },
           {
             "id": "a1473d71-b0e7-4bb1-9c41-1f22c9a62034",
@@ -2852,11 +2253,7 @@ export const formsData: FormTemplate[] = [
             "y": 59.49577631289381,
             "width": 5,
             "height": 2.224738232023725,
-            "value": "I have additional incomes from salary as specified below.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "I have additional incomes from salary as specified below."
           },
           {
             "id": "718f672f-ca1c-4de8-a598-580fd2975a45",
@@ -2864,19 +2261,11 @@ export const formsData: FormTemplate[] = [
             "y": 69.63812712831265,
             "width": 5,
             "height": 2.224738232023725,
-            "value": "The assessing officer approved the coordination according to the attached approval.",
-            "valueHe": "",
-            "valueAr": "",
-            "valueRu": "",
-            "valueAm": ""
+            "value": "The assessing officer approved the coordination according to the attached approval."
           }
         ],
         "borderWidth": 0,
-        "padding": 2,
-        "nameHe": "א. אני מבקש תיאום מס מהסיבות הבאות",
-        "nameAr": "أ. أطلب تنسيق الضرائب للأسباب التالية",
-        "nameRu": "I. Я прошу координацию налогов по следующим причинам",
-        "nameAm": "I. ለሚከተሉት ምክንያቶች የግብር ማስተባበር እጠይቃለሁ"
+        "padding": 2
       },
       {
         "id": "48489be0-0610-4327-b680-d43be404fdcd",
@@ -2978,11 +2367,7 @@ export const formsData: FormTemplate[] = [
             "fontSize": 10,
             "textAlign": "center"
           }
-        ],
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        ]
       },
       {
         "id": "0cc30699-3afe-4728-83dd-f21a3fd7f87a",
@@ -2998,11 +2383,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "48489be0-0610-4327-b680-d43be404fdcd",
-        "rowIndex": 0,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 0
       },
       {
         "id": "62d67539-c573-4fc8-bb7e-bf8084db7f9c",
@@ -3018,11 +2399,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "48489be0-0610-4327-b680-d43be404fdcd",
-        "rowIndex": 1,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 1
       },
       {
         "id": "ae12f38e-5060-4a9b-87ef-71f02333b2cf",
@@ -3038,11 +2415,7 @@ export const formsData: FormTemplate[] = [
         "fontSize": 12,
         "letterSpacing": 0,
         "parentFieldId": "48489be0-0610-4327-b680-d43be404fdcd",
-        "rowIndex": 2,
-        "nameHe": "",
-        "nameAr": "",
-        "nameRu": "",
-        "nameAm": ""
+        "rowIndex": 2
       },
       {
         "id": "2959aee5-b78b-471c-bdab-93fe823474f2",
@@ -3060,11 +2433,7 @@ export const formsData: FormTemplate[] = [
         "options": [],
         "borderWidth": 0,
         "padding": 2,
-        "dateFormat": "DD/MM/YYYY",
-        "nameHe": "תאריך נוכחי",
-        "nameAr": "التاريخ الحالي",
-        "nameRu": "Текущая дата",
-        "nameAm": "የአሁኑ ቀን"
+        "dateFormat": "DD/MM/YYYY"
       },
       {
         "id": "6c84c74a-6484-43fe-b06e-9df2121b56fe",
@@ -3083,11 +2452,7 @@ export const formsData: FormTemplate[] = [
         "borderWidth": 0,
         "padding": 2,
         "hidden": false,
-        "signatureCanvasHeight": 150,
-        "nameHe": "חתום כאן",
-        "nameAr": "وقع هنا",
-        "nameRu": "Подпишите здесь",
-        "nameAm": "እዚህ ይፈርሙ"
+        "signatureCanvasHeight": 150
       }
     ],
     "createdAt": "2025-11-30T13:23:50.377Z",

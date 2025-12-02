@@ -237,14 +237,8 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
               {/* Column header row */}
               <div className="flex items-center gap-2 p-2">
                 <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600"><GripVertical size={14} /></div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <input type="text" value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} className="w-full px-2 py-1 text-xs border border-slate-200 rounded bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-200" placeholder="Column name (English)" />
-                  <div className="grid grid-cols-2 gap-1">
-                    <input type="text" value={col.nameHe || ''} onChange={(e) => updateColumn(col.id, { nameHe: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="עברית" />
-                    <input type="text" value={col.nameRu || ''} onChange={(e) => updateColumn(col.id, { nameRu: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="Русский" />
-                    <input type="text" value={col.nameAr || ''} onChange={(e) => updateColumn(col.id, { nameAr: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="العربية" />
-                    <input type="text" value={col.nameAm || ''} onChange={(e) => updateColumn(col.id, { nameAm: e.target.value || undefined })} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="አማርኛ" />
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <input type="text" value={col.name} onChange={(e) => updateColumn(col.id, { name: e.target.value })} className="w-full px-2 py-1 text-xs border border-slate-200 rounded bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-200" placeholder="Column name" />
                 </div>
                 <select value={col.type} onChange={(e) => {
                   const newType = e.target.value as TableColumnType;
@@ -367,13 +361,7 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
                               <input type="text" value={opt.value} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'value', e.target.value)} placeholder="Value (stored)" className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded bg-white" />
                               <button onClick={() => deleteColumnOption(col.id, opt.id)} className="p-1 text-slate-400 hover:text-red-500"><X size={12} /></button>
                             </div>
-                            <input type="text" value={opt.labelEn || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelEn', e.target.value || undefined)} placeholder="English label (display)" className="w-full px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" />
-                            <div className="grid grid-cols-2 gap-1">
-                              <input type="text" value={opt.labelHe || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelHe', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="עברית" />
-                              <input type="text" value={opt.labelRu || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelRu', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="Русский" />
-                              <input type="text" value={opt.labelAr || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelAr', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" dir="rtl" placeholder="العربية" />
-                              <input type="text" value={opt.labelAm || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'labelAm', e.target.value || undefined)} className="px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" placeholder="አማርኛ" />
-                            </div>
+                            <input type="text" value={opt.label || ''} onChange={(e) => updateColumnOptionField(col.id, opt.id, 'label', e.target.value || undefined)} placeholder="Label (display)" className="w-full px-2 py-0.5 text-[9px] border border-slate-200 rounded bg-white" />
                           </div>
                         ))}
                       </div>

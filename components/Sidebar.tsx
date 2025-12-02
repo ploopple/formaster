@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onFieldBlur,
   onSyncCompositeChildren
 }) => {
-  const { t, isRTL, language } = useI18n();
+  const { t } = useI18n();
   const [draggedFieldId, setDraggedFieldId] = React.useState<string | null>(null);
   const [dragOverFieldId, setDragOverFieldId] = React.useState<string | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = React.useState<string | null>(null);
@@ -74,41 +74,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null);
   const [newSectionName, setNewSectionName] = React.useState('');
 
-  // Helper to get translated field name
-  // Helper to get translated field name based on current language
-  const getFieldName = (field: FormField) => {
-    switch (language) {
-      case 'he': return field.nameHe || field.name;
-      case 'ru': return field.nameRu || field.name;
-      case 'ar': return field.nameAr || field.name;
-      case 'am': return field.nameAm || field.name;
-      default: return field.name;
-    }
-  };
+  // Helper to get field name (English only)
+  const getFieldName = (field: FormField) => field.name;
 
-  // Helper to get translated option label based on current language
-  // The label is what's displayed to users, value is what's stored
-  const getOptionLabel = (opt: FieldOption) => {
-    const defaultLabel = opt.labelEn || opt.value;
-    switch (language) {
-      case 'he': return opt.labelHe || defaultLabel;
-      case 'ru': return opt.labelRu || defaultLabel;
-      case 'ar': return opt.labelAr || defaultLabel;
-      case 'am': return opt.labelAm || defaultLabel;
-      default: return defaultLabel;
-    }
-  };
+  // Helper to get option label
+  const getOptionLabel = (opt: FieldOption) => opt.label || opt.value;
 
-  // Helper to get translated section name based on current language
-  const getSectionName = (section: FieldSection) => {
-    switch (language) {
-      case 'he': return section.nameHe || section.name;
-      case 'ru': return section.nameRu || section.name;
-      case 'ar': return section.nameAr || section.name;
-      case 'am': return section.nameAm || section.name;
-      default: return section.name;
-    }
-  };
+  // Helper to get section name (English only)
+  const getSectionName = (section: FieldSection) => section.name;
   const [showNewSectionInput, setShowNewSectionInput] = React.useState(false);
   const [currentFillStep, setCurrentFillStep] = React.useState(0);
   const [sidebarWidth, setSidebarWidth] = React.useState(320);
@@ -221,11 +194,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       onUpdateField(selectedField.id, { options: selectedField.options.map(o => o.id === optId ? { ...o, value: newValue } : o) });
   };
 
-  const updateOptionLabelTranslation = (optId: string, lang: 'en' | 'he' | 'ru' | 'ar' | 'am', labelValue: string) => {
+  const updateOptionLabel = (optId: string, labelValue: string) => {
       if (!selectedField || !selectedField.options) return;
-      const key = `label${lang.charAt(0).toUpperCase() + lang.slice(1)}` as 'labelEn' | 'labelHe' | 'labelRu' | 'labelAr' | 'labelAm';
       onUpdateField(selectedField.id, { 
-        options: selectedField.options.map(o => o.id === optId ? { ...o, [key]: labelValue || undefined } : o) 
+        options: selectedField.options.map(o => o.id === optId ? { ...o, label: labelValue || undefined } : o) 
       });
   };
 
@@ -421,7 +393,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         onClick={() => onSelectField(selectedField.parentFieldId!)} 
                         className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors group"
                       >
-                        <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> 
+                        <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> 
                         {t.sidebar.backToParent}
                       </button>
                       {/* Separator */}
@@ -441,7 +413,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       onClick={() => onSelectField(null)} 
                       className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-sm font-medium transition-colors group"
                     >
-                      <ArrowLeft size={16} className={`transition-transform ${isRTL ? 'group-hover:translate-x-1 rotate-180' : 'group-hover:-translate-x-1'}`} /> 
+                      <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> 
                       {t.sidebar.back}
                     </button>
                   )}
@@ -452,62 +424,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.name}</label>
                         <input type="text" value={selectedField.name} onChange={(e) => onUpdateField(selectedField.id, { name: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm" autoFocus />
                         {selectedField.groupId && <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium"><MapPin size={10} /><span>{t.sidebar.linked}</span></div>}
-                    </div>
-
-                    {/* Translations Section */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">🌐 {t.sidebar.translations}</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400">{t.sidebar.translationsHelp}</p>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {/* Hebrew */}
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase">עברית (Hebrew)</label>
-                                <input 
-                                    type="text" 
-                                    value={selectedField.nameHe || ''} 
-                                    onChange={(e) => onUpdateField(selectedField.id, { nameHe: e.target.value || undefined })} 
-                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
-                                    dir="rtl"
-                                    placeholder="שם השדה"
-                                />
-                            </div>
-                            {/* Russian */}
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase">Русский (Russian)</label>
-                                <input 
-                                    type="text" 
-                                    value={selectedField.nameRu || ''} 
-                                    onChange={(e) => onUpdateField(selectedField.id, { nameRu: e.target.value || undefined })} 
-                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
-                                    placeholder="Название поля"
-                                />
-                            </div>
-                            {/* Arabic */}
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase">العربية (Arabic)</label>
-                                <input 
-                                    type="text" 
-                                    value={selectedField.nameAr || ''} 
-                                    onChange={(e) => onUpdateField(selectedField.id, { nameAr: e.target.value || undefined })} 
-                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
-                                    dir="rtl"
-                                    placeholder="اسم الحقل"
-                                />
-                            </div>
-                            {/* Amharic */}
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase">አማርኛ (Amharic)</label>
-                                <input 
-                                    type="text" 
-                                    value={selectedField.nameAm || ''} 
-                                    onChange={(e) => onUpdateField(selectedField.id, { nameAm: e.target.value || undefined })} 
-                                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs" 
-                                    placeholder="የመስክ ስም"
-                                />
-                            </div>
-                        </div>
                     </div>
 
                     {sections.length > 0 && (
@@ -934,20 +850,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                             {selectedField.type !== 'select' && <div className="text-slate-400 cursor-move"><GripVertical size={14} /></div>}
                                             <div className="flex-1 space-y-1">
                                                 <input type="text" value={opt.value} onChange={(e) => updateOptionValue(opt.id, e.target.value)} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs font-mono" placeholder="Value (stored)" title="This value is stored when selected" />
-                                                <input type="text" value={opt.labelEn || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'en', e.target.value)} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" placeholder="English Label - defaults to value" title="English display text shown to users" />
+                                                <input type="text" value={opt.label || ''} onChange={(e) => updateOptionLabel(opt.id, e.target.value)} className="w-full px-2 py-1 bg-white border border-slate-200 rounded text-xs" placeholder="Label - defaults to value" title="Display text shown to users" />
                                             </div>
                                             <button onClick={() => onAddNestedField(selectedField.id, opt.id)} className="text-slate-400 hover:text-blue-500 p-1 rounded" title="Add nested field"><CornerDownRight size={14} /></button>
                                             <button onClick={() => deleteOption(opt.id)} className="text-slate-400 hover:text-red-500 p-1 rounded" title="Delete option"><Trash2 size={14} /></button>
                                         </div>
-                                        <div className="ps-6 space-y-1">
-                                            <span className="text-[9px] text-slate-400 uppercase">Label Translations:</span>
-                                            <div className="grid grid-cols-2 gap-1">
-                                                <input type="text" value={opt.labelHe || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'he', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" dir="rtl" placeholder="עברית" />
-                                                <input type="text" value={opt.labelRu || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'ru', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" placeholder="Русский" />
-                                                <input type="text" value={opt.labelAr || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'ar', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" dir="rtl" placeholder="العربية" />
-                                                <input type="text" value={opt.labelAm || ''} onChange={(e) => updateOptionLabelTranslation(opt.id, 'am', e.target.value)} className="px-2 py-1 bg-white border border-slate-200 rounded text-[10px]" placeholder="አማርኛ" />
-                                            </div>
-                                        </div>
+
                                     </div>
                                 ))}
                              </div>
@@ -1812,29 +1720,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                 }
                                                             }}
                                                         />
-                                                        <input
-                                                            type="text"
-                                                            defaultValue={section.nameHe || ''}
-                                                            className="w-full px-1 py-0.5 text-xs border border-slate-200 rounded bg-white"
-                                                            dir="rtl"
-                                                            placeholder="שם בעברית"
-                                                            onBlur={(e) => {
-                                                                if (onUpdateSection) {
-                                                                    onUpdateSection(section.id, { nameHe: e.target.value.trim() || undefined });
-                                                                }
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    if (onUpdateSection) {
-                                                                        onUpdateSection(section.id, { nameHe: e.currentTarget.value.trim() || undefined });
-                                                                    }
-                                                                    setEditingSectionId(null);
-                                                                }
-                                                                if (e.key === 'Escape') {
-                                                                    setEditingSectionId(null);
-                                                                }
-                                                            }}
-                                                        />
+
                                                     </div>
                                                 ) : (
                                                     <span 
@@ -2417,7 +2303,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               // Add unsectioned fields as a step if there are any
               if (unsectionedFields.length > 0) {
                 const unsectionedVisibleFields = fields.filter(f => !f.sectionId);
-                steps.push({ id: '__other__', name: sections.length > 0 ? (language === 'he' ? 'שדות נוספים' : 'Other Fields') : (language === 'he' ? 'שדות הטופס' : 'Form Fields'), fields: unsectionedVisibleFields });
+                steps.push({ id: '__other__', name: sections.length > 0 ? 'Other Fields' : 'Form Fields', fields: unsectionedVisibleFields });
               }
               
               const totalSteps = steps.length;
@@ -2559,7 +2445,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => setCurrentFillStep(prev => Math.max(0, prev - 1))}
                     className="flex-1 flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 px-4 rounded-lg font-medium transition-colors"
                   >
-                    <ChevronRight size={18} className={isRTL ? '' : 'rotate-180'} /> {t.sidebar.previousField}
+                    <ChevronRight size={18} className="rotate-180" /> {t.sidebar.previousField}
                   </button>
                 )}
                 {isLastStep ? (
@@ -2575,7 +2461,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     onClick={() => setCurrentFillStep(prev => prev + 1)}
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm"
                   >
-                    {t.sidebar.nextField} <ChevronRight size={18} className={isRTL ? 'rotate-180' : ''} />
+                    {t.sidebar.nextField} <ChevronRight size={18} />
                   </button>
                 )}
               </div>

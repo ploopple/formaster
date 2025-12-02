@@ -12,32 +12,13 @@ interface InlineTableEditorProps {
 }
 
 const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateField, customRows = [] }) => {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
 
-  // Helper to get translated column name based on current language
-  const getColumnName = (col: TableColumn) => {
-    switch (language) {
-      case 'he': return col.nameHe || col.name;
-      case 'ru': return col.nameRu || col.name;
-      case 'ar': return col.nameAr || col.name;
-      case 'am': return col.nameAm || col.name;
-      default: return col.name;
-    }
-  };
+  const getColumnName = (col: TableColumn) => col.name;
 
-  // Helper to get translated option label based on current language
-  const getOptionLabel = (opt: FieldOption) => {
-    const defaultLabel = opt.labelEn || opt.value;
-    switch (language) {
-      case 'he': return opt.labelHe || defaultLabel;
-      case 'ru': return opt.labelRu || defaultLabel;
-      case 'ar': return opt.labelAr || defaultLabel;
-      case 'am': return opt.labelAm || defaultLabel;
-      default: return defaultLabel;
-    }
-  };
+  const getOptionLabel = (opt: FieldOption) => opt.label || opt.value;
 
   const getTableData = (): string[][] => {
     try {
@@ -80,7 +61,6 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     }
   }, [editingCell]);
 
-  // Helper to render cell input based on column definition
   const renderCellInput = (col: TableColumn, value: string, rowIdx: number, colIdx: number, isEditing: boolean) => {
     const type = col.type;
 
@@ -94,7 +74,6 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     }
 
     if (type === 'radio') {
-      // Radio in table context - show options as buttons
       return (
         <div className="flex gap-1 flex-wrap">
           {(col.options || []).map((opt) => (
@@ -135,7 +114,6 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
       );
     }
 
-    // Text, number, textarea
     return (
       <input ref={isEditing ? inputRef as React.RefObject<HTMLInputElement> : undefined}
         type={type === 'number' ? 'number' : 'text'} value={value}
@@ -148,10 +126,8 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     );
   };
 
-  // Get columns from parent table (for custom rows) or from field itself
   const columns = field.columns || [];
   
-  // Render for custom rows - cells are derived from parent table columns
   if (customRows.length > 0) {
     const sortedRows = [...customRows].sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0));
     const visibleCount = Math.min(field.filledRows || 1, sortedRows.length);
@@ -203,7 +179,6 @@ const InlineTableEditor: React.FC<InlineTableEditorProps> = ({ field, onUpdateFi
     );
   }
 
-  // Render for standard table columns (no custom rows)
   const rowsToRender = field.filledRows || 1;
   const maxRows = field.maxRows || 10;
   const tableData = getTableData();

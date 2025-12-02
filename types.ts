@@ -25,12 +25,8 @@ export interface FieldOption {
   y: number;
   width: number;
   height: number;
-  value: string; // The stored/submitted value (e.g., "yes", "male") - not translated
-  labelEn?: string; // English display label (defaults to value if not set)
-  labelHe?: string; // Hebrew translation of the display label
-  labelRu?: string; // Russian translation of the display label
-  labelAr?: string; // Arabic translation of the display label
-  labelAm?: string; // Amharic translation of the display label
+  value: string; // The stored/submitted value (e.g., "yes", "male")
+  label?: string; // Display label (defaults to value if not set)
 }
 
 // Column type excludes 'table' and 'table-row' - all other field types are allowed
@@ -39,10 +35,6 @@ export type TableColumnType = Exclude<FieldType, 'table' | 'table-row'>;
 export interface TableColumn {
   id: string;
   name: string; // Column header name
-  nameHe?: string; // Hebrew translation of column name
-  nameRu?: string; // Russian translation of column name
-  nameAr?: string; // Arabic translation of column name
-  nameAm?: string; // Amharic translation of column name
   type: TableColumnType;
   width: number; // Percentage relative to the row width (all columns should sum to 100)
   
@@ -75,10 +67,6 @@ export interface TableColumn {
 export interface FieldSection {
   id: string;
   name: string;
-  nameHe?: string; // Hebrew translation of section name
-  nameRu?: string; // Russian translation of section name
-  nameAr?: string; // Arabic translation of section name
-  nameAm?: string; // Amharic translation of section name
   collapsed?: boolean;
   order: number;
 }
@@ -110,16 +98,8 @@ export interface FormField {
   additionalPositions?: FieldPosition[];
   
   name: string;
-  nameHe?: string; // Hebrew translation of field name
-  nameRu?: string; // Russian translation of field name
-  nameAr?: string; // Arabic translation of field name
-  nameAm?: string; // Amharic translation of field name
   value: string; // Text content, or selected value(s), or JSON string for Table data
   previewText: string;
-  previewTextHe?: string; // Hebrew translation of preview text
-  previewTextRu?: string; // Russian translation of preview text
-  previewTextAr?: string; // Arabic translation of preview text
-  previewTextAm?: string; // Amharic translation of preview text
   type: FieldType;
   
   // Text Styling

@@ -90,18 +90,11 @@ export const en = {
     
     // Field properties
     name: 'Name',
-    nameHe: 'Name (Hebrew)',
     section: 'Section',
     noSection: 'No Section',
     type: 'Type',
     value: 'Value',
     placeholder: 'Placeholder',
-    placeholderHe: 'Placeholder (Hebrew)',
-    
-    // Translations section
-    translations: 'Translations',
-    translationsHelp: 'Add Hebrew translations for this field',
-    optionTranslation: 'Hebrew',
     
     // Field types
     fieldTypes: {
