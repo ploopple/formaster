@@ -540,10 +540,10 @@ const FormCreator: React.FC<FormCreatorProps> = ({
         onMouseDown={(e) => !isLocked && handleElementMouseDown(e, elem.id)}
       >
         {/* Element content */}
-        <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center overflow-hidden select-none">
           {elem.type === 'text-label' && (
             <span
-              className="w-full px-1"
+              className="w-full px-1 pointer-events-none"
               style={{
                 fontSize: `${elem.fontSize || 12}px`,
                 fontWeight: elem.fontWeight,
@@ -684,9 +684,14 @@ const FormCreator: React.FC<FormCreatorProps> = ({
               style={{ borderColor: elem.borderColor || '#cbd5e1' }}
             >
               {elem.imageData ? (
-                <img src={elem.imageData} alt="" className="w-full h-full object-contain" />
+                <img 
+                  src={elem.imageData} 
+                  alt="" 
+                  className="w-full h-full object-contain pointer-events-none select-none" 
+                  draggable={false}
+                />
               ) : (
-                <div className="text-center text-gray-400">
+                <div className="text-center text-gray-400 pointer-events-none">
                   <Image size={24} className="mx-auto mb-1" />
                   <span className="text-xs">Image</span>
                 </div>
