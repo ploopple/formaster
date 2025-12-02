@@ -77,6 +77,8 @@ export const en = {
     failedToCopyJson: 'Failed to copy JSON to clipboard',
     share: 'Share',
     copyShareLink: 'Copy share link',
+    saveProgress: 'Save Progress',
+    progressSaved: 'Saved!',
     formNotFound: 'Form Not Found',
     formNotFoundDesc: 'The form you are looking for does not exist or has been removed.',
   },

@@ -13,8 +13,11 @@ import { formsData, FormTemplate } from '../../../formsData';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp, Share2 } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp, Share2, HardDrive } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
+
+// LocalStorage key prefix for saved form states
+const FORM_STORAGE_KEY_PREFIX = 'pdf_form_state_';
 
 function EditorContent() {
   const router = useRouter();
@@ -42,6 +45,7 @@ function EditorContent() {
   const [formNotFound, setFormNotFound] = useState(false);
   const [currentForm, setCurrentForm] = useState<FormTemplate | null>(null);
   const [globalDrawColor, setGlobalDrawColor] = useState<string>('#000000');
+  const [isSavedToStorage, setIsSavedToStorage] = useState(false);
 
   const validationStates = useMemo(() => validateAllFields(fields), [fields]);
   const formIsValid = useMemo(() => isFormValid(validationStates), [validationStates]);
@@ -51,8 +55,16 @@ function EditorContent() {
     setIsClient(true);
   }, []);
 
-  // Load form by ID from formsData
+  // Load form by ID from formsData, checking localStorage for saved state first
   useEffect(() => {
+    // Reset state when formId changes
+    setIsLoading(true);
+    setFormNotFound(false);
+    setFile(null);
+    setPdfBytes(null);
+    setPreviewBlob(null);
+    setCurrentForm(null);
+    
     const loadForm = async () => {
       const form = formsData.find(f => f.id === formId);
       if (!form) {
@@ -63,6 +75,29 @@ function EditorContent() {
       
       setCurrentForm(form);
       
+      // Check localStorage for saved state
+      let savedFields = form.fields;
+      let savedSections = form.sections || [];
+      let savedGlobalDrawColor = form.globalDrawColor || '#000000';
+      
+      try {
+        const savedState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
+        if (savedState) {
+          const parsed = JSON.parse(savedState);
+          if (parsed.fields && Array.isArray(parsed.fields)) {
+            savedFields = parsed.fields;
+          }
+          if (parsed.sections && Array.isArray(parsed.sections)) {
+            savedSections = parsed.sections;
+          }
+          if (parsed.globalDrawColor) {
+            savedGlobalDrawColor = parsed.globalDrawColor;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load saved form state from localStorage', error);
+      }
+      
       try {
         const response = await fetch(form.fileName);
         if (!response.ok) throw new Error('Failed to load PDF');
@@ -71,16 +106,14 @@ function EditorContent() {
         const pdfFile = new File([blob], form.fileName.split('/').pop() || 'form.pdf', { type: 'application/pdf' });
         
         setFile(pdfFile);
-        setFields(form.fields);
-        setSections(form.sections || []);
-        if (form.globalDrawColor) {
-          setGlobalDrawColor(form.globalDrawColor);
-        }
+        setFields(savedFields);
+        setSections(savedSections);
+        setGlobalDrawColor(savedGlobalDrawColor);
         
         const bytes = await blob.arrayBuffer();
         setPdfBytes(bytes);
         
-        const generatedBytes = await saveFilledPDF(bytes, form.fields);
+        const generatedBytes = await saveFilledPDF(bytes, savedFields);
         const previewBlobData = new Blob([generatedBytes as BlobPart], { type: 'application/pdf' });
         setPreviewBlob(previewBlobData);
         
@@ -107,6 +140,24 @@ function EditorContent() {
       console.error('Failed to copy link', error);
     }
   };
+
+  // Save form state to localStorage
+  const saveToLocalStorage = useCallback(() => {
+    try {
+      const formState = {
+        fields,
+        sections,
+        globalDrawColor,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`, JSON.stringify(formState));
+      setIsSavedToStorage(true);
+      setTimeout(() => setIsSavedToStorage(false), 2000);
+    } catch (error) {
+      console.error('Failed to save to localStorage', error);
+      alert('Failed to save form progress');
+    }
+  }, [fields, sections, globalDrawColor, formId]);
 
   useEffect(() => {
     if (!pdfBytes) return;
@@ -457,6 +508,10 @@ function EditorContent() {
               </button>
             </div>
           )}
+          <button onClick={saveToLocalStorage} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title={t.editor.saveProgress || 'Save progress locally'}>
+            {isSavedToStorage ? <Check size={16} className="text-green-600" /> : <HardDrive size={16} />}
+            <span className="hidden sm:inline">{isSavedToStorage ? t.common.copied : (t.editor.saveProgress || 'Save Progress')}</span>
+          </button>
           <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyShareLink || 'Copy share link'}>
             {isLinkCopied ? <Check size={16} className="text-green-600" /> : <Share2 size={16} />}
             <span className="hidden sm:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
@@ -475,7 +530,7 @@ function EditorContent() {
       </header>
       <div className="flex flex-1 overflow-hidden relative">
         {(previewBlob || file) && (
-          <PDFViewer file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} />
+          <PDFViewer key={formId} file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} />
         )}
         <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} globalDrawColor={globalDrawColor} onGlobalDrawColorChange={setGlobalDrawColor} />
       </div>

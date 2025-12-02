@@ -96,6 +96,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   useEffect(() => { setActiveOptionId(null); }, [selectedFieldId]);
 
+  // Track file identity to detect when a new file is passed
+  const fileIdRef = useRef<number>(0);
+  
   // Create stable blob URL that updates without causing Document remount
   useEffect(() => {
     if (!file) {
@@ -103,18 +106,30 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       return;
     }
     
-    // Create new URL for the blob
-    const newUrl = URL.createObjectURL(file instanceof Blob ? file : new Blob([file]));
+    // Increment file ID to track this specific file instance
+    const currentFileId = ++fileIdRef.current;
+    
+    // Clear the URL first to prevent using stale URL
+    setStableFileUrl(null);
     
     // Revoke previous URL to prevent memory leaks
     if (previousUrlRef.current) {
       URL.revokeObjectURL(previousUrlRef.current);
+      previousUrlRef.current = null;
     }
     
-    previousUrlRef.current = newUrl;
-    setStableFileUrl(newUrl);
+    // Create new URL for the blob after a small delay to ensure cleanup
+    const timeoutId = setTimeout(() => {
+      // Only proceed if this is still the current file
+      if (fileIdRef.current !== currentFileId) return;
+      
+      const newUrl = URL.createObjectURL(file instanceof Blob ? file : new Blob([file]));
+      previousUrlRef.current = newUrl;
+      setStableFileUrl(newUrl);
+    }, 50);
     
     return () => {
+      clearTimeout(timeoutId);
       if (previousUrlRef.current) {
         URL.revokeObjectURL(previousUrlRef.current);
         previousUrlRef.current = null;
