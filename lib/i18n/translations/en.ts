@@ -39,8 +39,7 @@ export const en = {
     title: 'Smart PDF Filler',
     subtitle: 'Upload a PDF to start editing fields and filling information.',
     browseTemplates: 'Browse Form Templates',
-    createNewForm: 'Create New Form',
-    uploadNewPdf: 'Upload Existing PDF',
+    uploadNewPdf: 'Upload New PDF',
     supportedFormats: 'Supported formats: PDF only',
   },
 

@@ -41,8 +41,7 @@ export const he: TranslationKeys = {
     title: 'מילוי טפסים חכם',
     subtitle: 'העלה קובץ PDF כדי להתחיל לערוך שדות ולמלא מידע.',
     browseTemplates: 'עיין בתבניות טפסים',
-    createNewForm: 'צור טופס חדש',
-    uploadNewPdf: 'העלה PDF קיים',
+    uploadNewPdf: 'העלה PDF חדש',
     supportedFormats: 'פורמטים נתמכים: PDF בלבד',
   },
 

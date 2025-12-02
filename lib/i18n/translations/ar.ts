@@ -41,8 +41,7 @@ export const ar: TranslationKeys = {
     title: 'تعبئة PDF الذكية',
     subtitle: 'قم بتحميل ملف PDF لبدء تعديل الحقول وملء المعلومات.',
     browseTemplates: 'تصفح قوالب النماذج',
-    createNewForm: 'إنشاء نموذج جديد',
-    uploadNewPdf: 'تحميل PDF موجود',
+    uploadNewPdf: 'تحميل PDF جديد',
     supportedFormats: 'الصيغ المدعومة: PDF فقط',
   },
 

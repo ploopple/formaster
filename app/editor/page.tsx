@@ -48,41 +48,9 @@ function EditorContent() {
     setIsClient(true);
   }, []);
 
-  // Load form from sessionStorage if coming from templates or form creator
+  // Load form from sessionStorage if coming from templates
   useEffect(() => {
     const loadForm = async () => {
-      // Check for custom form from form creator first
-      const customForm = sessionStorage.getItem('customFormTemplate');
-      if (customForm) {
-        try {
-          const form = JSON.parse(customForm);
-          // Convert base64 back to blob
-          const response = await fetch(form.pdfBlob);
-          const blob = await response.blob();
-          const pdfFile = new File([blob], 'custom-form.pdf', { type: 'application/pdf' });
-          
-          setFile(pdfFile);
-          setFields(form.fields || []);
-          setSections(form.sections || []);
-          
-          const bytes = await blob.arrayBuffer();
-          setPdfBytes(bytes);
-          
-          const generatedBytes = await saveFilledPDF(bytes, form.fields || []);
-          const previewBlobData = new Blob([generatedBytes as BlobPart], { type: 'application/pdf' });
-          setPreviewBlob(previewBlobData);
-          
-          if (window.innerWidth > 768) setIsSidebarOpen(true);
-          sessionStorage.removeItem('customFormTemplate');
-          setIsLoading(false);
-          return;
-        } catch (error) {
-          console.error('Failed to load custom form', error);
-          sessionStorage.removeItem('customFormTemplate');
-        }
-      }
-
-      // Check for template form
       const storedForm = sessionStorage.getItem('selectedForm');
       if (storedForm) {
         try {
