@@ -8,7 +8,7 @@ import {
   Calendar, PenTool,
   List, Circle, Image,
   ArrowUp, ArrowDown,
-  Lock, Grid3X3, Undo2, Redo2, Clipboard,
+  Lock, Grid3X3, Undo2, Redo2, Clipboard, Layers, Eye, EyeOff,
 } from 'lucide-react';
 import { PAGE_SIZES, PageSizeKey, FormElement } from '../services/pdfGenerator';
 
@@ -852,6 +852,61 @@ const FormCreator: React.FC<FormCreatorProps> = ({
           ))}
         </div>
 
+        {/* Elements Tree / Layers */}
+        <div className="border-t border-slate-100">
+          <div className="p-3 flex items-center justify-between">
+            <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+              <Layers size={14} />
+              Layers ({pageElements.length})
+            </h4>
+          </div>
+          <div className="max-h-48 overflow-y-auto px-2 pb-2">
+            {pageElements.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-2">No elements on this page</p>
+            ) : (
+              <div className="space-y-1">
+                {[...pageElements].reverse().map((elem) => {
+                  const typeInfo = ELEMENT_TYPES.find(t => t.type === elem.type);
+                  const Icon = typeInfo?.icon || Square;
+                  const isSelected = elem.id === selectedElementId;
+                  
+                  return (
+                    <div
+                      key={elem.id}
+                      onClick={() => setSelectedElementId(elem.id)}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-xs transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'hover:bg-slate-50 text-slate-600'
+                      }`}
+                    >
+                      <Icon size={14} className="shrink-0" />
+                      <span className="flex-1 truncate">
+                        {elem.type === 'text-label' && elem.text 
+                          ? elem.text.substring(0, 20) + (elem.text.length > 20 ? '...' : '')
+                          : elem.type === 'image' && elem.imageData
+                          ? 'Image'
+                          : typeInfo?.label || elem.type}
+                      </span>
+                      <span className="text-[10px] text-slate-400 shrink-0">z:{elem.zIndex || 0}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteElement(elem.id);
+                        }}
+                        className="p-0.5 hover:bg-red-100 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Page Settings */}
         <div className="p-4 border-t border-slate-100 mt-auto">
           <h4 className="text-xs font-bold text-slate-400 uppercase mb-3">Page Settings</h4>
@@ -1054,6 +1109,38 @@ const FormCreator: React.FC<FormCreatorProps> = ({
                     className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
                     step="0.5"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Layer (Z-Index) */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-400 uppercase">Layer</h4>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-slate-500">Z-Index</label>
+                  <input
+                    type="number"
+                    value={selectedElement.zIndex || 0}
+                    onChange={(e) => updateElement(selectedElement.id, { zIndex: parseInt(e.target.value) || 0 }, true)}
+                    className="w-full px-2 py-1 text-sm border border-slate-200 rounded"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 pt-4">
+                  <button
+                    onClick={bringToFront}
+                    className="px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+                    title="Bring to Front"
+                  >
+                    <ArrowUp size={14} className="inline" /> Front
+                  </button>
+                  <button
+                    onClick={sendToBack}
+                    className="px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+                    title="Send to Back"
+                  >
+                    <ArrowDown size={14} className="inline" /> Back
+                  </button>
                 </div>
               </div>
             </div>

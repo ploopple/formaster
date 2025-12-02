@@ -115,7 +115,10 @@ export const generateBlankPDF = async (
   // Draw elements on their respective pages
   const pages = pdfDoc.getPages();
   
-  for (const element of elements) {
+  // Sort elements by z-index so lower z-index elements are drawn first (appear behind)
+  const sortedElements = [...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+  
+  for (const element of sortedElements) {
     const pageIndex = element.page - 1;
     if (pageIndex < 0 || pageIndex >= pages.length) continue;
     
