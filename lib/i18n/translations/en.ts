@@ -41,6 +41,7 @@ export const en = {
     browseTemplates: 'Browse Form Templates',
     uploadNewPdf: 'Upload New PDF',
     supportedFormats: 'Supported formats: PDF only',
+    createNewForm: "Create new form"
   },
 
   // Templates page
