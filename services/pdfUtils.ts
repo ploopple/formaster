@@ -16,10 +16,9 @@ const getAllPositions = (field: FormField): FieldPosition[] => {
 };
 
 // Helper to draw checkmark
-const drawCheckmark = (page: PDFPage, x: number, y: number, width: number, height: number) => {
+const drawCheckmark = (page: PDFPage, x: number, y: number, width: number, height: number, color: Color = rgb(0, 0, 0)) => {
     const size = Math.min(width, height) * 0.6;
     const strokeWidth = 1.5;
-    const color = rgb(0, 0, 0);
     
     const p1 = { x: x - size * 0.25, y: y }; 
     const p2 = { x: x - size * 0.05, y: y - size * 0.25 }; 
@@ -30,54 +29,53 @@ const drawCheckmark = (page: PDFPage, x: number, y: number, width: number, heigh
 };
 
 // Helper to draw X mark
-const drawXMark = (page: PDFPage, x: number, y: number, width: number, height: number) => {
+const drawXMark = (page: PDFPage, x: number, y: number, width: number, height: number, color: Color = rgb(0, 0, 0)) => {
     const size = Math.min(width, height) * 0.35;
     const strokeWidth = 1.5;
-    const color = rgb(0, 0, 0);
     
     page.drawLine({ start: { x: x - size, y: y - size }, end: { x: x + size, y: y + size }, thickness: strokeWidth, color });
     page.drawLine({ start: { x: x - size, y: y + size }, end: { x: x + size, y: y - size }, thickness: strokeWidth, color });
 };
 
 // Helper to draw filled circle (dot)
-const drawDot = (page: PDFPage, x: number, y: number, width: number, height: number) => {
+const drawDot = (page: PDFPage, x: number, y: number, width: number, height: number, color: Color = rgb(0, 0, 0)) => {
     const radius = Math.min(width, height) * 0.25;
-    page.drawCircle({ x, y, size: radius, color: rgb(0, 0, 0) });
+    page.drawCircle({ x, y, size: radius, color });
 };
 
 // Helper to draw circle outline
-const drawCircle = (page: PDFPage, x: number, y: number, width: number, height: number) => {
+const drawCircle = (page: PDFPage, x: number, y: number, width: number, height: number, color: Color = rgb(0, 0, 0)) => {
     const radius = Math.min(width, height) * 0.3;
-    page.drawCircle({ x, y, size: radius, borderColor: rgb(0, 0, 0), borderWidth: 1.5 });
+    page.drawCircle({ x, y, size: radius, borderColor: color, borderWidth: 1.5 });
 };
 
 // Helper to draw filled square
-const drawSquare = (page: PDFPage, x: number, y: number, width: number, height: number) => {
+const drawSquare = (page: PDFPage, x: number, y: number, width: number, height: number, color: Color = rgb(0, 0, 0)) => {
     const size = Math.min(width, height) * 0.4;
-    page.drawRectangle({ x: x - size/2, y: y - size/2, width: size, height: size, color: rgb(0, 0, 0) });
+    page.drawRectangle({ x: x - size/2, y: y - size/2, width: size, height: size, color });
 };
 
 // Draw mark based on style
-const drawMark = (page: PDFPage, x: number, y: number, width: number, height: number, style: MarkStyle = 'checkmark') => {
+const drawMark = (page: PDFPage, x: number, y: number, width: number, height: number, style: MarkStyle = 'checkmark', color: Color = rgb(0, 0, 0)) => {
     switch (style) {
         case 'none':
             // Don't draw anything
             break;
         case 'x':
-            drawXMark(page, x, y, width, height);
+            drawXMark(page, x, y, width, height, color);
             break;
         case 'circle':
-            drawCircle(page, x, y, width, height);
+            drawCircle(page, x, y, width, height, color);
             break;
         case 'square':
-            drawSquare(page, x, y, width, height);
+            drawSquare(page, x, y, width, height, color);
             break;
         case 'dot':
-            drawDot(page, x, y, width, height);
+            drawDot(page, x, y, width, height, color);
             break;
         case 'checkmark':
         default:
-            drawCheckmark(page, x, y, width, height);
+            drawCheckmark(page, x, y, width, height, color);
             break;
     }
 };
@@ -175,7 +173,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             if (cellValue === 'true' || (col.options?.some(o => o.value === cellValue))) {
                                 const centerX = pdfX + (pdfW / 2);
                                 const centerY = pdfY + (pdfH / 2);
-                                drawMark(page, centerX, centerY, pdfW, pdfH, col.markStyle || field.markStyle || 'checkmark');
+                                const markColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
+                                drawMark(page, centerX, centerY, pdfW, pdfH, col.markStyle || field.markStyle || 'checkmark', markColor);
                             }
                         } else {
                             let displayValue = cellValue;
@@ -243,7 +242,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         if (col.type === 'checkbox' || col.type === 'radio') {
                             if (cellValue === 'true') {
                                  const centerX = currentColX + (colWidthAbs/2);
-                                 drawMark(page, centerX, cellCenterY, colWidthAbs, rowHeightAbs, col.markStyle || field.markStyle || 'checkmark');
+                                 const markColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
+                                 drawMark(page, centerX, cellCenterY, colWidthAbs, rowHeightAbs, col.markStyle || field.markStyle || 'checkmark', markColor);
                             }
                         } else {
                             let displayValue = cellValue;
@@ -456,7 +456,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             const mainY = originY + height - ((field.y / 100) * height) - mainH;
             const centerX = mainX + mainW / 2;
             const centerY = mainY + mainH / 2;
-            drawMark(page, centerX, centerY, mainW, mainH, field.markStyle || 'checkmark');
+            const markColor = hexToRgb(field.color) || rgb(0, 0, 0);
+            drawMark(page, centerX, centerY, mainW, mainH, field.markStyle || 'checkmark', markColor);
         }
     }
     
@@ -519,8 +520,9 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 const centerX = optX + optW / 2;
                 const centerY = optY + optH / 2;
                 
-                // Draw mark based on field's markStyle
-                drawMark(page, centerX, centerY, optW, optH, field.markStyle || 'checkmark');
+                // Draw mark based on field's markStyle and color
+                const markColor = hexToRgb(field.color) || rgb(0, 0, 0);
+                drawMark(page, centerX, centerY, optW, optH, field.markStyle || 'checkmark', markColor);
             }
          });
     }

@@ -141,6 +141,13 @@ export const en = {
     radius: 'Radius',
     padding: 'Padding (px)',
 
+    // Global drawing color
+    globalDrawColor: 'Global Draw Color',
+    globalDrawColorHelp: 'Default color for new fields',
+    presetColors: 'Preset Colors',
+    customColor: 'Custom',
+    useGlobalColor: 'Use Global Color',
+
     // Typography
     typography: 'Typography',
     fontSize: 'Font Size',

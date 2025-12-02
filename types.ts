@@ -108,6 +108,7 @@ export interface FormField {
   textAlign?: 'left' | 'center' | 'right';
   fontFamily?: string;
   color?: string; // Hex code for text color
+  useGlobalColor?: boolean; // When true, use the global draw color instead of field's own color
   
   // Visual Styling (The "Box" look)
   backgroundColor?: string; // Hex code

@@ -24,6 +24,7 @@ interface PDFViewerProps {
 
   onOpenSignature?: (fieldId: string) => void;
   onPageDimensionsChange?: (width: number, height: number) => void;
+  globalDrawColor?: string;
 }
 
 const resizeHandles = [
@@ -47,7 +48,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   onFieldSelect,
   onFieldDelete,
   onOpenSignature,
-  onPageDimensionsChange
+  onPageDimensionsChange,
+  globalDrawColor = '#000000'
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -227,6 +229,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               ctx.strokeRect(x, y, w, h);
               ctx.setLineDash([]);
               
+              // Draw a small color indicator in the corner showing the effective text color
+              if (!isOption && !isAdditional) {
+                  const effectiveColor = field.useGlobalColor !== false ? globalDrawColor : (field.color || '#000000');
+                  if (effectiveColor && effectiveColor !== '#000000') {
+                      const indicatorSize = 6;
+                      ctx.fillStyle = effectiveColor;
+                      ctx.fillRect(x + w - indicatorSize - 2, y + 2, indicatorSize, indicatorSize);
+                      ctx.strokeStyle = '#ffffff';
+                      ctx.lineWidth = 1;
+                      ctx.strokeRect(x + w - indicatorSize - 2, y + 2, indicatorSize, indicatorSize);
+                  }
+              }
+              
               // Draw small indicator for radio/checkbox options
               if (isOption) {
                   ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
@@ -376,7 +391,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 const height = Math.min(100 - y, Math.abs(rawY2 - rawY1));
                 if (width > 1 && height > 1) {
                      const newField: FormField = { 
-                        id: crypto.randomUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: undefined, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
+                        id: crypto.randomUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
                     };
                     onFieldAdd(newField);
                     onFieldSelect(newField.id);
@@ -389,7 +404,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     return () => { window.removeEventListener('pointermove', handlePointerMove); window.removeEventListener('pointerup', handlePointerUp); };
-  }, [dragState, drawingState, onFieldUpdate, fields, pageNumber, onFieldAdd, onFieldSelect]);
+  }, [dragState, drawingState, onFieldUpdate, fields, pageNumber, onFieldAdd, onFieldSelect, globalDrawColor]);
 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
@@ -674,7 +689,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             {mode === AppMode.EDITOR && isSelected && (
                 <>
                     {(!isOption || field.options?.[0]?.id === option?.id) && (
-                        <div className="absolute -top-5 left-0 text-white text-[9px] px-1 rounded shadow pointer-events-none z-30 whitespace-nowrap bg-blue-600">
+                        <div className="absolute -top-5 left-0 text-white text-[9px] px-1 rounded shadow pointer-events-none z-30 whitespace-nowrap bg-blue-600 flex items-center gap-1">
+                            {(() => {
+                                const effectiveColor = field.useGlobalColor !== false ? globalDrawColor : (field.color || '#000000');
+                                return effectiveColor && effectiveColor !== '#000000' ? (
+                                    <span className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: effectiveColor }} />
+                                ) : null;
+                            })()}
                             {field.name} {isHidden && '(Hidden)'}
                         </div>
                     )}

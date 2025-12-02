@@ -41,6 +41,7 @@ function EditorContent() {
   const [isClient, setIsClient] = useState(false);
   const [formNotFound, setFormNotFound] = useState(false);
   const [currentForm, setCurrentForm] = useState<FormTemplate | null>(null);
+  const [globalDrawColor, setGlobalDrawColor] = useState<string>('#000000');
 
   const validationStates = useMemo(() => validateAllFields(fields), [fields]);
   const formIsValid = useMemo(() => isFormValid(validationStates), [validationStates]);
@@ -108,7 +109,11 @@ function EditorContent() {
     if (!pdfBytes) return;
     const timer = setTimeout(async () => {
       try {
-        const generatedBytes = await saveFilledPDF(pdfBytes, fields);
+        // Apply global color to fields that have useGlobalColor enabled
+        const fieldsWithGlobalColor = fields.map(f => 
+          f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
+        );
+        const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
         const blob = new Blob([generatedBytes as BlobPart], { type: 'application/pdf' });
         setPreviewBlob(blob);
       } catch (e) {
@@ -116,7 +121,7 @@ function EditorContent() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [fields, pdfBytes]);
+  }, [fields, pdfBytes, globalDrawColor]);
 
   const addField = useCallback((field: FormField) => setFields((prev) => [...prev, field]), [setFields]);
 
@@ -303,7 +308,11 @@ function EditorContent() {
       return;
     }
     try {
-      const generatedBytes = await saveFilledPDF(pdfBytes, fields);
+      // Apply global color to fields that have useGlobalColor enabled
+      const fieldsWithGlobalColor = fields.map(f => 
+        f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
+      );
+      const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
       downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
     } catch (error) {
       console.error('Failed to save PDF', error);
@@ -315,7 +324,11 @@ function EditorContent() {
     if (!pdfBytes) return;
     setShowValidationWarning(false);
     try {
-      const generatedBytes = await saveFilledPDF(pdfBytes, fields);
+      // Apply global color to fields that have useGlobalColor enabled
+      const fieldsWithGlobalColor = fields.map(f => 
+        f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
+      );
+      const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
       downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
     } catch (error) {
       console.error('Failed to save PDF', error);
@@ -449,9 +462,9 @@ function EditorContent() {
       </header>
       <div className="flex flex-1 overflow-hidden relative">
         {(previewBlob || file) && (
-          <PDFViewer file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} />
+          <PDFViewer file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} />
         )}
-        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} />
+        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} globalDrawColor={globalDrawColor} onGlobalDrawColorChange={setGlobalDrawColor} />
       </div>
       <SignatureModal 
         isOpen={!!signingFieldId} 
@@ -459,6 +472,7 @@ function EditorContent() {
         onSave={handleSaveSignature}
         canvasWidth={signingFieldId ? fields.find(f => f.id === signingFieldId)?.signatureCanvasWidth : undefined}
         canvasHeight={signingFieldId ? fields.find(f => f.id === signingFieldId)?.signatureCanvasHeight : undefined}
+        strokeColor={signingFieldId ? (fields.find(f => f.id === signingFieldId)?.useGlobalColor !== false ? globalDrawColor : fields.find(f => f.id === signingFieldId)?.color) : undefined}
       />
       <KeyboardShortcutsPanel isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       {showValidationWarning && (

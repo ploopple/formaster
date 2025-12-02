@@ -10,9 +10,10 @@ interface SignatureModalProps {
   onSave: (signatureDataUrl: string) => void;
   canvasWidth?: number; // Optional width for the signature canvas (default: 500)
   canvasHeight?: number; // Optional height for the signature canvas (default: 300)
+  strokeColor?: string; // Color for the signature stroke (default: #000000)
 }
 
-export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, canvasWidth = 500, canvasHeight = 300 }) => {
+export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, canvasWidth = 500, canvasHeight = 300, strokeColor = '#000000' }) => {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -25,7 +26,18 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
       window.addEventListener('resize', resizeCanvas);
     }
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, [isOpen]);
+  }, [isOpen, strokeColor]);
+
+  // Update stroke color when it changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.strokeStyle = strokeColor;
+      }
+    }
+  }, [strokeColor]);
 
   const resizeCanvas = () => {
     const canvas = canvasRef.current;
@@ -37,7 +49,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
       // Reset context properties after resize
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -108,7 +120,12 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
-          <h3 className="font-semibold text-slate-800">{t.signature.title}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-slate-800">{t.signature.title}</h3>
+            {strokeColor && strokeColor !== '#000000' && (
+              <span className="w-4 h-4 rounded-full border border-slate-300" style={{ backgroundColor: strokeColor }} title={`Stroke color: ${strokeColor}`} />
+            )}
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
             <X size={20} />
           </button>

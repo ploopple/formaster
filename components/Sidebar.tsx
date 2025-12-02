@@ -36,6 +36,8 @@ interface SidebarProps {
   touchedFields?: Set<string>;
   onFieldBlur?: (fieldId: string) => void;
   onSyncCompositeChildren?: (compositeId: string, template: string) => void;
+  globalDrawColor?: string;
+  onGlobalDrawColorChange?: (color: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -64,7 +66,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   validationStates,
   touchedFields,
   onFieldBlur,
-  onSyncCompositeChildren
+  onSyncCompositeChildren,
+  globalDrawColor = '#000000',
+  onGlobalDrawColorChange
 }) => {
   const { t } = useI18n();
   const [draggedFieldId, setDraggedFieldId] = React.useState<string | null>(null);
@@ -554,19 +558,45 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
 
                     {/* VISUAL STYLING SECTION */}
-                    {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'date' || selectedField.type === 'select' || selectedField.type === 'textarea' || selectedField.type === 'signature') && (
+                    {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'date' || selectedField.type === 'select' || selectedField.type === 'textarea' || selectedField.type === 'signature' || selectedField.type === 'radio' || selectedField.type === 'checkbox') && (
                         <div className="space-y-3 pt-2 border-t border-slate-100">
                              <div className="flex items-center gap-2 mb-1">
                                 <Palette size={14} className="text-slate-600" />
                                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.visualStyling}</h3>
                              </div>
                              
+                             {/* Use Global Color Checkbox */}
+                             <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer p-2 bg-slate-50 rounded-md border border-slate-200">
+                                 <input 
+                                     type="checkbox" 
+                                     checked={selectedField.useGlobalColor !== false} 
+                                     onChange={(e) => onUpdateField(selectedField.id, { useGlobalColor: e.target.checked })} 
+                                     className="rounded border-slate-300 text-blue-600" 
+                                 />
+                                 <span>{t.sidebar.useGlobalColor || 'Use Global Color'}</span>
+                                 {selectedField.useGlobalColor !== false && globalDrawColor && (
+                                     <span className="w-4 h-4 rounded-full border border-slate-300 ml-auto" style={{ backgroundColor: globalDrawColor }} />
+                                 )}
+                             </label>
+                             
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.textColor}</label>
                                     <div className="flex items-center gap-2">
-                                        <input type="color" value={selectedField.color || '#000000'} onChange={(e) => onUpdateField(selectedField.id, { color: e.target.value })} className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" />
-                                        <button onClick={() => onUpdateField(selectedField.id, { color: undefined })} className="text-[10px] text-slate-400 hover:text-red-500">{t.common.clear}</button>
+                                        <input 
+                                            type="color" 
+                                            value={selectedField.useGlobalColor !== false ? (globalDrawColor || '#000000') : (selectedField.color || '#000000')} 
+                                            onChange={(e) => onUpdateField(selectedField.id, { color: e.target.value, useGlobalColor: false })} 
+                                            className="w-6 h-6 rounded border-0 p-0 overflow-hidden cursor-pointer" 
+                                            disabled={selectedField.useGlobalColor !== false}
+                                        />
+                                        <button 
+                                            onClick={() => onUpdateField(selectedField.id, { color: undefined, useGlobalColor: true })} 
+                                            className="text-[10px] text-slate-400 hover:text-red-500"
+                                            disabled={selectedField.useGlobalColor !== false}
+                                        >
+                                            {t.common.clear}
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
@@ -1515,6 +1545,52 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
             ) : (
               <div className="flex flex-col h-full animate-in slide-in-from-left-4 fade-in duration-200">
+                {/* Global Draw Color Picker */}
+                {onGlobalDrawColorChange && (
+                  <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Palette size={14} className="text-slate-600" />
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t.sidebar.globalDrawColor || 'Global Draw Color'}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mb-3">{t.sidebar.globalDrawColorHelp || 'Default color for new fields'}</p>
+                    
+                    {/* Preset Colors */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] text-slate-400 uppercase">{t.sidebar.presetColors || 'Preset Colors'}</span>
+                      <div className="flex gap-1.5">
+                        {[
+                          { color: '#000000', name: 'Black' },
+                          { color: '#1e40af', name: 'Blue' },
+                          { color: '#dc2626', name: 'Red' },
+                          { color: '#16a34a', name: 'Green' },
+                          { color: '#7c3aed', name: 'Purple' },
+                          { color: '#ea580c', name: 'Orange' },
+                        ].map(({ color, name }) => (
+                          <button
+                            key={color}
+                            onClick={() => onGlobalDrawColorChange(color)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${globalDrawColor === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-300'}`}
+                            style={{ backgroundColor: color }}
+                            title={name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Custom Color Picker */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 uppercase">{t.sidebar.customColor || 'Custom'}</span>
+                      <input
+                        type="color"
+                        value={globalDrawColor}
+                        onChange={(e) => onGlobalDrawColorChange(e.target.value)}
+                        className="w-8 h-8 rounded border-0 p-0 cursor-pointer"
+                      />
+                      <span className="text-xs text-slate-600 font-mono">{globalDrawColor}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-slate-500 px-1 mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">Fields ({fields.length})</span>
                     <div className="flex items-center gap-2">
