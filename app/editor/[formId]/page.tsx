@@ -132,7 +132,8 @@ function EditorContent() {
         const previewBlobData = new Blob([generatedBytes as BlobPart], { type: 'application/pdf' });
         setPreviewBlob(previewBlobData);
         
-        if (window.innerWidth > 768) setIsSidebarOpen(true);
+        // Always open sidebar - in fill mode it's the main content, in editor mode it's useful on desktop
+        setIsSidebarOpen(true);
       } catch (error) {
         console.error('Failed to load form', error);
         setFormNotFound(true);
@@ -512,14 +513,25 @@ function EditorContent() {
   return (
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
       <header className="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-6 shrink-0 z-30 shadow-sm relative safe-area-inset-top">
-        {/* Logo/Back button */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Logo/Back button + Undo/Redo on mobile */}
+        <div className="flex items-center gap-1 shrink-0">
           <div className="flex items-center gap-2 text-slate-800 font-bold text-base md:text-lg cursor-pointer touch-manipulation" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/templates'); }}>
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
               <PenTool size={16} />
             </div>
             <span className="hidden md:inline truncate max-w-[150px] lg:max-w-none">{currentForm?.title || t.home.title}</span>
           </div>
+          {/* Undo/Redo on mobile - shown on left side */}
+          {mode === AppMode.EDITOR && (
+            <div className="flex sm:hidden items-center gap-0.5 ms-1">
+              <button onClick={undo} disabled={!canUndo} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
+                <Undo2 size={16} />
+              </button>
+              <button onClick={redo} disabled={!canRedo} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.redo}>
+                <Redo2 size={16} />
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Mode Toggle - Centered */}
@@ -537,9 +549,9 @@ function EditorContent() {
         </div>
         
         {/* Action buttons */}
-        <div className="flex items-center gap-0.5 md:gap-2 shrink-0">
+        <div className="flex items-center gap-0.5 md:gap-2 shrink-0 z-10">
           {mode === AppMode.EDITOR && (
-            <div className="flex items-center gap-0.5 me-0.5 md:me-2">
+            <div className="hidden sm:flex items-center gap-0.5 me-0.5 md:me-2">
               <button onClick={undo} disabled={!canUndo} className="p-2 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
                 <Undo2 size={18} />
               </button>

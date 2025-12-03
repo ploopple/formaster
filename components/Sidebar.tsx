@@ -355,16 +355,22 @@ const Sidebar: React.FC<SidebarProps> = ({
       setDragOverSectionId(null);
   };
 
+  // In fill mode, render as inline content (not a sidebar overlay)
+  const isFillMode = mode === AppMode.FILL;
+
   return (
     <>
-    {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />}
+    {!isFillMode && isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />}
     
     <div 
       ref={sidebarRef}
-      className={`fixed md:relative top-0 right-0 h-full bg-white ${mode === AppMode.FILL ? '' : 'border-l border-slate-200'} shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`}
-      style={{ 
-        width: mode === AppMode.FILL ? '100%' : (typeof window !== 'undefined' && window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%'),
-        maxWidth: mode === AppMode.FILL ? '100%' : (typeof window !== 'undefined' && window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%')
+      className={`${isFillMode 
+        ? 'flex-1 relative h-full bg-white flex flex-col' 
+        : `fixed md:relative top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`
+      }`}
+      style={isFillMode ? undefined : { 
+        width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%',
+        maxWidth: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%'
       }}
     >
       {/* Resize handle - hidden in fill mode */}
@@ -386,7 +392,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {mode === AppMode.EDITOR ? t.sidebar.configureFields : t.sidebar.fillInformation}
             </p>
         </div>
-        <button onClick={onClose} className="md:hidden text-slate-500 hover:bg-slate-200 active:bg-slate-300 p-2.5 rounded-full touch-manipulation shrink-0 ml-2"><X size={24} /></button>
+        {!isFillMode && <button onClick={onClose} className="md:hidden text-slate-500 hover:bg-slate-200 active:bg-slate-300 p-2.5 rounded-full touch-manipulation shrink-0 ml-2"><X size={24} /></button>}
       </div>
 
       <div className={`flex-1 overflow-y-auto overscroll-contain ${mode === AppMode.FILL ? 'p-3 md:p-6 lg:p-8 bg-slate-50' : 'p-3 md:p-4'}`}>
