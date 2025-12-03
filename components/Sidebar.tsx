@@ -360,20 +360,22 @@ const Sidebar: React.FC<SidebarProps> = ({
     
     <div 
       ref={sidebarRef}
-      className={`fixed md:relative top-0 right-0 h-full w-full bg-white border-l border-slate-200 shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`}
-      style={{ width: window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%' }}
+      className={`fixed md:relative top-0 right-0 h-full w-full bg-white ${mode === AppMode.FILL ? '' : 'border-l border-slate-200'} shadow-xl z-50 md:z-20 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} flex flex-col`}
+      style={{ width: mode === AppMode.FILL ? '100%' : (window.innerWidth >= 768 ? `${sidebarWidth}px` : '100%') }}
     >
-      {/* Resize handle */}
-      <div 
-        className="hidden md:block absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500 transition-colors group"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-slate-300 group-hover:bg-blue-500 rounded-r transition-colors" />
-      </div>
-      <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+      {/* Resize handle - hidden in fill mode */}
+      {mode === AppMode.EDITOR && (
+        <div 
+          className="hidden md:block absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-blue-500 transition-colors group"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-slate-300 group-hover:bg-blue-500 rounded-r transition-colors" />
+        </div>
+      )}
+      <div className={`p-4 border-b border-slate-100 ${mode === AppMode.FILL ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-slate-50'} flex items-center justify-between`}>
         <div>
             <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-            {mode === AppMode.EDITOR ? <Edit2 size={18} /> : <Type size={18} />}
+            {mode === AppMode.EDITOR ? <Edit2 size={18} /> : <Type size={18} className="text-blue-600" />}
             {mode === AppMode.EDITOR ? t.sidebar.editorMode : t.sidebar.fillForm}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
@@ -383,7 +385,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button onClick={onClose} className="md:hidden text-slate-500 hover:bg-slate-200 p-2 rounded-full"><X size={24} /></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className={`flex-1 overflow-y-auto ${mode === AppMode.FILL ? 'p-4 md:p-6 lg:p-8 bg-slate-50' : 'p-4'}`}>
         {mode === AppMode.EDITOR ? (
           <div className="h-full flex flex-col">
             {selectedField ? (
@@ -2196,7 +2198,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
             {(() => {
               const renderFillField = (field: FormField, isNested: boolean = false) => {
                 if (!isFieldVisible(field, fields)) return null;
@@ -2213,22 +2215,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                 const showSuccess = isTouched && validationState?.isValid && field.validationRules && field.validationRules.length > 0;
                 const hasRequiredRule = field.validationRules?.some(r => r.type === 'required' || r.type === 'conditional');
                 
-                const inputClassName = `w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm transition-colors ${
+                const inputClassName = `w-full px-4 py-3 bg-white border rounded-lg text-sm shadow-sm transition-all ${
                     showError 
                         ? 'border-red-400 focus:border-red-500 focus:ring-red-200' 
                         : showSuccess 
                             ? 'border-green-400 focus:border-green-500 focus:ring-green-200'
-                            : 'border-slate-300 focus:border-blue-500 focus:ring-blue-200'
+                            : 'border-slate-200 focus:border-blue-500 focus:ring-blue-200 hover:border-slate-300'
                 } focus:ring-2 focus:outline-none`;
 
                 const handleBlur = () => onFieldBlur?.(field.id);
 
                 return (
-                  <div key={field.id} className="space-y-1">
-                      <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                  <div key={field.id} className={`${isNested ? 'space-y-2' : 'bg-white rounded-xl p-4 md:p-5 shadow-sm border border-slate-100 space-y-3'}`}>
+                      <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                           <span className="truncate">{getFieldName(field)}</span>
-                          {hasRequiredRule && <span className="text-red-500">*</span>}
-                          {showSuccess && <CheckCircle2 size={14} className="text-green-500 shrink-0" />}
+                          {hasRequiredRule && <span className="text-red-500 text-xs font-normal">(required)</span>}
+                          {showSuccess && <CheckCircle2 size={16} className="text-green-500 shrink-0" />}
                       </label>
                       
                       {field.type === 'text' && ( 
@@ -2279,11 +2281,13 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                       {field.type === 'date' && (
                         <div className="relative group">
-                            <div className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm hover:bg-slate-50 hover:border-blue-400 transition-all cursor-pointer">
+                            <div className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 hover:border-blue-400 transition-all cursor-pointer">
                                 <span className={`text-sm ${field.value ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
                                     {field.value || (field.dateFormat === 'YYYY' ? 'Select Year' : field.dateFormat === 'MM/YYYY' ? 'Select Month' : 'Select Date')}
                                 </span>
-                                <Calendar size={16} className="text-slate-400 group-hover:text-blue-500" />
+                                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                    <Calendar size={16} className="text-blue-500" />
+                                </div>
                             </div>
 
                             {field.dateFormat === 'YYYY' ? (
@@ -2316,29 +2320,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
 
                     {(field.type === 'radio') && (
-                        <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
-                                <Info size={10} />
-                                <span>You can select one option</span>
+                        <div className="space-y-2 mt-1">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+                                <Info size={12} />
+                                <span>Select one option</span>
                             </div>
                             {(field.options || []).map((opt) => {
                                 const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
+                                const isSelected = field.value === opt.value;
                                 return (
                                     <div key={opt.id}>
-                                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                        <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border-2 transition-all ${isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
                                             <input 
                                                 type="radio" 
                                                 name={`field-${field.id}`}
                                                 value={opt.value}
-                                                checked={field.value === opt.value}
+                                                checked={isSelected}
                                                 onChange={() => onUpdateField(field.id, { value: opt.value })}
-                                                className="text-blue-600 focus:ring-blue-500 accent-blue-600"
+                                                className="w-4 h-4 text-blue-600 focus:ring-blue-500 accent-blue-600"
                                             />
-                                            <span className="text-sm text-slate-700">{opt.value}</span>
+                                            <span className={`text-sm ${isSelected ? 'text-blue-700 font-medium' : 'text-slate-700'}`}>{opt.value}</span>
                                         </label>
                                         {/* Render nested fields when this option is selected */}
-                                        {field.value === opt.value && nestedFields.length > 0 && (
-                                            <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
+                                        {isSelected && nestedFields.length > 0 && (
+                                            <div className="ml-6 mt-3 pl-4 border-l-2 border-blue-200 space-y-3">
                                                 {nestedFields.map(nestedField => renderFillField(nestedField, true))}
                                             </div>
                                         )}
@@ -2349,20 +2354,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                     
                     {(field.type === 'checkbox') && (
-                        <div className="space-y-1 mt-1 bg-white p-2 rounded-md border border-slate-200">
+                        <div className="space-y-2 mt-1">
                              {field.useFieldAsCheckbox ? (
                                 // Simple checkbox toggle when using field as checkbox
                                 <>
-                                    <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                    <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border-2 transition-all ${field.value === 'true' ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
                                         <input 
                                             type="checkbox"
                                             checked={field.value === 'true'}
                                             onChange={(e) => {
                                                 onUpdateField(field.id, { value: e.target.checked ? 'true' : '' });
                                             }}
-                                            className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
+                                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
                                         />
-                                        <span className="text-sm text-slate-700">{getFieldName(field)}</span>
+                                        <span className={`text-sm ${field.value === 'true' ? 'text-blue-700 font-medium' : 'text-slate-700'}`}>{getFieldName(field)}</span>
                                     </label>
                                     {/* Render nested fields when checkbox is checked */}
                                     {field.value === 'true' && (() => {
@@ -2378,9 +2383,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                              ) : (
                                 // Options-based checkbox
                                 <>
-                                    <div className="flex items-center gap-1 text-[10px] text-slate-400 pb-1 border-b border-slate-100 mb-1">
-                                        <Info size={10} />
-                                        <span>You can select multiple options</span>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+                                        <Info size={12} />
+                                        <span>Select multiple options</span>
                                     </div>
                                     {(field.options || []).map((opt) => {
                                         // Use ||| as separator to handle option values containing commas
@@ -2390,7 +2395,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                         const nestedFields = fields.filter(f => f.parentFieldId === field.id && f.parentOptionId === opt.id);
                                         return (
                                             <div key={opt.id}>
-                                                <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
+                                                <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg border-2 transition-all ${isChecked ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
                                                     <input 
                                                         type="checkbox"
                                                         checked={isChecked}
@@ -2402,13 +2407,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                             else next = current.filter(v => v !== opt.value);
                                                             onUpdateField(field.id, { value: next.join(separator) });
                                                         }}
-                                                        className="text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
+                                                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 rounded accent-blue-600"
                                                     />
-                                                    <span className="text-sm text-slate-700">{getOptionLabel(opt)}</span>
+                                                    <span className={`text-sm ${isChecked ? 'text-blue-700 font-medium' : 'text-slate-700'}`}>{getOptionLabel(opt)}</span>
                                                 </label>
                                                 {/* Render nested fields when this option is checked */}
                                                 {isChecked && nestedFields.length > 0 && (
-                                                    <div className="ml-6 mt-2 pl-3 border-l-2 border-blue-200 space-y-3">
+                                                    <div className="ml-6 mt-3 pl-4 border-l-2 border-blue-200 space-y-3">
                                                         {nestedFields.map(nestedField => renderFillField(nestedField, true))}
                                                     </div>
                                                 )}
@@ -2526,29 +2531,29 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
 
                     {field.type === 'signature' && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {field.value && field.value.startsWith('data:image') ? (
                                 <div className="relative group">
-                                    <div className="w-full h-24 bg-white border border-slate-200 rounded-md overflow-hidden flex items-center justify-center">
+                                    <div className="w-full h-28 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl overflow-hidden flex items-center justify-center p-3">
                                         <img 
                                             src={field.value} 
                                             alt="Signature" 
                                             className="max-w-full max-h-full object-contain"
                                         />
                                     </div>
-                                    <div className="flex gap-2 mt-2">
+                                    <div className="flex gap-2 mt-3">
                                         <button
                                             onClick={() => onOpenSignature?.(field.id)}
-                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-sm font-medium transition-colors"
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-all"
                                         >
-                                            <PenTool size={14} />
+                                            <PenTool size={16} />
                                             Redraw
                                         </button>
                                         <button
                                             onClick={() => onUpdateField(field.id, { value: '' })}
-                                            className="flex items-center justify-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-md text-sm font-medium transition-colors"
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition-all"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={16} />
                                             Clear
                                         </button>
                                     </div>
@@ -2556,10 +2561,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                             ) : (
                                 <button
                                     onClick={() => onOpenSignature?.(field.id)}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 hover:border-blue-400 text-blue-600 rounded-lg text-sm font-medium transition-all"
+                                    className="w-full flex flex-col items-center justify-center gap-2 px-4 py-6 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-2 border-dashed border-blue-300 hover:border-blue-400 text-blue-600 rounded-xl text-sm font-medium transition-all"
                                 >
-                                    <PenTool size={18} />
-                                    Click to Sign
+                                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <PenTool size={24} />
+                                    </div>
+                                    <span>Click to add your signature</span>
                                 </button>
                             )}
                         </div>
@@ -2718,8 +2725,12 @@ const Sidebar: React.FC<SidebarProps> = ({
               
               if (totalSteps === 0) {
                 return (
-                  <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-                    No fields to fill
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                      <Type size={28} className="text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-600 mb-2">No fields to fill</h3>
+                    <p className="text-sm text-slate-400 max-w-xs">This form doesn&apos;t have any fillable fields yet. Switch to Editor mode to add fields.</p>
                   </div>
                 );
               }
@@ -2727,49 +2738,51 @@ const Sidebar: React.FC<SidebarProps> = ({
               return (
                 <>
                   {/* Progress indicator */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-slate-500">
-                        Step {currentStep + 1} of {totalSteps}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {Math.round(((currentStep + 1) / totalSteps) * 100)}% complete
-                      </span>
+                  <div className="mb-6 bg-white rounded-xl p-4 md:p-5 shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-blue-600 font-bold text-sm">{currentStep + 1}</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-slate-800">{activeStep.name}</h3>
+                          <p className="text-xs text-slate-500">
+                            {activeStep.fields.filter(f => f.type !== 'table-row' && !f.parentFieldId).length} field(s) to complete
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-blue-600">
+                          {Math.round(((currentStep + 1) / totalSteps) * 100)}%
+                        </span>
+                        <p className="text-xs text-slate-400">complete</p>
+                      </div>
                     </div>
-                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-blue-600 transition-all duration-300 ease-out"
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out"
                         style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
                       />
                     </div>
-                    {/* Step dots */}
-                    <div className="flex justify-center gap-1.5 mt-3">
-                      {steps.map((step, idx) => (
-                        <button
-                          key={step.id}
-                          onClick={() => setCurrentFillStep(idx)}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            idx === currentStep 
-                              ? 'bg-blue-600 w-4' 
-                              : idx < currentStep 
-                                ? 'bg-blue-400' 
-                                : 'bg-slate-300'
-                          }`}
-                          title={step.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Section header */}
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2">
-                      <Folder size={16} className="text-blue-600" />
-                      <h3 className="font-semibold text-blue-800">{activeStep.name}</h3>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">
-                      {activeStep.fields.filter(f => f.type !== 'table-row' && !f.parentFieldId).length} field(s) in this section
-                    </p>
+                    {/* Step indicators */}
+                    {totalSteps > 1 && (
+                      <div className="flex justify-center gap-2 mt-4">
+                        {steps.map((step, idx) => (
+                          <button
+                            key={step.id}
+                            onClick={() => setCurrentFillStep(idx)}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              idx === currentStep 
+                                ? 'bg-blue-600 w-8' 
+                                : idx < currentStep 
+                                  ? 'bg-blue-400 w-2 hover:bg-blue-500' 
+                                  : 'bg-slate-200 w-2 hover:bg-slate-300'
+                            }`}
+                            title={step.name}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Validation Summary for current step */}
@@ -2789,18 +2802,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                     
                     if (allValid && allTouched) {
                       return (
-                        <div className="mb-4 p-2 bg-green-50 rounded-lg border border-green-200 flex items-center gap-2">
-                          <CheckCircle2 size={16} className="text-green-600" />
-                          <span className="text-xs text-green-700 font-medium">All required fields completed</span>
+                        <div className="mb-5 p-3 bg-green-50 rounded-xl border border-green-200 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-green-600" />
+                          </div>
+                          <span className="text-sm text-green-700 font-medium">All required fields completed</span>
                         </div>
                       );
                     }
                     
                     if (invalidStepFields.length > 0) {
                       return (
-                        <div className="mb-4 p-2 bg-red-50 rounded-lg border border-red-200 flex items-center gap-2">
-                          <AlertCircle size={16} className="text-red-600" />
-                          <span className="text-xs text-red-700 font-medium">{invalidStepFields.length} field(s) need attention</span>
+                        <div className="mb-5 p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                            <AlertCircle size={18} className="text-amber-600" />
+                          </div>
+                          <span className="text-sm text-amber-700 font-medium">{invalidStepFields.length} field(s) need your attention</span>
                         </div>
                       );
                     }
@@ -2809,7 +2826,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   })()}
                   
                   {/* Fields for current step */}
-                  <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+                  <div className="flex-1 overflow-y-auto space-y-4 md:space-y-5 pb-4">
                     {activeStep.fields.map(f => renderFillField(f))}
                   </div>
                 </>
@@ -2820,7 +2837,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {mode === AppMode.FILL && (
-        <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
+        <div className="p-4 md:p-6 border-t border-slate-200 bg-white shadow-lg">
+          <div className="max-w-4xl mx-auto">
           {(() => {
             const sortedSections = [...sections].sort((a, b) => a.order - b.order);
             const unsectionedFields = fields.filter(f => !f.sectionId && !f.parentFieldId && f.type !== 'table-row');
@@ -2836,41 +2854,42 @@ const Sidebar: React.FC<SidebarProps> = ({
             
             if (totalSteps === 0) {
               return (
-                <button onClick={onDownload} disabled={fields.length === 0} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50">
-                  <Download size={18} /> {t.sidebar.downloadPdf}
+                <button onClick={onDownload} disabled={fields.length === 0} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 px-6 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Download size={20} /> {t.sidebar.downloadPdf}
                 </button>
               );
             }
             
             return (
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {!isFirstStep && (
                   <button 
                     onClick={() => setCurrentFillStep(prev => Math.max(0, prev - 1))}
-                    className="flex-1 flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 px-4 rounded-lg font-medium transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3.5 px-6 rounded-xl font-semibold transition-all border border-slate-200"
                   >
-                    <ChevronRight size={18} className="rotate-180" /> {t.sidebar.previousField}
+                    <ChevronRight size={20} className="rotate-180" /> {t.sidebar.previousField}
                   </button>
                 )}
                 {isLastStep ? (
                   <button 
                     onClick={onDownload} 
                     disabled={fields.length === 0} 
-                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3.5 px-6 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Download size={18} /> {t.sidebar.downloadPdf}
+                    <Download size={20} /> {t.sidebar.downloadPdf}
                   </button>
                 ) : (
                   <button 
                     onClick={() => setCurrentFillStep(prev => prev + 1)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 px-6 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg"
                   >
-                    {t.sidebar.nextField} <ChevronRight size={18} />
+                    {t.sidebar.nextField} <ChevronRight size={20} />
                   </button>
                 )}
               </div>
             );
           })()}
+          </div>
         </div>
       )}
     </div>
