@@ -14,7 +14,7 @@ import { formService } from '../../../services/formService';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, Save, AlertTriangle, FileUp, Share2, HardDrive, Bug } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, HardDrive, Bug } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 
 // LocalStorage key prefix for saved form states
@@ -28,7 +28,7 @@ function EditorContent() {
   
   const [mode, setMode] = useState<AppMode>(AppMode.FILL);
   const [file, setFile] = useState<File | null>(null);
-  const { state: fields, setState: setFields, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo<FormField[]>([]);
+  const { state: fields, setState: setFields, undo, redo, canUndo, canRedo } = useUndoRedo<FormField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [sections, setSections] = useState<FieldSection[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -86,18 +86,16 @@ function EditorContent() {
         if (savedState) {
           const parsed = JSON.parse(savedState);
           if (parsed.fields && Array.isArray(parsed.fields)) {
-            // Merge localStorage fields with template fields to preserve new properties
-            // Template fields take precedence for structure, localStorage for user values
+            // Merge localStorage fields with template fields
+            // localStorage (user saved) takes precedence, template fills in missing properties
             const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
             savedFields = parsed.fields.map((savedField: FormField) => {
               const templateField = templateFieldsMap.get(savedField.id);
               if (templateField) {
-                // Merge: template properties + saved user values (value, hidden, locked)
+                // Merge: localStorage saved values take precedence, template fills gaps
                 return {
-                  ...templateField, // Base from template (includes new properties like fontWeight, fontStyle, textDecoration)
-                  value: savedField.value, // Preserve user-entered value
-                  hidden: savedField.hidden, // Preserve visibility state
-                  locked: savedField.locked, // Preserve lock state
+                  ...templateField, // Base from template (fills in any new properties not in localStorage)
+                  ...savedField, // Override with all saved properties (including fontWeight, fontStyle, textDecoration)
                 };
               }
               return savedField; // Field not in template, keep as-is
@@ -440,7 +438,6 @@ function EditorContent() {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
       if (e.key === '?') { e.preventDefault(); setShowShortcuts(prev => !prev); return; }
       if (mode === AppMode.EDITOR) {
-        if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveSnapshot(); return; }
         if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
         if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) { e.preventDefault(); redo(); return; }
         if ((e.metaKey || e.ctrlKey) && e.key === 'y') { e.preventDefault(); redo(); return; }
@@ -488,7 +485,7 @@ function EditorContent() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, selectedFieldId, fields, deleteField, updateField, duplicateField, undo, redo, saveSnapshot]);
+  }, [mode, selectedFieldId, fields, deleteField, updateField, duplicateField, undo, redo]);
 
   if (isLoading || !isClient) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">{t.common.loading}</div></div>;
@@ -537,10 +534,6 @@ function EditorContent() {
         <div className="flex items-center gap-1 md:gap-2">
           {mode === AppMode.EDITOR && (
             <div className="flex items-center gap-1 me-1 md:me-2">
-              <button onClick={() => saveSnapshot()} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs md:text-sm font-medium rounded-lg transition-all" title={t.editor.saveSnapshot}>
-                <Save size={16} />
-                <span className="hidden sm:inline">{t.common.save}</span>
-              </button>
               <button onClick={undo} disabled={!canUndo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.undo}>
                 <Undo2 size={18} />
               </button>
