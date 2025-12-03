@@ -1,4 +1,5 @@
 import { formsData as initialFormsData, FormTemplate } from '../formsData';
+import { generateUUID } from '../lib/uuid';
 
 // Runtime forms storage (includes initial forms + duplicated forms)
 let runtimeForms: FormTemplate[] = [...initialFormsData];
@@ -16,7 +17,7 @@ export const formService = {
 
   // Duplicate a form with new IDs
   duplicateForm: (form: FormTemplate): FormTemplate => {
-    const generateId = () => crypto.randomUUID();
+    const generateId = () => generateUUID();
     
     // Deep clone the form and regenerate all IDs
     const duplicatedForm: FormTemplate = {

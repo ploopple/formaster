@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { TableColumn, FormField, FieldOption, MarkStyle, ValidationRule, TableColumnType } from '../types';
 import { Plus, Trash2, GripVertical, Columns, LayoutGrid, Wand2, ChevronDown, ChevronUp, Settings2, X } from 'lucide-react';
 import { useI18n } from '../lib/i18n/I18nContext';
+import { generateUUID } from '../lib/uuid';
 
 interface TableBuilderProps {
   field: FormField;
@@ -76,7 +77,7 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
 
   const applyTemplate = (template: typeof COLUMN_TEMPLATES[0]) => {
     const newColumns: TableColumn[] = template.columns.map(col => ({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: col.name,
       type: col.type,
       width: col.width,
@@ -89,7 +90,7 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
 
   const addColumn = (type: TableColumnType = 'text') => {
     const newCol: TableColumn = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: `Column ${columns.length + 1}`,
       type,
       width: 20,
@@ -98,8 +99,8 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
     };
     if (type === 'radio' || type === 'checkbox' || type === 'select') {
       newCol.options = [
-        { id: crypto.randomUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 1' },
-        { id: crypto.randomUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 2' },
+        { id: generateUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 1' },
+        { id: generateUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 2' },
       ];
     }
     if (type === 'date') {
@@ -134,7 +135,7 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
     const col = columns.find(c => c.id === colId);
     if (!col) return;
     const newOption: FieldOption = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       x: 0, y: 0, width: 0, height: 0,
       value: `Option ${(col.options?.length || 0) + 1}`
     };
@@ -245,8 +246,8 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
                   const updates: Partial<TableColumn> = { type: newType };
                   if ((newType === 'radio' || newType === 'checkbox' || newType === 'select') && (!col.options || col.options.length === 0)) {
                     updates.options = [
-                      { id: crypto.randomUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 1' },
-                      { id: crypto.randomUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 2' },
+                      { id: generateUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 1' },
+                      { id: generateUUID(), x: 0, y: 0, width: 0, height: 0, value: 'Option 2' },
                     ];
                   }
                   if (newType === 'date' && !col.dateFormat) updates.dateFormat = 'DD/MM/YYYY';

@@ -8,20 +8,20 @@ export default function Home() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
-        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 safe-area-inset-top safe-area-inset-bottom">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 md:p-8 text-center border border-slate-100">
+        <div className="w-16 h-16 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5 md:mb-6">
           <PenTool size={32} />
         </div>
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">{t.home.title}</h1>
-        <p className="text-slate-500 mb-8">{t.home.subtitle}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">{t.home.title}</h1>
+        <p className="text-sm md:text-base text-slate-500 mb-6 md:mb-8">{t.home.subtitle}</p>
         
         <div className="space-y-3">
           <Link
             href="/templates"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 active:scale-95 flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation text-base"
           >
-            <List size={20} />
+            <List size={22} />
             <span>{t.home.browseTemplates}</span>
           </Link>
           
@@ -29,8 +29,8 @@ export default function Home() {
             href="/editor"
             className="block w-full"
           >
-            <div className="w-full bg-slate-600 hover:bg-slate-700 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-slate-500/30 active:scale-95 flex items-center justify-center gap-2">
-              <FileUp size={20} />
+            <div className="w-full bg-slate-600 hover:bg-slate-700 active:bg-slate-800 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-slate-500/30 active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation text-base">
+              <FileUp size={22} />
               <span>{t.home.uploadNewPdf}</span>
             </div>
           </Link>

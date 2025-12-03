@@ -39,6 +39,10 @@ export const en = {
     resetView: 'Reset View',
     minimap: 'Page Navigator',
     goToPage: 'Go to page',
+    addField: 'Add Field',
+    tapToAddField: 'Tap a field type to add it to the current page. You can then drag to position it.',
+    doubleTapHint: 'Tip: Double-tap on the PDF to place a field at that exact spot',
+    fieldAtTapLocation: 'Field will be created at your tap location',
   },
 
   // Home page

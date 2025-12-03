@@ -15,6 +15,7 @@ import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug } from 'lucide-react';
 import { useI18n } from '../../lib/i18n/I18nContext';
+import { generateUUID } from '../../lib/uuid';
 
 function EditorContent() {
   const router = useRouter();
@@ -178,7 +179,7 @@ function EditorContent() {
   const duplicateField = useCallback((id: string) => {
     const field = fields.find(f => f.id === id);
     if (field) {
-      const newField: FormField = { ...field, id: crypto.randomUUID(), groupId: undefined, name: `${field.name} (Copy)`, x: Math.min(field.x + 2, 95), y: Math.min(field.y + 2, 95), parentFieldId: field.parentFieldId, parentOptionId: field.parentOptionId };
+      const newField: FormField = { ...field, id: generateUUID(), groupId: undefined, name: `${field.name} (Copy)`, x: Math.min(field.x + 2, 95), y: Math.min(field.y + 2, 95), parentFieldId: field.parentFieldId, parentOptionId: field.parentOptionId };
       setFields((prev) => [...prev, newField]);
       setSelectedFieldId(newField.id);
     }
@@ -188,8 +189,8 @@ function EditorContent() {
     setFields(prev => {
       const field = prev.find(f => f.id === id);
       if (!field) return prev;
-      const groupId = field.groupId || crypto.randomUUID();
-      const newField: FormField = { ...field, id: crypto.randomUUID(), groupId: groupId, x: Math.min(field.x + 5, 95), y: Math.min(field.y + 5, 95) };
+      const groupId = field.groupId || generateUUID();
+      const newField: FormField = { ...field, id: generateUUID(), groupId: groupId, x: Math.min(field.x + 5, 95), y: Math.min(field.y + 5, 95) };
       return prev.map(f => f.id === id ? { ...f, groupId } : f).concat(newField);
     });
   }, [setFields]);
@@ -201,7 +202,7 @@ function EditorContent() {
     // Handle useFieldAsCheckbox mode - no options needed
     if (parentField.type === 'checkbox' && parentField.useFieldAsCheckbox) {
       const newField: FormField = { 
-        id: crypto.randomUUID(), 
+        id: generateUUID(), 
         page: parentField.page, 
         x: Math.min(parentField.x + 5, 90), 
         y: Math.min(parentField.y + 5, 95), 
@@ -225,7 +226,7 @@ function EditorContent() {
     // Standard option-based nesting
     const parentOption = parentField?.options?.find(o => o.id === optionId);
     if (!parentOption) return;
-    const newField: FormField = { id: crypto.randomUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
+    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
   }, [fields, setFields]);
@@ -240,7 +241,7 @@ function EditorContent() {
     if (newY > 95) newY = tableField.y;
     // Row only has position - cells are derived from parent table's columns
     const newRow: FormField = { 
-      id: crypto.randomUUID(), 
+      id: generateUUID(), 
       page: tableField.page, 
       x: tableField.x, 
       y: newY, 
@@ -294,7 +295,7 @@ function EditorContent() {
       } else {
         // Create new child field
         const newChild: FormField = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           page: compositeField.page,
           x: compositeField.x + (idx * 15) % 60,
           y: compositeField.y + Math.floor(idx / 4) * 5,
@@ -332,7 +333,7 @@ function EditorContent() {
   const reorderFields = useCallback((reorderedFields: FormField[]) => setFields(reorderedFields), [setFields]);
 
   const addSection = useCallback((name: string) => {
-    const newSection: FieldSection = { id: crypto.randomUUID(), name, collapsed: false, order: sections.length };
+    const newSection: FieldSection = { id: generateUUID(), name, collapsed: false, order: sections.length };
     setSections(prev => [...prev, newSection]);
     return newSection.id;
   }, [sections.length]);
@@ -405,7 +406,7 @@ function EditorContent() {
   const handleCopyJSON = async () => {
     try {
       const formTemplate = { 
-        id: crypto.randomUUID(), 
+        id: generateUUID(), 
         title: "EDIT_THIS_TITLE", 
         description: "EDIT_THIS_DESCRIPTION", 
         fileName: `/forms/${file?.name || 'document.pdf'}`, 

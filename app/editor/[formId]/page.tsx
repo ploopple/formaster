@@ -16,6 +16,7 @@ import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, HardDrive, Bug } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
+import { generateUUID } from '../../../lib/uuid';
 
 // LocalStorage key prefix for saved form states
 const FORM_STORAGE_KEY_PREFIX = 'pdf_form_state_';
@@ -237,7 +238,7 @@ function EditorContent() {
   const duplicateField = useCallback((id: string) => {
     const field = fields.find(f => f.id === id);
     if (field) {
-      const newField: FormField = { ...field, id: crypto.randomUUID(), groupId: undefined, name: `${field.name} (Copy)`, x: Math.min(field.x + 2, 95), y: Math.min(field.y + 2, 95), parentFieldId: field.parentFieldId, parentOptionId: field.parentOptionId };
+      const newField: FormField = { ...field, id: generateUUID(), groupId: undefined, name: `${field.name} (Copy)`, x: Math.min(field.x + 2, 95), y: Math.min(field.y + 2, 95), parentFieldId: field.parentFieldId, parentOptionId: field.parentOptionId };
       setFields((prev) => [...prev, newField]);
       setSelectedFieldId(newField.id);
     }
@@ -247,8 +248,8 @@ function EditorContent() {
     setFields(prev => {
       const field = prev.find(f => f.id === id);
       if (!field) return prev;
-      const groupId = field.groupId || crypto.randomUUID();
-      const newField: FormField = { ...field, id: crypto.randomUUID(), groupId: groupId, x: Math.min(field.x + 5, 95), y: Math.min(field.y + 5, 95) };
+      const groupId = field.groupId || generateUUID();
+      const newField: FormField = { ...field, id: generateUUID(), groupId: groupId, x: Math.min(field.x + 5, 95), y: Math.min(field.y + 5, 95) };
       return prev.map(f => f.id === id ? { ...f, groupId } : f).concat(newField);
     });
   }, [setFields]);
@@ -259,7 +260,7 @@ function EditorContent() {
     
     if (parentField.type === 'checkbox' && parentField.useFieldAsCheckbox) {
       const newField: FormField = { 
-        id: crypto.randomUUID(), page: parentField.page, x: Math.min(parentField.x + 5, 90), y: Math.min(parentField.y + 5, 95), 
+        id: generateUUID(), page: parentField.page, x: Math.min(parentField.x + 5, 90), y: Math.min(parentField.y + 5, 95), 
         width: 20, height: 3, name: `Nested: ${parentField.name}`, value: '', previewText: '', type: 'text', 
         fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId,
       };
@@ -270,7 +271,7 @@ function EditorContent() {
     
     const parentOption = parentField?.options?.find(o => o.id === optionId);
     if (!parentOption) return;
-    const newField: FormField = { id: crypto.randomUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
+    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
   }, [fields, setFields]);
@@ -284,7 +285,7 @@ function EditorContent() {
     let newY = lastRow ? lastRow.y + lastRow.height : (tableField.showHeaders ? tableField.y + 4 : tableField.y);
     if (newY > 95) newY = tableField.y;
     const newRow: FormField = { 
-      id: crypto.randomUUID(), page: tableField.page, x: tableField.x, y: newY, width: tableField.width, height: 5, 
+      id: generateUUID(), page: tableField.page, x: tableField.x, y: newY, width: tableField.width, height: 5, 
       name: `${tableField.name} Row ${nextIndex + 1}`, value: '', previewText: '', type: 'table-row', 
       fontSize: 12, letterSpacing: 0, parentFieldId: tableId, rowIndex: nextIndex 
     };
@@ -318,7 +319,7 @@ function EditorContent() {
         }
       } else {
         const newChild: FormField = {
-          id: crypto.randomUUID(), page: compositeField.page, x: compositeField.x + (idx * 15) % 60, y: compositeField.y + Math.floor(idx / 4) * 5,
+          id: generateUUID(), page: compositeField.page, x: compositeField.x + (idx * 15) % 60, y: compositeField.y + Math.floor(idx / 4) * 5,
           width: 15, height: 3, name: childName, value: '', previewText: ph.type === 'date' ? 'DD/MM/YYYY' : '', type: ph.type,
           fontSize: compositeField.fontSize || 12, letterSpacing: compositeField.letterSpacing || 0, parentFieldId: compositeId,
           dateFormat: ph.type === 'date' ? 'DD/MM/YYYY' : undefined,
@@ -341,7 +342,7 @@ function EditorContent() {
   const reorderFields = useCallback((reorderedFields: FormField[]) => setFields(reorderedFields), [setFields]);
 
   const addSection = useCallback((name: string) => {
-    const newSection: FieldSection = { id: crypto.randomUUID(), name, collapsed: false, order: sections.length };
+    const newSection: FieldSection = { id: generateUUID(), name, collapsed: false, order: sections.length };
     setSections(prev => [...prev, newSection]);
     return newSection.id;
   }, [sections.length]);
@@ -510,65 +511,70 @@ function EditorContent() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
-      <header className="h-16 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-30 shadow-sm relative">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg cursor-pointer" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/templates'); }}>
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+      <header className="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-6 shrink-0 z-30 shadow-sm relative safe-area-inset-top">
+        {/* Logo/Back button */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-base md:text-lg cursor-pointer touch-manipulation" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/templates'); }}>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
               <PenTool size={16} />
             </div>
-            <span className="hidden sm:inline">{currentForm?.title || t.home.title}</span>
+            <span className="hidden md:inline truncate max-w-[150px] lg:max-w-none">{currentForm?.title || t.home.title}</span>
           </div>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+        
+        {/* Mode Toggle - Centered */}
+        <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
             <Pencil size={14} />
             <span className="hidden sm:inline">{t.editor.editorMode}</span>
             <span className="sm:hidden">{t.editor.edit}</span>
           </button>
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
             <PenTool size={14} />
             <span className="hidden sm:inline">{t.editor.fillMode}</span>
             <span className="sm:hidden">{t.editor.fill}</span>
           </button>
         </div>
-        <div className="flex items-center gap-1 md:gap-2">
+        
+        {/* Action buttons */}
+        <div className="flex items-center gap-0.5 md:gap-2 shrink-0">
           {mode === AppMode.EDITOR && (
-            <div className="flex items-center gap-1 me-1 md:me-2">
-              <button onClick={undo} disabled={!canUndo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.undo}>
+            <div className="flex items-center gap-0.5 me-0.5 md:me-2">
+              <button onClick={undo} disabled={!canUndo} className="p-2 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
                 <Undo2 size={18} />
               </button>
-              <button onClick={redo} disabled={!canRedo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.redo}>
+              <button onClick={redo} disabled={!canRedo} className="p-2 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.redo}>
                 <Redo2 size={18} />
               </button>
             </div>
           )}
-          <button onClick={saveToLocalStorage} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all" title={t.editor.saveProgress || 'Save progress locally'}>
-            {isSavedToStorage ? <Check size={16} className="text-green-600" /> : <HardDrive size={16} />}
-            <span className="hidden sm:inline">{isSavedToStorage ? t.common.copied : (t.editor.saveProgress || 'Save Progress')}</span>
+          <button onClick={saveToLocalStorage} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation" title={t.editor.saveProgress || 'Save progress locally'}>
+            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : <HardDrive size={18} />}
+            <span className="hidden lg:inline">{isSavedToStorage ? t.common.copied : (t.editor.saveProgress || 'Save')}</span>
           </button>
-          <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyShareLink || 'Copy share link'}>
-            {isLinkCopied ? <Check size={16} className="text-green-600" /> : <Share2 size={16} />}
-            <span className="hidden sm:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
+          <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all touch-manipulation" title={t.editor.copyShareLink || 'Copy share link'}>
+            {isLinkCopied ? <Check size={18} className="text-green-600" /> : <Share2 size={18} />}
+            <span className="hidden lg:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
           </button>
-          <a href="https://twitter.com/messages/compose?recipient_id=YOUR_TWITTER_ID&text=Feedback%20for%20Smart%20PDF%20Filler%3A%20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Report Bug / Request Feature">
+          <a href="https://twitter.com/messages/compose?recipient_id=YOUR_TWITTER_ID&text=Feedback%20for%20Smart%20PDF%20Filler%3A%20" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Report Bug / Request Feature">
             <Bug size={16} />
-            <span className="hidden sm:inline">Feedback</span>
+            <span className="hidden xl:inline">Feedback</span>
           </a>
-          <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
+          <button onClick={() => setShowShortcuts(true)} className="hidden md:flex p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
           </button>
-          <button onClick={handleCopyJSON} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyFormConfig}>
+          <button onClick={handleCopyJSON} className="hidden md:flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyFormConfig}>
             {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
             <span className="hidden sm:inline">{isCopied ? t.common.copied : t.common.copyJson}</span>
           </button>
-          <button onClick={() => setIsSidebarOpen(prev => !prev)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg md:hidden">
+          <button onClick={() => setIsSidebarOpen(prev => !prev)} className="p-2.5 text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-lg md:hidden touch-manipulation">
             <Menu size={24} />
           </button>
         </div>
       </header>
       <div className="flex flex-1 overflow-hidden relative">
         {mode === AppMode.EDITOR && (previewBlob || file) && (
-          <PDFViewer key={formId} file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} />
+          <PDFViewer key={formId} file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); /* Only auto-open sidebar on desktop, not mobile - on mobile users can tap the Edit button */ if (id && window.innerWidth >= 768) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} onOpenSidebar={() => setIsSidebarOpen(true)} />
         )}
         <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} globalDrawColor={globalDrawColor} onGlobalDrawColorChange={setGlobalDrawColor} />
       </div>

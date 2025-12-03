@@ -4,13 +4,14 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from '../lib/pdfjs-config';
 import { FormField, AppMode, FieldOption } from '../types';
-import { Trash2, Rows, Eye, EyeOff, ZoomIn, ZoomOut, Maximize, Lock, ChevronLeft, ChevronRight, Grid3X3 } from 'lucide-react';
+import { Trash2, Rows, Eye, EyeOff, ZoomIn, ZoomOut, Maximize, Lock, ChevronLeft, ChevronRight, Grid3X3, X, Plus, Edit2 } from 'lucide-react';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 import { isFieldVisible } from '../services/formLogic';
 import { useI18n } from '../lib/i18n/I18nContext';
+import { generateUUID } from '../lib/uuid';
 
 interface PDFViewerProps {
   file: any; // File or Blob
@@ -25,6 +26,7 @@ interface PDFViewerProps {
   onOpenSignature?: (fieldId: string) => void;
   onPageDimensionsChange?: (width: number, height: number) => void;
   globalDrawColor?: string;
+  onOpenSidebar?: () => void; // For mobile: open sidebar to edit field properties
 }
 
 const resizeHandles = [
@@ -49,7 +51,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   onFieldDelete,
   onOpenSignature,
   onPageDimensionsChange,
-  globalDrawColor = '#000000'
+  globalDrawColor = '#000000',
+  onOpenSidebar
 }) => {
   const { t } = useI18n();
   const [numPages, setNumPages] = useState<number>(0);
@@ -60,6 +63,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const [containerWidth, setContainerWidth] = useState<number>(600);
   const [containerHeight, setContainerHeight] = useState<number>(800);
   const [activeOptionId, setActiveOptionId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [showMobileAddField, setShowMobileAddField] = useState<boolean>(false);
+  const [doubleTapPosition, setDoubleTapPosition] = useState<{ x: number; y: number } | null>(null);
+  const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Minimap state
   const [showMinimap, setShowMinimap] = useState(false);
@@ -209,7 +224,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  useEffect(() => { if (window.innerWidth < 768) setScale(0.6); }, []);
+  useEffect(() => { 
+    if (window.innerWidth < 768) setScale(0.5);
+    else if (window.innerWidth < 1024) setScale(0.7);
+  }, []);
   
   // Zoom control functions
   const zoomIn = useCallback(() => setScale(s => Math.min(3.0, s + 0.25)), []);
@@ -253,7 +271,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         const ctx = canvas.getContext('2d');
         
         if (ctx) {
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
           newThumbnails.set(i, canvas.toDataURL('image/jpeg', 0.6));
         }
       }
@@ -493,7 +511,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 const height = Math.min(100 - y, Math.abs(rawY2 - rawY1));
                 if (width > 1 && height > 1) {
                      const newField: FormField = { 
-                        id: crypto.randomUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
+                        id: generateUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
                     };
                     onFieldAdd(newField);
                     onFieldSelect(newField.id);
@@ -538,6 +556,42 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   const handleBackgroundPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (mode !== AppMode.EDITOR) return;
+    
+    // On mobile, detect double-tap to create field
+    if (isMobile) {
+      // Don't process taps if the add field modal is already open
+      if (showMobileAddField) {
+        return;
+      }
+      
+      const now = Date.now();
+      const lastTap = lastTapRef.current;
+      
+      // Check if this is a double-tap (within 300ms and 50px of last tap)
+      if (lastTap && 
+          now - lastTap.time < 300 && 
+          Math.abs(e.clientX - lastTap.x) < 50 && 
+          Math.abs(e.clientY - lastTap.y) < 50) {
+        // Double-tap detected! Get position relative to PDF page
+        const overlay = containerRef.current?.querySelector('.react-pdf__Page');
+        const rect = overlay?.getBoundingClientRect();
+        if (rect) {
+          const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+          const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+          setDoubleTapPosition({ x: Math.max(0, Math.min(85, xPercent)), y: Math.max(0, Math.min(90, yPercent)) });
+          setShowMobileAddField(true);
+          // Clear the tap ref to prevent any further double-tap detection
+          lastTapRef.current = null;
+        }
+        lastTapRef.current = null;
+      } else {
+        // First tap - record it
+        lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+        onFieldSelect(null);
+      }
+      return;
+    }
+    
     setDrawingState({ isDrawing: true, startX: e.clientX, startY: e.clientY, currentX: e.clientX, currentY: e.clientY });
     onFieldSelect(null);
   };
@@ -610,8 +664,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
              })}
              {isSelected && (
                 <>
-                    {!isHidden && resizeHandles.map(({ h, c, pos }) => (<div key={h} onPointerDown={(e) => handleResizeStart(e, field, null, h)} className={`absolute w-2.5 h-2.5 bg-white border border-purple-600 z-30 shadow-sm ${c} ${pos}`} />))}
-                    <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className="absolute -top-8 -right-10 bg-slate-500 text-white p-1 rounded shadow hover:bg-slate-600 cursor-pointer z-40">{field.hidden ? <EyeOff size={12} /> : <Eye size={12} />}</button>
+                    {!isHidden && resizeHandles.map(({ h, c, pos }) => (<div key={h} onPointerDown={(e) => handleResizeStart(e, field, null, h)} className={`absolute ${isMobile ? 'w-5 h-5' : 'w-2.5 h-2.5'} bg-white border-2 border-purple-600 z-30 shadow-md rounded-sm touch-manipulation ${c} ${pos}`} />))}
+                    <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className={`absolute -top-10 md:-top-8 -right-12 md:-right-10 bg-slate-500 text-white ${isMobile ? 'p-2' : 'p-1'} rounded-lg shadow hover:bg-slate-600 active:bg-slate-700 cursor-pointer z-40 touch-manipulation`}>{field.hidden ? <EyeOff size={isMobile ? 16 : 12} /> : <Eye size={isMobile ? 16 : 12} />}</button>
                 </>
              )}
          </div>
@@ -703,9 +757,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                     <div className="absolute -top-6 left-0 text-white text-[10px] px-1.5 py-0.5 rounded shadow bg-blue-600 pointer-events-none z-20">{field.name} {isHidden && '(Hidden)'}</div>
                     {showHandles && (
                         <>
-                            {!isHidden && resizeHandles.map(({ h, c, pos }) => (<div key={h} onPointerDown={(e) => handleResizeStart(e, field, null, h)} className={`absolute w-3 h-3 bg-white border border-blue-600 z-30 shadow-sm ${c} ${pos}`} />))}
-                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className="absolute -top-8 -right-10 bg-slate-500 text-white p-1 rounded shadow hover:bg-slate-600 cursor-pointer z-40">{field.hidden ? <EyeOff size={12} /> : <Eye size={12} />}</button>
-                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldDelete(field.id); }} className="absolute -top-8 -right-2 bg-red-500 text-white p-1 rounded shadow hover:bg-red-600 cursor-pointer z-40"><Trash2 size={12} /></button>
+                            {!isHidden && resizeHandles.map(({ h, c, pos }) => (<div key={h} onPointerDown={(e) => handleResizeStart(e, field, null, h)} className={`absolute ${isMobile ? 'w-5 h-5' : 'w-3 h-3'} bg-white border-2 border-blue-600 z-30 shadow-md rounded-sm touch-manipulation ${c} ${pos}`} />))}
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className={`absolute -top-10 md:-top-8 -right-12 md:-right-10 bg-slate-500 text-white ${isMobile ? 'p-2' : 'p-1'} rounded-lg shadow hover:bg-slate-600 active:bg-slate-700 cursor-pointer z-40 touch-manipulation`}>{field.hidden ? <EyeOff size={isMobile ? 16 : 12} /> : <Eye size={isMobile ? 16 : 12} />}</button>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldDelete(field.id); }} className={`absolute -top-10 md:-top-8 -right-2 bg-red-500 text-white ${isMobile ? 'p-2' : 'p-1'} rounded-lg shadow hover:bg-red-600 active:bg-red-700 cursor-pointer z-40 touch-manipulation`}><Trash2 size={isMobile ? 16 : 12} /></button>
                         </>
                     )}
                 </>
@@ -734,11 +788,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         top: `${y}%`, 
         width: `${w}%`, 
         height: `${h}%`,
-        touchAction: 'none',
+        touchAction: mode === AppMode.EDITOR ? 'none' : 'manipulation',
         position: 'absolute',
         boxSizing: 'border-box',
         background: 'transparent',
         border: 'none',
+        // Ensure minimum touch target size on mobile
+        minWidth: isMobile ? '44px' : undefined,
+        minHeight: isMobile ? '44px' : undefined,
     };
 
     let wrapperClass = `group transition-colors duration-0 z-10 `;
@@ -748,8 +805,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             wrapperClass += 'z-20 '; 
         }
     } else {
-        // In FILL mode, make fields clickable for interaction
-        wrapperClass += 'cursor-pointer ';
+        // In FILL mode, make fields clickable for interaction with better touch feedback
+        wrapperClass += 'cursor-pointer active:opacity-70 ';
     }
 
     return (
@@ -799,24 +856,30 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             {mode === AppMode.EDITOR && isSelected && (
                 <>
                     {(!isOption || field.options?.[0]?.id === option?.id) && (
-                        <div className={`absolute -top-5 left-0 text-white text-[9px] px-1 rounded shadow pointer-events-none z-30 whitespace-nowrap flex items-center gap-1 ${field.locked ? 'bg-amber-500' : 'bg-blue-600'}`}>
-                            {field.locked && <Lock size={10} />}
+                        <div className={`absolute ${isMobile ? '-top-7' : '-top-5'} left-0 text-white ${isMobile ? 'text-xs px-2 py-0.5' : 'text-[9px] px-1'} rounded shadow pointer-events-none z-30 whitespace-nowrap flex items-center gap-1 ${field.locked ? 'bg-amber-500' : 'bg-blue-600'}`}>
+                            {field.locked && <Lock size={isMobile ? 12 : 10} />}
                             {(() => {
                                 const effectiveColor = field.useGlobalColor !== false ? globalDrawColor : (field.color || '#000000');
                                 return effectiveColor && effectiveColor !== '#000000' ? (
-                                    <span className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: effectiveColor }} />
+                                    <span className={`${isMobile ? 'w-3 h-3' : 'w-2 h-2'} rounded-full border border-white/50`} style={{ backgroundColor: effectiveColor }} />
                                 ) : null;
                             })()}
                             {field.name} {isHidden && '(Hidden)'} {field.locked && '🔒'}
                         </div>
                     )}
+                    {/* Mobile drag hint */}
+                    {isMobile && !isOption && !field.locked && (
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full shadow-sm pointer-events-none z-30 whitespace-nowrap border border-blue-200">
+                            Drag to move • Corners to resize
+                        </div>
+                    )}
                     {showHandles && !isHidden && resizeHandles.map(({ h, c, pos }) => (
-                        <div key={h} onPointerDown={(e) => handleResizeStart(e, field, option, h)} className={`absolute w-2.5 h-2.5 bg-white border border-blue-600 z-30 shadow-sm ${c} ${pos}`} />
+                        <div key={h} onPointerDown={(e) => handleResizeStart(e, field, option, h)} className={`absolute ${isMobile ? 'w-5 h-5' : 'w-2.5 h-2.5'} bg-white border-2 border-blue-600 z-30 shadow-md rounded-sm touch-manipulation ${c} ${pos}`} />
                     ))}
                     {showHandles && (!isOption || (field.options?.length || 0) > 1) && (
                          <>
-                             <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className="absolute -top-7 -right-10 bg-slate-500 text-white p-1 rounded shadow hover:bg-slate-600 cursor-pointer z-40">{field.hidden ? <EyeOff size={10} /> : <Eye size={10} />}</button>
-                             <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); isOption ? onFieldUpdate(field.id, { options: (field.options||[]).filter(o => o.id !== option!.id) }) : onFieldDelete(field.id); }} className="absolute -top-7 -right-2 bg-red-500 text-white p-1 rounded shadow cursor-pointer z-40 hover:bg-red-600"><Trash2 size={10} /></button>
+                             <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onFieldUpdate(field.id, { hidden: !field.hidden }); }} className={`absolute ${isMobile ? '-top-9 -right-12 p-2' : '-top-7 -right-10 p-1'} bg-slate-500 text-white rounded-lg shadow hover:bg-slate-600 active:bg-slate-700 cursor-pointer z-40 touch-manipulation`}>{field.hidden ? <EyeOff size={isMobile ? 14 : 10} /> : <Eye size={isMobile ? 14 : 10} />}</button>
+                             <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); isOption ? onFieldUpdate(field.id, { options: (field.options||[]).filter(o => o.id !== option!.id) }) : onFieldDelete(field.id); }} className={`absolute ${isMobile ? '-top-9 -right-2 p-2' : '-top-7 -right-2 p-1'} bg-red-500 text-white rounded-lg shadow cursor-pointer z-40 hover:bg-red-600 active:bg-red-700 touch-manipulation`}><Trash2 size={isMobile ? 14 : 10} /></button>
                          </>
                     )}
                 </>
@@ -828,75 +891,85 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 overflow-hidden relative">
-      {/* Enhanced Toolbar with Zoom Controls */}
-      <div className="h-14 md:h-12 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-4 shrink-0 z-10 overflow-x-auto gap-2">
-        <div className="flex items-center space-x-1 md:space-x-2">
-          <button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:hover:bg-transparent" title={t.common.previous}>
-            <ChevronLeft size={18} />
+      {/* Enhanced Toolbar with Zoom Controls - Mobile Optimized */}
+      <div className="h-auto min-h-12 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between px-2 md:px-4 py-2 shrink-0 z-10 gap-2">
+        {/* Page Navigation */}
+        <div className="flex items-center space-x-1">
+          <button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)} className="p-2 md:p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg disabled:opacity-50 disabled:hover:bg-transparent touch-manipulation" title={t.common.previous}>
+            <ChevronLeft size={isMobile ? 22 : 18} />
           </button>
-          <span className="text-xs md:text-sm text-slate-500 min-w-[80px] text-center">{t.common.page} {pageNumber} {t.common.of} {numPages}</span>
-          <button disabled={pageNumber >= numPages} onClick={() => handlePageChange(pageNumber + 1)} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:hover:bg-transparent" title={t.common.next}>
-            <ChevronRight size={18} />
+          <span className="text-sm md:text-sm text-slate-600 font-medium min-w-[60px] md:min-w-[80px] text-center">{pageNumber}/{numPages}</span>
+          <button disabled={pageNumber >= numPages} onClick={() => handlePageChange(pageNumber + 1)} className="p-2 md:p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg disabled:opacity-50 disabled:hover:bg-transparent touch-manipulation" title={t.common.next}>
+            <ChevronRight size={isMobile ? 22 : 18} />
           </button>
           {/* Minimap toggle for multi-page PDFs */}
           {numPages > 1 && (
             <button 
               onClick={() => setShowMinimap(!showMinimap)} 
-              className={`p-1.5 rounded transition-colors ${showMinimap ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'}`}
+              className={`p-2 md:p-1.5 rounded-lg transition-colors touch-manipulation ${showMinimap ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100'}`}
               title={t.pdfViewer.minimap}
             >
-              <Grid3X3 size={18} />
+              <Grid3X3 size={isMobile ? 20 : 18} />
             </button>
           )}
         </div>
         
-        {/* Zoom Controls */}
-        <div className="flex items-center space-x-1 md:space-x-2 bg-slate-50 rounded-lg p-1">
-          <button onClick={zoomOut} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.zoomOut}>
-            <ZoomOut size={16} />
+        {/* Zoom Controls - Responsive */}
+        <div className="flex items-center space-x-1 bg-slate-50 rounded-lg p-1">
+          <button onClick={zoomOut} className="p-2 md:p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white active:bg-blue-50 rounded-lg transition-colors touch-manipulation" title={t.pdfViewer.zoomOut}>
+            <ZoomOut size={isMobile ? 20 : 16} />
           </button>
-          <span className="text-xs font-mono w-12 text-center text-slate-600">{Math.round(scale * 100)}%</span>
-          <button onClick={zoomIn} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.zoomIn}>
-            <ZoomIn size={16} />
+          <span className="text-xs font-mono w-10 md:w-12 text-center text-slate-600">{Math.round(scale * 100)}%</span>
+          <button onClick={zoomIn} className="p-2 md:p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white active:bg-blue-50 rounded-lg transition-colors touch-manipulation" title={t.pdfViewer.zoomIn}>
+            <ZoomIn size={isMobile ? 20 : 16} />
           </button>
-          <div className="w-px h-4 bg-slate-300 mx-1" />
-          <button onClick={fitToPage} className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.fitToPage}>
-            Fit
+          <div className="w-px h-4 bg-slate-300 mx-0.5 hidden sm:block" />
+          <button onClick={fitToPage} className="p-2 md:px-2 md:py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white active:bg-blue-50 rounded-lg transition-colors touch-manipulation hidden sm:flex items-center" title={t.pdfViewer.fitToPage}>
+            <span className="hidden md:inline">Fit</span>
+            <Maximize size={16} className="md:hidden" />
           </button>
-          <button onClick={fitToWidth} className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors hidden md:block" title={t.pdfViewer.fitToWidth}>
+          <button onClick={fitToWidth} className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors hidden lg:block" title={t.pdfViewer.fitToWidth}>
             Width
           </button>
-          <button onClick={() => { setScale(1.0); setPanOffset({ x: 0, y: 0 }); }} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.resetView}>
-            <Maximize size={16} />
+          <button onClick={() => { setScale(1.0); setPanOffset({ x: 0, y: 0 }); }} className="p-2 md:p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white active:bg-blue-50 rounded-lg transition-colors touch-manipulation" title={t.pdfViewer.resetView}>
+            <Maximize size={isMobile ? 18 : 16} />
           </button>
         </div>
       </div>
       
-      {/* Minimap Panel */}
+      {/* Minimap Panel - Mobile Optimized */}
       {showMinimap && numPages > 1 && (
-        <div className="absolute top-14 left-2 z-30 bg-white rounded-lg shadow-xl border border-slate-200 p-2 max-h-[60vh] overflow-y-auto">
-          <div className="text-xs font-medium text-slate-600 mb-2 px-1">{t.pdfViewer.minimap}</div>
-          <div className="grid grid-cols-3 gap-2" style={{ maxWidth: '240px' }}>
+        <div className="absolute top-16 md:top-14 left-2 right-2 md:right-auto z-30 bg-white rounded-xl shadow-xl border border-slate-200 p-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-semibold text-slate-700">{t.pdfViewer.minimap}</div>
+            <button 
+              onClick={() => setShowMinimap(false)}
+              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg md:hidden touch-manipulation"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="grid grid-cols-4 md:grid-cols-3 gap-2" style={{ maxWidth: isMobile ? '100%' : '240px' }}>
             {Array.from({ length: Math.min(numPages, 20) }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
                 onClick={() => { handlePageChange(page); setShowMinimap(false); }}
-                className={`relative rounded overflow-hidden border-2 transition-all hover:border-blue-400 ${pageNumber === page ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200'}`}
+                className={`relative rounded-lg overflow-hidden border-2 transition-all active:scale-95 touch-manipulation ${pageNumber === page ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200 hover:border-blue-400'}`}
                 title={`${t.pdfViewer.goToPage} ${page}`}
               >
                 {pageThumbnails.has(page) ? (
                   <img src={pageThumbnails.get(page)} alt={`Page ${page}`} className="w-full h-auto" />
                 ) : (
-                  <div className="w-16 h-20 bg-slate-100 flex items-center justify-center">
-                    <span className="text-xs text-slate-400">{page}</span>
+                  <div className="w-full aspect-[3/4] bg-slate-100 flex items-center justify-center">
+                    <span className="text-sm font-medium text-slate-400">{page}</span>
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] text-center py-0.5">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-1 font-medium">
                   {page}
                 </div>
                 {/* Show field count indicator */}
                 {fields.filter(f => f.page === page).length > 0 && (
-                  <div className="absolute top-1 right-1 bg-blue-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">
+                  <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 font-medium">
                     {fields.filter(f => f.page === page).length}
                   </div>
                 )}
@@ -904,12 +977,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             ))}
           </div>
           {numPages > 20 && (
-            <p className="text-[10px] text-slate-400 mt-2 text-center">Showing first 20 pages</p>
+            <p className="text-xs text-slate-400 mt-3 text-center">Showing first 20 pages</p>
           )}
         </div>
       )}
       <div 
-        className="flex-1 overflow-hidden p-4 md:p-8 flex justify-center items-center relative select-none" 
+        className="flex-1 overflow-auto p-2 md:p-8 flex justify-center items-start md:items-center relative select-none touch-pan-x touch-pan-y" 
         ref={containerRef}
         onPointerDown={handlePanStart}
         onWheel={handleWheel}
@@ -955,12 +1028,143 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                       if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
                       return renderBox(field, null);
                     })}
+                  
+                  {/* Double-tap position indicator */}
+                  {isMobile && doubleTapPosition && showMobileAddField && (
+                    <div 
+                      className="absolute w-4 h-4 -ml-2 -mt-2 z-50 pointer-events-none"
+                      style={{ left: `${doubleTapPosition.x}%`, top: `${doubleTapPosition.y}%` }}
+                    >
+                      <div className="w-full h-full bg-green-500 rounded-full animate-ping opacity-75" />
+                      <div className="absolute inset-0 w-full h-full bg-green-500 rounded-full" />
+                    </div>
+                  )}
                 </div>
               </div>
             </Document>
           </div>
         )}
       </div>
+      
+      {/* Mobile Add Field Bottom Sheet */}
+      {mode === AppMode.EDITOR && isMobile && showMobileAddField && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={() => { setShowMobileAddField(false); setDoubleTapPosition(null); lastTapRef.current = null; }}>
+          <div 
+            className="bg-white rounded-t-2xl w-full max-h-[70vh] overflow-y-auto animate-in slide-in-from-bottom duration-200 safe-area-inset-bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-slate-100 p-4 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800 text-lg">{t.pdfViewer.addField || 'Add Field'}</h3>
+              <button 
+                onClick={() => { setShowMobileAddField(false); setDoubleTapPosition(null); lastTapRef.current = null; }}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 touch-manipulation"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            
+            {/* Show position indicator if double-tapped */}
+            {doubleTapPosition && (
+              <div className="px-4 pb-2">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs text-green-700">Field will be placed at your tap location</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="p-4 pt-2 grid grid-cols-3 gap-3">
+              {[
+                { type: 'text', icon: '📝', label: t.sidebar?.fieldTypes?.text || 'Text' },
+                { type: 'number', icon: '🔢', label: t.sidebar?.fieldTypes?.number || 'Number' },
+                { type: 'date', icon: '📅', label: t.sidebar?.fieldTypes?.date || 'Date' },
+                { type: 'checkbox', icon: '☑️', label: t.sidebar?.fieldTypes?.checkbox || 'Checkbox' },
+                { type: 'radio', icon: '🔘', label: t.sidebar?.fieldTypes?.radio || 'Radio' },
+                { type: 'select', icon: '📋', label: t.sidebar?.fieldTypes?.select || 'Select' },
+                { type: 'textarea', icon: '📄', label: t.sidebar?.fieldTypes?.textarea || 'Textarea' },
+                { type: 'signature', icon: '✍️', label: t.sidebar?.fieldTypes?.signature || 'Signature' },
+                { type: 'table', icon: '📊', label: t.sidebar?.fieldTypes?.table || 'Table' },
+              ].map(({ type, icon, label }) => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    // Use double-tap position if available, otherwise use default position
+                    const fieldX = doubleTapPosition ? doubleTapPosition.x : 10;
+                    const fieldY = doubleTapPosition ? doubleTapPosition.y : (30 + (fields.filter(f => f.page === pageNumber).length * 8) % 40);
+                    
+                    const newField: FormField = {
+                      id: generateUUID(),
+                      page: pageNumber,
+                      x: fieldX,
+                      y: fieldY,
+                      width: type === 'checkbox' || type === 'radio' ? 5 : type === 'table' ? 80 : 50,
+                      height: type === 'textarea' ? 15 : type === 'table' ? 20 : type === 'signature' ? 10 : 5,
+                      name: `${label} ${fields.length + 1}`,
+                      value: '',
+                      previewText: type === 'date' ? 'DD/MM/YYYY' : type === 'signature' ? 'Sign Here' : '',
+                      type: type as any,
+                      fontSize: 12,
+                      letterSpacing: 0,
+                      options: (type === 'radio' || type === 'checkbox' || type === 'select') ? [
+                        { id: generateUUID(), x: fieldX, y: fieldY, width: 4, height: 3, value: 'Option 1' },
+                        { id: generateUUID(), x: fieldX + 10, y: fieldY, width: 4, height: 3, value: 'Option 2' },
+                      ] : [],
+                      color: globalDrawColor,
+                      useGlobalColor: true,
+                      dateFormat: type === 'date' ? 'DD/MM/YYYY' : undefined,
+                      columns: type === 'table' ? [
+                        { id: generateUUID(), name: 'Col 1', type: 'text', width: 50 },
+                        { id: generateUUID(), name: 'Col 2', type: 'text', width: 50 },
+                      ] : undefined,
+                      maxRows: type === 'table' ? 3 : undefined,
+                      filledRows: type === 'table' ? 1 : undefined,
+                    };
+                    onFieldAdd(newField);
+                    onFieldSelect(newField.id);
+                    setShowMobileAddField(false);
+                    setDoubleTapPosition(null); // Clear the position after use
+                  }}
+                  className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-blue-50 active:bg-blue-100 rounded-xl border border-slate-200 hover:border-blue-300 transition-all touch-manipulation"
+                >
+                  <span className="text-2xl">{icon}</span>
+                  <span className="text-xs font-medium text-slate-700">{label}</span>
+                </button>
+              ))}
+            </div>
+            
+            <div className="p-4 pt-0">
+              <p className="text-xs text-slate-500 text-center">
+                {doubleTapPosition 
+                  ? (t.pdfViewer.fieldAtTapLocation || 'Field will be created at your tap location')
+                  : (t.pdfViewer.doubleTapHint || 'Tip: Double-tap on the PDF to place a field at that exact spot')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Mobile: Edit Properties button when field is selected */}
+      {mode === AppMode.EDITOR && isMobile && selectedFieldId && onOpenSidebar && (
+        <button
+          onClick={onOpenSidebar}
+          className="fixed bottom-20 left-4 z-30 px-4 py-3 bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white rounded-full shadow-lg flex items-center gap-2 touch-manipulation transition-all active:scale-95"
+          title="Edit field properties"
+        >
+          <Edit2 size={18} />
+          <span className="text-sm font-medium">Edit</span>
+        </button>
+      )}
+      
+      {/* Floating Action Button for adding fields on mobile in Editor mode */}
+      {mode === AppMode.EDITOR && isMobile && (
+        <button
+          onClick={() => { setDoubleTapPosition(null); setShowMobileAddField(true); }}
+          className="fixed bottom-20 right-4 z-30 w-14 h-14 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full shadow-lg flex items-center justify-center touch-manipulation transition-all active:scale-95"
+          title="Add new field"
+        >
+          <Plus size={28} />
+        </button>
+      )}
     </div>
   );
 };
