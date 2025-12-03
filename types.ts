@@ -143,6 +143,12 @@ export interface FormField {
   
   // Visibility
   hidden?: boolean; // Hide the field box in editor mode
+  locked?: boolean; // Lock field to prevent accidental edits
+  
+  // Rich text formatting
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
   
   // Mark style for radio/checkbox
   markStyle?: MarkStyle; // Style of mark when selected (checkmark, x, circle, etc.)

@@ -32,6 +32,13 @@ export const en = {
   pdfViewer: {
     initializingViewer: 'Initializing PDF viewer...',
     loadingPdf: 'Loading PDF...',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    fitToPage: 'Fit to Page',
+    fitToWidth: 'Fit to Width',
+    resetView: 'Reset View',
+    minimap: 'Page Navigator',
+    goToPage: 'Go to page',
   },
 
   // Home page
@@ -230,6 +237,18 @@ export const en = {
     acceptedTypes: 'Accepted Types',
     maxFiles: 'Max Files',
     attachmentRequired: 'Required',
+
+    // Rich text formatting
+    richText: 'Text Formatting',
+    bold: 'Bold',
+    italic: 'Italic',
+    underline: 'Underline',
+    
+    // Field locking
+    lockField: 'Lock Field',
+    unlockField: 'Unlock Field',
+    fieldLocked: 'This field is locked',
+    lockedFieldsHidden: 'Locked fields cannot be edited',
 
     // Actions
     actions: 'Actions',

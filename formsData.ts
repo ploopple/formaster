@@ -83,7 +83,7 @@ export const formsData: FormTemplate[] = [
       "width": 11.96504068283344,
       "height": 2.227284900766799,
       "name": "Tax Year",
-      "value": "2024",
+      "value": "2028",
       "previewText": "",
       "type": "number",
       "fontSize": 14,
@@ -193,7 +193,10 @@ export const formsData: FormTemplate[] = [
       "options": [],
       "borderWidth": 0,
       "padding": 2,
-      "textAlign": "center"
+      "textAlign": "center",
+      "fontWeight": "bold",
+      "fontStyle": "italic",
+      "textDecoration": "underline"
     },
     {
       "id": "88788452-0328-4388-8668-3cda4b92e7bd",
@@ -2458,7 +2461,7 @@ export const formsData: FormTemplate[] = [
     }
   ],
   "globalDrawColor": "#1e40af",
-  "createdAt": "2025-12-02T16:24:24.158Z",
+  "createdAt": "2025-12-03T13:53:11.029Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

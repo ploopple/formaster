@@ -437,11 +437,36 @@ function EditorContent() {
       const resizeStep = e.shiftKey ? 5 : 0.5;
       switch (e.key) {
         case 'Delete':
-        case 'Backspace': e.preventDefault(); deleteField(selectedFieldId); break;
-        case 'ArrowUp': e.preventDefault(); if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { height: Math.max(1, field.height - resizeStep) }); else updateField(selectedFieldId, { y: Math.max(0, field.y - moveStep) }); break;
-        case 'ArrowDown': e.preventDefault(); if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { height: Math.min(100, field.height + resizeStep) }); else updateField(selectedFieldId, { y: Math.min(100, field.y + moveStep) }); break;
-        case 'ArrowLeft': e.preventDefault(); if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { width: Math.max(1, field.width - resizeStep) }); else updateField(selectedFieldId, { x: Math.max(0, field.x - moveStep) }); break;
-        case 'ArrowRight': e.preventDefault(); if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { width: Math.min(100, field.width + resizeStep) }); else updateField(selectedFieldId, { x: Math.min(100, field.x + moveStep) }); break;
+        case 'Backspace': 
+          e.preventDefault(); 
+          // Don't delete locked fields
+          if (!field.locked) deleteField(selectedFieldId); 
+          break;
+        case 'ArrowUp': 
+          e.preventDefault(); 
+          // Don't move/resize locked fields
+          if (field.locked) break;
+          if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { height: Math.max(1, field.height - resizeStep) }); 
+          else updateField(selectedFieldId, { y: Math.max(0, field.y - moveStep) }); 
+          break;
+        case 'ArrowDown': 
+          e.preventDefault(); 
+          if (field.locked) break;
+          if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { height: Math.min(100, field.height + resizeStep) }); 
+          else updateField(selectedFieldId, { y: Math.min(100, field.y + moveStep) }); 
+          break;
+        case 'ArrowLeft': 
+          e.preventDefault(); 
+          if (field.locked) break;
+          if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { width: Math.max(1, field.width - resizeStep) }); 
+          else updateField(selectedFieldId, { x: Math.max(0, field.x - moveStep) }); 
+          break;
+        case 'ArrowRight': 
+          e.preventDefault(); 
+          if (field.locked) break;
+          if (e.metaKey || e.ctrlKey) updateField(selectedFieldId, { width: Math.min(100, field.width + resizeStep) }); 
+          else updateField(selectedFieldId, { x: Math.min(100, field.x + moveStep) }); 
+          break;
         case 'Escape': e.preventDefault(); setSelectedFieldId(null); break;
         case 'd': if (e.ctrlKey || e.metaKey) { e.preventDefault(); duplicateField(selectedFieldId); } break;
       }

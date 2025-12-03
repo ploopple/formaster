@@ -112,8 +112,24 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
   pdfDoc.registerFontkit(fontkit);
   
   const pages = pdfDoc.getPages();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  
+  // Embed all font variants for rich text support
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  const fontBoldItalic = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique);
+  const font = fontRegular; // Default font for backwards compatibility
   const scriptFont = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+  
+  // Helper to select font based on rich text properties
+  const selectFont = (field: FormField) => {
+    const isBold = field.fontWeight === 'bold';
+    const isItalic = field.fontStyle === 'italic';
+    if (isBold && isItalic) return fontBoldItalic;
+    if (isBold) return fontBold;
+    if (isItalic) return fontItalic;
+    return fontRegular;
+  };
   
   // Load Hebrew font
   let hebrewFont: typeof font | undefined;
@@ -357,7 +373,8 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             }
 
             if (field.value) {
-                let fontToUse = field.type === 'signature' ? scriptFont : font;
+                // Select font based on rich text properties (bold, italic)
+                let fontToUse = field.type === 'signature' ? scriptFont : selectFont(field);
                 const sizeToUse = field.type === 'signature' ? posFontSize * 1.5 : posFontSize;
                 
                 // Process value based on field type
@@ -439,6 +456,18 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                     // check if the field type is radio 
                     if(field.type !== "radio" && field.type !== "checkbox") {
                         posPage.drawText(displayValue, { x: textX, y: textY, size: sizeToUse, font: fontToUse, color: textColor });
+                        
+                        // Draw underline if textDecoration is 'underline'
+                        if (field.textDecoration === 'underline') {
+                            const underlineY = textY - 2; // Slightly below the text baseline
+                            const underlineWidth = fontToUse.widthOfTextAtSize(displayValue, sizeToUse);
+                            posPage.drawLine({
+                                start: { x: textX, y: underlineY },
+                                end: { x: textX + underlineWidth, y: underlineY },
+                                thickness: sizeToUse / 15, // Proportional to font size
+                                color: textColor,
+                            });
+                        }
                     }
                 }
             }

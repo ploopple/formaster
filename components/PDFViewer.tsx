@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from '../lib/pdfjs-config';
 import { FormField, AppMode, FieldOption } from '../types';
-import { Trash2, Rows, Eye, EyeOff } from 'lucide-react';
+import { Trash2, Rows, Eye, EyeOff, ZoomIn, ZoomOut, Maximize, Lock, ChevronLeft, ChevronRight, Grid3X3 } from 'lucide-react';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -51,13 +51,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   onPageDimensionsChange,
   globalDrawColor = '#000000'
 }) => {
+  const { t } = useI18n();
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(600);
+  const [containerHeight, setContainerHeight] = useState<number>(800);
   const [activeOptionId, setActiveOptionId] = useState<string | null>(null);
+  
+  // Minimap state
+  const [showMinimap, setShowMinimap] = useState(false);
+  const [pageThumbnails, setPageThumbnails] = useState<Map<number, string>>(new Map());
+  const [loadingThumbnails, setLoadingThumbnails] = useState(false);
+  
+  // Lazy loading - track which pages are near viewport
+  const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set([1]));
   
   // Pan & Zoom state (transform-based, survives PDF re-renders)
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -188,13 +198,90 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   };
 
   useEffect(() => {
-    const updateWidth = () => { if (containerRef.current) setContainerWidth(containerRef.current.clientWidth - 32); };
-    window.addEventListener('resize', updateWidth);
-    setTimeout(updateWidth, 100);
-    return () => window.removeEventListener('resize', updateWidth);
+    const updateDimensions = () => { 
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth - 32);
+        setContainerHeight(containerRef.current.clientHeight - 32);
+      }
+    };
+    window.addEventListener('resize', updateDimensions);
+    setTimeout(updateDimensions, 100);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   useEffect(() => { if (window.innerWidth < 768) setScale(0.6); }, []);
+  
+  // Zoom control functions
+  const zoomIn = useCallback(() => setScale(s => Math.min(3.0, s + 0.25)), []);
+  const zoomOut = useCallback(() => setScale(s => Math.max(0.25, s - 0.25)), []);
+  const fitToPage = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerH = containerRef.current.clientHeight - 100;
+    const containerW = containerRef.current.clientWidth - 100;
+    // Estimate PDF page ratio (A4 ~= 0.707)
+    const estimatedPageHeight = containerWidth * 1.414;
+    const scaleH = containerH / estimatedPageHeight;
+    const scaleW = containerW / containerWidth;
+    setScale(Math.min(scaleH, scaleW, 1.5));
+    setPanOffset({ x: 0, y: 0 });
+  }, [containerWidth]);
+  
+  const fitToWidth = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerW = containerRef.current.clientWidth - 100;
+    setScale(containerW / containerWidth);
+    setPanOffset({ x: 0, y: 0 });
+  }, [containerWidth]);
+  
+  // Generate thumbnails for minimap (lazy loaded)
+  const generateThumbnails = useCallback(async () => {
+    if (!stableFileUrl || loadingThumbnails || pageThumbnails.size === numPages) return;
+    setLoadingThumbnails(true);
+    
+    try {
+      const pdf = await pdfjs.getDocument(stableFileUrl).promise;
+      const newThumbnails = new Map(pageThumbnails);
+      
+      for (let i = 1; i <= Math.min(numPages, 20); i++) { // Limit to 20 pages for performance
+        if (newThumbnails.has(i)) continue;
+        
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 0.15 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          newThumbnails.set(i, canvas.toDataURL('image/jpeg', 0.6));
+        }
+      }
+      
+      setPageThumbnails(newThumbnails);
+    } catch (error) {
+      console.error('Failed to generate thumbnails:', error);
+    }
+    
+    setLoadingThumbnails(false);
+  }, [stableFileUrl, numPages, loadingThumbnails, pageThumbnails]);
+  
+  // Load thumbnails when minimap is opened
+  useEffect(() => {
+    if (showMinimap && numPages > 0) {
+      generateThumbnails();
+    }
+  }, [showMinimap, numPages, generateThumbnails]);
+  
+  // Update visible pages for lazy loading
+  useEffect(() => {
+    const newVisible = new Set<number>();
+    // Always include current page and adjacent pages
+    newVisible.add(pageNumber);
+    if (pageNumber > 1) newVisible.add(pageNumber - 1);
+    if (pageNumber < numPages) newVisible.add(pageNumber + 1);
+    setVisiblePages(newVisible);
+  }, [pageNumber, numPages]);
 
   // --- CANVAS VISUAL RENDERING LAYER (Editor Mode Only) ---
   useEffect(() => {
@@ -460,6 +547,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     e.stopPropagation();
     onFieldSelect(field.id);
     setActiveOptionId(option ? option.id : null);
+    
+    // Don't allow dragging locked fields
+    if (field.locked) return;
+    
     const overlay = containerRef.current?.querySelector('.react-pdf__Page'); 
     const containerRect = overlay?.getBoundingClientRect() || e.currentTarget.parentElement?.getBoundingClientRect();
     if (!containerRect) return;
@@ -473,6 +564,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   const handleResizeStart = (e: React.PointerEvent, field: FormField, option: FieldOption | null, handle: string) => {
     e.stopPropagation();
+    
+    // Don't allow resizing locked fields
+    if (field.locked) return;
+    
     const overlay = containerRef.current?.querySelector('.react-pdf__Page');
     const containerRect = overlay?.getBoundingClientRect();
     if (!containerRect) return;
@@ -704,14 +799,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             {mode === AppMode.EDITOR && isSelected && (
                 <>
                     {(!isOption || field.options?.[0]?.id === option?.id) && (
-                        <div className="absolute -top-5 left-0 text-white text-[9px] px-1 rounded shadow pointer-events-none z-30 whitespace-nowrap bg-blue-600 flex items-center gap-1">
+                        <div className={`absolute -top-5 left-0 text-white text-[9px] px-1 rounded shadow pointer-events-none z-30 whitespace-nowrap flex items-center gap-1 ${field.locked ? 'bg-amber-500' : 'bg-blue-600'}`}>
+                            {field.locked && <Lock size={10} />}
                             {(() => {
                                 const effectiveColor = field.useGlobalColor !== false ? globalDrawColor : (field.color || '#000000');
                                 return effectiveColor && effectiveColor !== '#000000' ? (
                                     <span className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: effectiveColor }} />
                                 ) : null;
                             })()}
-                            {field.name} {isHidden && '(Hidden)'}
+                            {field.name} {isHidden && '(Hidden)'} {field.locked && '🔒'}
                         </div>
                     )}
                     {showHandles && !isHidden && resizeHandles.map(({ h, c, pos }) => (
@@ -732,19 +828,86 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100 overflow-hidden relative">
+      {/* Enhanced Toolbar with Zoom Controls */}
       <div className="h-14 md:h-12 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-4 shrink-0 z-10 overflow-x-auto gap-2">
-        <div className="flex items-center space-x-2 md:space-x-4">
-          <button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Previous</button>
-          <span className="text-xs md:text-sm text-slate-500">Page {pageNumber} of {numPages}</span>
-          <button disabled={pageNumber >= numPages} onClick={() => handlePageChange(pageNumber + 1)} className="text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 disabled:opacity-50">Next</button>
-        </div>
         <div className="flex items-center space-x-1 md:space-x-2">
-          <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">-</button>
-          <span className="text-xs font-mono w-8 md:w-12 text-center">{Math.round(scale * 100)}%</span>
-          <button onClick={() => setScale(s => Math.min(2.5, s + 0.1))} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-sm">+</button>
-          <button onClick={() => setPanOffset({ x: 0, y: 0 })} className="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 text-xs ml-2" title="Reset view">Reset</button>
+          <button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:hover:bg-transparent" title={t.common.previous}>
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-xs md:text-sm text-slate-500 min-w-[80px] text-center">{t.common.page} {pageNumber} {t.common.of} {numPages}</span>
+          <button disabled={pageNumber >= numPages} onClick={() => handlePageChange(pageNumber + 1)} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:hover:bg-transparent" title={t.common.next}>
+            <ChevronRight size={18} />
+          </button>
+          {/* Minimap toggle for multi-page PDFs */}
+          {numPages > 1 && (
+            <button 
+              onClick={() => setShowMinimap(!showMinimap)} 
+              className={`p-1.5 rounded transition-colors ${showMinimap ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'}`}
+              title={t.pdfViewer.minimap}
+            >
+              <Grid3X3 size={18} />
+            </button>
+          )}
+        </div>
+        
+        {/* Zoom Controls */}
+        <div className="flex items-center space-x-1 md:space-x-2 bg-slate-50 rounded-lg p-1">
+          <button onClick={zoomOut} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.zoomOut}>
+            <ZoomOut size={16} />
+          </button>
+          <span className="text-xs font-mono w-12 text-center text-slate-600">{Math.round(scale * 100)}%</span>
+          <button onClick={zoomIn} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.zoomIn}>
+            <ZoomIn size={16} />
+          </button>
+          <div className="w-px h-4 bg-slate-300 mx-1" />
+          <button onClick={fitToPage} className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.fitToPage}>
+            Fit
+          </button>
+          <button onClick={fitToWidth} className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors hidden md:block" title={t.pdfViewer.fitToWidth}>
+            Width
+          </button>
+          <button onClick={() => { setScale(1.0); setPanOffset({ x: 0, y: 0 }); }} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-white rounded transition-colors" title={t.pdfViewer.resetView}>
+            <Maximize size={16} />
+          </button>
         </div>
       </div>
+      
+      {/* Minimap Panel */}
+      {showMinimap && numPages > 1 && (
+        <div className="absolute top-14 left-2 z-30 bg-white rounded-lg shadow-xl border border-slate-200 p-2 max-h-[60vh] overflow-y-auto">
+          <div className="text-xs font-medium text-slate-600 mb-2 px-1">{t.pdfViewer.minimap}</div>
+          <div className="grid grid-cols-3 gap-2" style={{ maxWidth: '240px' }}>
+            {Array.from({ length: Math.min(numPages, 20) }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => { handlePageChange(page); setShowMinimap(false); }}
+                className={`relative rounded overflow-hidden border-2 transition-all hover:border-blue-400 ${pageNumber === page ? 'border-blue-500 ring-2 ring-blue-200' : 'border-slate-200'}`}
+                title={`${t.pdfViewer.goToPage} ${page}`}
+              >
+                {pageThumbnails.has(page) ? (
+                  <img src={pageThumbnails.get(page)} alt={`Page ${page}`} className="w-full h-auto" />
+                ) : (
+                  <div className="w-16 h-20 bg-slate-100 flex items-center justify-center">
+                    <span className="text-xs text-slate-400">{page}</span>
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] text-center py-0.5">
+                  {page}
+                </div>
+                {/* Show field count indicator */}
+                {fields.filter(f => f.page === page).length > 0 && (
+                  <div className="absolute top-1 right-1 bg-blue-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">
+                    {fields.filter(f => f.page === page).length}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+          {numPages > 20 && (
+            <p className="text-[10px] text-slate-400 mt-2 text-center">Showing first 20 pages</p>
+          )}
+        </div>
+      )}
       <div 
         className="flex-1 overflow-hidden p-4 md:p-8 flex justify-center items-center relative select-none" 
         ref={containerRef}

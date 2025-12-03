@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FormField, AppMode, FieldType, FieldOption, TableColumn, MarkStyle, FieldSection, ValidationRule, ValidationPattern, FieldValidationState, DocumentAttachment, DocumentRequirement, FieldPosition } from '../types';
-import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle, Home } from 'lucide-react';
+import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, Plus, GripVertical, CornerDownRight, Table, X, Minus, MapPin, Calendar, PenTool, ChevronDown, ChevronRight, List, Rows, Check, Palette, AlignLeft, AlignCenter, AlignRight, BoxSelect, FolderPlus, Folder, ShieldCheck, AlertCircle, CheckCircle2, Paperclip, FileText, Image, Upload, Info, HelpCircle, Home, Lock, Unlock, Bold, Italic, Underline } from 'lucide-react';
 import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
 import TableBuilder from './TableBuilder';
@@ -722,6 +722,36 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     ))}
                                 </div>
                              </div>
+                             
+                             {/* Rich Text Formatting */}
+                             {(selectedField.type === 'text' || selectedField.type === 'textarea') && (
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.richText || 'Text Formatting'}</label>
+                                    <div className="flex bg-slate-100 rounded p-1 gap-1">
+                                        <button 
+                                            onClick={() => onUpdateField(selectedField.id, { fontWeight: selectedField.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                                            className={`flex-1 flex justify-center py-1.5 rounded hover:bg-white hover:shadow-sm transition-all ${selectedField.fontWeight === 'bold' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                                            title={t.sidebar.bold || 'Bold'}
+                                        >
+                                            <Bold size={14} />
+                                        </button>
+                                        <button 
+                                            onClick={() => onUpdateField(selectedField.id, { fontStyle: selectedField.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                                            className={`flex-1 flex justify-center py-1.5 rounded hover:bg-white hover:shadow-sm transition-all ${selectedField.fontStyle === 'italic' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                                            title={t.sidebar.italic || 'Italic'}
+                                        >
+                                            <Italic size={14} />
+                                        </button>
+                                        <button 
+                                            onClick={() => onUpdateField(selectedField.id, { textDecoration: selectedField.textDecoration === 'underline' ? 'none' : 'underline' })}
+                                            className={`flex-1 flex justify-center py-1.5 rounded hover:bg-white hover:shadow-sm transition-all ${selectedField.textDecoration === 'underline' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                                            title={t.sidebar.underline || 'Underline'}
+                                        >
+                                            <Underline size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                             )}
                         </div>
                     )}
 
@@ -1539,9 +1569,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     )}
 
+                    {/* Field Locking */}
+                    <div className="pt-4 border-t border-slate-100">
+                        <button 
+                            onClick={() => onUpdateField(selectedField.id, { locked: !selectedField.locked })}
+                            className={`w-full flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${selectedField.locked ? 'bg-amber-100 hover:bg-amber-200 text-amber-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                        >
+                            {selectedField.locked ? <><Unlock size={16} /> {t.sidebar.unlockField || 'Unlock Field'}</> : <><Lock size={16} /> {t.sidebar.lockField || 'Lock Field'}</>}
+                        </button>
+                        {selectedField.locked && (
+                            <p className="text-[10px] text-amber-600 mt-1 text-center">{t.sidebar.fieldLocked || 'This field is locked and cannot be moved or resized'}</p>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
                         <button onClick={() => onDuplicateField(selectedField.id)} className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-md text-sm font-medium transition-colors"><Copy size={16} /> Clone</button>
-                        <button onClick={() => onDeleteField(selectedField.id)} className="flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-md text-sm font-medium transition-colors"><Trash2 size={16} /> Delete</button>
+                        <button onClick={() => onDeleteField(selectedField.id)} disabled={selectedField.locked} className={`flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${selectedField.locked ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-50 hover:bg-red-100 text-red-600'}`}><Trash2 size={16} /> Delete</button>
                     </div>
                 </div>
               </div>
