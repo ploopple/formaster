@@ -86,7 +86,22 @@ function EditorContent() {
         if (savedState) {
           const parsed = JSON.parse(savedState);
           if (parsed.fields && Array.isArray(parsed.fields)) {
-            savedFields = parsed.fields;
+            // Merge localStorage fields with template fields to preserve new properties
+            // Template fields take precedence for structure, localStorage for user values
+            const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
+            savedFields = parsed.fields.map((savedField: FormField) => {
+              const templateField = templateFieldsMap.get(savedField.id);
+              if (templateField) {
+                // Merge: template properties + saved user values (value, hidden, locked)
+                return {
+                  ...templateField, // Base from template (includes new properties like fontWeight, fontStyle, textDecoration)
+                  value: savedField.value, // Preserve user-entered value
+                  hidden: savedField.hidden, // Preserve visibility state
+                  locked: savedField.locked, // Preserve lock state
+                };
+              }
+              return savedField; // Field not in template, keep as-is
+            });
           }
           if (parsed.sections && Array.isArray(parsed.sections)) {
             savedSections = parsed.sections;

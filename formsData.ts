@@ -146,7 +146,8 @@ export const formsData: FormTemplate[] = [
       "borderWidth": 0,
       "padding": 2,
       "textAlign": "center",
-      "useGlobalColor": false
+      "useGlobalColor": false,
+      "fontStyle": "italic"
     },
     {
       "id": "52c4c8be-aafa-4183-b6a2-8a00f1eb945e",
@@ -2461,7 +2462,7 @@ export const formsData: FormTemplate[] = [
     }
   ],
   "globalDrawColor": "#1e40af",
-  "createdAt": "2025-12-03T13:53:11.029Z",
+  "createdAt": "2025-12-03T14:01:12.008Z",
   "category": "EDIT_THIS_CATEGORY"
 }
 ];

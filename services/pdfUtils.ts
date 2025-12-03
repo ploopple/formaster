@@ -401,6 +401,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 }
                 
                 // Use Hebrew font if text contains Hebrew characters
+                // Note: Hebrew font doesn't support bold/italic variants
                 if (hebrewFont && containsHebrew(displayValue)) {
                     fontToUse = hebrewFont;
                 }
