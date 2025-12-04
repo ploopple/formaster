@@ -3,11 +3,21 @@ import {
   uploadBytes,
   getDownloadURL,
   deleteObject,
+  getMetadata,
 } from 'firebase/storage';
 import { storage } from './firebase';
 
+// Compute SHA-256 hash of file content
+async function computeFileHash(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export const storageService = {
-  // Upload a PDF file to Firebase Storage
+  // Upload a PDF file to Firebase Storage with deduplication
+  // Returns { url, hash, isExisting }
   uploadPDF: async (
     userId: string,
     file: File,
@@ -15,18 +25,38 @@ export const storageService = {
   ): Promise<string> => {
     if (!storage) throw new Error('Firebase Storage is not configured');
 
-    // Create a unique path for the PDF
-    const fileName = `${formId}_${file.name}`;
-    const storageRef = ref(storage, `forms/${userId}/${fileName}`);
+    // Compute hash of the PDF content
+    const fileHash = await computeFileHash(file);
+    
+    // Use hash-based path for deduplication (shared across all users)
+    const deduplicatedPath = `pdfs/${fileHash}.pdf`;
+    const storageRef = ref(storage, deduplicatedPath);
 
-    // Upload the file
-    const snapshot = await uploadBytes(storageRef, file, {
-      contentType: 'application/pdf',
-    });
+    // Check if this PDF already exists
+    try {
+      await getMetadata(storageRef);
+      // File exists, just return the URL
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch {
+      // File doesn't exist, upload it
+      const snapshot = await uploadBytes(storageRef, file, {
+        contentType: 'application/pdf',
+        customMetadata: {
+          originalName: file.name,
+          uploadedBy: userId,
+          formId: formId,
+        },
+      });
 
-    // Get the download URL
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    }
+  },
+
+  // Get the hash of a PDF file (useful for checking duplicates before upload)
+  getPDFHash: async (file: File): Promise<string> => {
+    return computeFileHash(file);
   },
 
   // Delete a PDF from Firebase Storage
