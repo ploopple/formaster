@@ -19,6 +19,27 @@ import { FormField, FieldSection } from '../../types';
 const FORM_TEMPLATES_COLLECTION = 'formTemplates';
 const FORM_STATES_COLLECTION = 'formStates';
 
+// Helper to recursively remove undefined values from objects/arrays
+// Firestore doesn't accept undefined values
+function removeUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefined(item)) as T;
+  }
+  if (typeof obj === 'object') {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = removeUndefined(value);
+      }
+    }
+    return cleaned as T;
+  }
+  return obj;
+}
+
 export interface FormTemplateData {
   id: string;
   title: string;
@@ -105,8 +126,11 @@ export const firestoreService = {
       throw new Error('You do not have permission to edit this form');
     }
     
+    // Deep clean to remove all undefined values - Firestore doesn't accept undefined
+    const cleanedUpdates = removeUndefined(updates);
+    
     await updateDoc(docRef, {
-      ...updates,
+      ...cleanedUpdates,
       updatedAt: serverTimestamp(),
     });
   },
@@ -192,12 +216,16 @@ export const firestoreService = {
     const docId = `${userId}_${formId}`;
     const docRef = doc(db, FORM_STATES_COLLECTION, docId);
     
+    // Deep clean to remove undefined values
+    const cleanedFields = removeUndefined(fields);
+    const cleanedSections = removeUndefined(sections);
+    
     const existingDoc = await getDoc(docRef);
     
     if (existingDoc.exists()) {
       await updateDoc(docRef, {
-        fields,
-        sections,
+        fields: cleanedFields,
+        sections: cleanedSections,
         globalDrawColor,
         updatedAt: serverTimestamp(),
       });
@@ -206,8 +234,8 @@ export const firestoreService = {
         id: docId,
         formId,
         userId,
-        fields,
-        sections,
+        fields: cleanedFields,
+        sections: cleanedSections,
         globalDrawColor,
         savedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

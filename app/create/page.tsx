@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, FileText, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth, firestoreService } from '../../lib/firebase';
+import { useAuth, firestoreService, storageService } from '../../lib/firebase';
 
 export default function CreateFormPage() {
   const router = useRouter();
@@ -41,22 +41,28 @@ export default function CreateFormPage() {
     setIsSubmitting(true);
 
     try {
-      // For now, we'll store the PDF filename and expect it to be in /public/forms/
-      // In a production app, you'd upload to Firebase Storage
-      const fileName = `/forms/${pdfFile.name}`;
-      
+      // First create the form to get the formId
       const formId = await firestoreService.createFormTemplate(
         user.uid,
         user.email || '',
         title,
         description,
-        fileName,
+        '', // Temporary empty fileName
         [], // Empty fields - user will add them in editor
         [],
         '#000000',
         category,
         isPublic
       );
+
+      // Upload PDF to Firebase Storage
+      const pdfUrl = await storageService.uploadPDF(user.uid, pdfFile, formId);
+
+      // Update the form with the PDF URL
+      await firestoreService.updateFormTemplate(formId, user.uid, {
+        fileName: pdfUrl,
+        pdfUrl: pdfUrl,
+      });
 
       router.push(`/editor/${formId}`);
     } catch (err) {
@@ -126,7 +132,7 @@ export default function CreateFormPage() {
                   <label className="cursor-pointer">
                     <Upload className="mx-auto text-slate-400 mb-2" size={32} />
                     <p className="text-slate-600 mb-1">Click to upload PDF</p>
-                    <p className="text-xs text-slate-400">The PDF should be in your public/forms folder</p>
+                    <p className="text-xs text-slate-400">PDF will be uploaded to Firebase Storage</p>
                     <input
                       type="file"
                       accept=".pdf"

@@ -132,12 +132,20 @@ function EditorContent() {
           }
         }
         
-        // Load PDF
-        const response = await fetch(form.fileName);
+        // Load PDF - use pdfUrl (Firebase Storage) if available, otherwise fall back to fileName
+        const pdfSource = form.pdfUrl || form.fileName;
+        const response = await fetch(pdfSource);
         if (!response.ok) throw new Error('Failed to load PDF');
         
         const blob = await response.blob();
-        const pdfFile = new File([blob], form.fileName.split('/').pop() || 'form.pdf', { type: 'application/pdf' });
+        
+        // Validate that we got a PDF
+        if (blob.type && !blob.type.includes('pdf') && !blob.type.includes('octet-stream')) {
+          console.error('Invalid content type:', blob.type);
+          throw new Error('Invalid PDF file');
+        }
+        
+        const pdfFile = new File([blob], pdfSource.split('/').pop()?.split('?')[0] || 'form.pdf', { type: 'application/pdf' });
         
         setFile(pdfFile);
         setFields(savedFields);
