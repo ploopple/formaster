@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Globe, Lock } from 'lucide-react';
 import { FormTemplateData, firestoreService } from '../lib/firebase';
+import { countries } from '../lib/countries';
 
 interface EditFormModalProps {
   form: FormTemplateData;
@@ -14,6 +15,7 @@ const EditFormModal: React.FC<EditFormModalProps> = ({ form, onClose, onSave }) 
   const [title, setTitle] = useState(form.title);
   const [description, setDescription] = useState(form.description);
   const [category, setCategory] = useState(form.category || '');
+  const [country, setCountry] = useState(form.country || '');
   const [isPublic, setIsPublic] = useState(form.isPublic);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,7 @@ const EditFormModal: React.FC<EditFormModalProps> = ({ form, onClose, onSave }) 
         title: title.trim(),
         description: description.trim(),
         category: category.trim(),
+        country: country.trim(),
         isPublic,
       });
 
@@ -51,6 +54,7 @@ const EditFormModal: React.FC<EditFormModalProps> = ({ form, onClose, onSave }) 
         title: title.trim(),
         description: description.trim(),
         category: category.trim(),
+        country: country.trim(),
         isPublic,
       });
     } catch (err) {
@@ -125,6 +129,23 @@ const EditFormModal: React.FC<EditFormModalProps> = ({ form, onClose, onSave }) 
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., Tax Forms, Applications"
             />
+          </div>
+
+          {/* Country */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Country
+            </label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="">Select a country</option>
+              {countries.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
 
           {/* Visibility */}

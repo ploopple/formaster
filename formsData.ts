@@ -18,4 +18,5 @@ export interface FormTemplate {
   globalDrawColor?: string; // Global color for drawing fields (default: #000000)
   createdAt: string;
   category?: string;
+  country?: string; // Country where this form is used
 }

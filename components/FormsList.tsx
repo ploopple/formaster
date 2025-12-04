@@ -6,6 +6,7 @@ import { FileText, Search, Calendar, FolderOpen, ArrowLeft, Trash2, Plus, User, 
 import EditFormModal from './EditFormModal';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { useAuth, firestoreService, FormTemplateData } from '../lib/firebase';
+import { countries } from '../lib/countries';
 
 interface FormsListProps {
   onSelectForm: (form: FormTemplateData) => void;
@@ -16,6 +17,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const { user, isConfigured } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCountry, setSelectedCountry] = useState<string>('all');
   const [forms, setForms] = useState<FormTemplateData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
@@ -82,7 +84,8 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
     const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          form.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || form.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesCountry = selectedCountry === 'all' || form.country === selectedCountry;
+    return matchesSearch && matchesCategory && matchesCountry;
   });
 
   const formatDate = (timestamp: { seconds: number } | undefined) => {
@@ -148,16 +151,28 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
 
         {/* Search and Filter */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 md:p-4 mb-4 md:mb-6">
-          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input
-                type="text"
-                placeholder={t.templates.searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full ps-10 pe-4 py-3 md:py-2 border border-slate-300 rounded-xl md:rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-              />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  type="text"
+                  placeholder={t.templates.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full ps-10 pe-4 py-3 md:py-2 border border-slate-300 rounded-xl md:rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                />
+              </div>
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="px-4 py-3 md:py-2 border border-slate-300 rounded-xl md:rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-white min-w-[180px]"
+              >
+                <option value="all">All Countries</option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
             {categories.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
@@ -224,10 +239,15 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-slate-800 mb-1 truncate text-base">{form.title}</h3>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {form.category && (
                         <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
                           {form.category}
+                        </span>
+                      )}
+                      {form.country && (
+                        <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
+                          {form.country}
                         </span>
                       )}
                       <span title={form.isPublic ? 'Public' : 'Private'}>

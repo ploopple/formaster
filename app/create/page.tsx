@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, FileText, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth, firestoreService, storageService } from '../../lib/firebase';
+import { countries } from '../../lib/countries';
 import AuthGuard from '../../components/AuthGuard';
 
 function CreateFormContent() {
@@ -13,6 +14,7 @@ function CreateFormContent() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [country, setCountry] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +49,7 @@ function CreateFormContent() {
         [],
         '#000000',
         category,
+        country,
         isPublic
       );
 
@@ -166,6 +169,21 @@ function CreateFormContent() {
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 placeholder="e.g., Tax, Legal, HR"
               />
+            </div>
+
+            {/* Country */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+              >
+                <option value="">Select a country</option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
 
             {/* Visibility */}

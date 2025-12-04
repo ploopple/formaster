@@ -457,27 +457,7 @@ function EditorContent() {
     }
   };
 
-  const handleCopyJSON = async () => {
-    try {
-      const formTemplate = { 
-        id: formId, 
-        title: currentForm?.title || "EDIT_THIS_TITLE", 
-        description: currentForm?.description || "EDIT_THIS_DESCRIPTION", 
-        fileName: currentForm?.fileName || `/forms/${file?.name || 'document.pdf'}`, 
-        fields: fields, 
-        sections: sections.length > 0 ? sections : undefined, 
-        globalDrawColor: globalDrawColor !== '#000000' ? globalDrawColor : undefined,
-        createdAt: new Date().toISOString(), 
-        category: currentForm?.category || "EDIT_THIS_CATEGORY" 
-      };
-      await navigator.clipboard.writeText(JSON.stringify(formTemplate, null, 2));
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy JSON', error);
-      alert('Failed to copy JSON to clipboard');
-    }
-  };
+ 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -631,10 +611,6 @@ function EditorContent() {
           </a>
           <button onClick={() => setShowShortcuts(true)} className="hidden md:flex p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
-          </button>
-          <button onClick={handleCopyJSON} className="hidden md:flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyFormConfig}>
-            {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-            <span className="hidden sm:inline">{isCopied ? t.common.copied : t.common.copyJson}</span>
           </button>
           <button onClick={() => setIsSidebarOpen(prev => !prev)} className="p-2.5 text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-lg md:hidden touch-manipulation">
             <Menu size={24} />

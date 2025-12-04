@@ -405,27 +405,7 @@ function EditorContent() {
     }
   };
 
-  const handleCopyJSON = async () => {
-    try {
-      const formTemplate = { 
-        id: generateUUID(), 
-        title: "EDIT_THIS_TITLE", 
-        description: "EDIT_THIS_DESCRIPTION", 
-        fileName: `/forms/${file?.name || 'document.pdf'}`, 
-        fields: fields, 
-        sections: sections.length > 0 ? sections : undefined, 
-        globalDrawColor: globalDrawColor !== '#000000' ? globalDrawColor : undefined,
-        createdAt: new Date().toISOString(), 
-        category: "EDIT_THIS_CATEGORY" 
-      };
-      await navigator.clipboard.writeText(JSON.stringify(formTemplate, null, 2));
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy JSON', error);
-      alert('Failed to copy JSON to clipboard');
-    }
-  };
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -535,10 +515,6 @@ function EditorContent() {
           </a>
           <button onClick={() => setShowShortcuts(true)} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.keyboardShortcuts}>
             <Keyboard size={18} />
-          </button>
-          <button onClick={handleCopyJSON} className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title={t.editor.copyFormConfig}>
-            {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-            <span className="hidden sm:inline">{isCopied ? t.common.copied : t.common.copyJson}</span>
           </button>
           <button onClick={() => setIsSidebarOpen(prev => !prev)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg md:hidden">
             <Menu size={24} />

@@ -50,6 +50,7 @@ export interface FormTemplateData {
   sections?: FieldSection[];
   globalDrawColor?: string;
   category?: string;
+  country?: string; // Country where this form is used
   createdAt: Timestamp;
   updatedAt: Timestamp;
   ownerId: string; // User who created the form
@@ -82,6 +83,7 @@ export const firestoreService = {
     sections?: FieldSection[],
     globalDrawColor?: string,
     category?: string,
+    country?: string,
     isPublic: boolean = true
   ): Promise<string> => {
     if (!db) throw new Error('Firebase is not configured');
@@ -97,6 +99,7 @@ export const firestoreService = {
       sections: sections || [],
       globalDrawColor: globalDrawColor || '#000000',
       category: category || '',
+      country: country || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       ownerId,
