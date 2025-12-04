@@ -52,6 +52,15 @@ Add these rules to your Firestore database:
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Form templates - owners can edit, anyone can read public forms
+    match /formTemplates/{formId} {
+      allow read: if resource.data.isPublic == true || 
+                    (request.auth != null && request.auth.uid == resource.data.ownerId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+    
+    // Form states - users can only access their own filled form data
     match /formStates/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;

@@ -1,44 +1,26 @@
-import { formsData as initialFormsData, FormTemplate } from '../formsData';
-import { generateUUID } from '../lib/uuid';
+// Form service - now just a placeholder
+// All form operations are handled by firestoreService in lib/firebase
 
-// Runtime forms storage (includes initial forms + duplicated forms)
-let runtimeForms: FormTemplate[] = [...initialFormsData];
+import { FormTemplate } from '../formsData';
 
+// This service is deprecated - use firestoreService instead
 export const formService = {
-  // Get all forms
   getForms: (): FormTemplate[] => {
-    return runtimeForms;
+    console.warn('formService.getForms is deprecated. Use firestoreService.getPublicFormTemplates instead.');
+    return [];
   },
 
-  // Get a form by ID
   getFormById: (id: string): FormTemplate | undefined => {
-    return runtimeForms.find(form => form.id === id);
+    console.warn('formService.getFormById is deprecated. Use firestoreService.getFormTemplate instead.');
+    return undefined;
   },
 
-  // Duplicate a form with new IDs
   duplicateForm: (form: FormTemplate): FormTemplate => {
-    const generateId = () => generateUUID();
-    
-    // Deep clone the form and regenerate all IDs
-    const duplicatedForm: FormTemplate = {
-      ...JSON.parse(JSON.stringify(form)),
-      id: generateId(),
-      title: `${form.title} (Copy)`,
-      createdAt: new Date().toISOString(),
-      fields: form.fields.map(field => ({
-        ...JSON.parse(JSON.stringify(field)),
-        id: generateId(),
-      })),
-    };
-
-    // Add to runtime forms
-    runtimeForms = [duplicatedForm, ...runtimeForms];
-    
-    return duplicatedForm;
+    console.warn('formService.duplicateForm is deprecated. Create a new form via firestoreService instead.');
+    return form;
   },
 
-  // Reset to initial forms (useful for testing)
   reset: () => {
-    runtimeForms = [...initialFormsData];
+    // No-op
   },
 };

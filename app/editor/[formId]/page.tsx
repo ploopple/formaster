@@ -9,15 +9,14 @@ import Sidebar from '../../../components/Sidebar';
 const PDFViewer = dynamic(() => import('../../../components/PDFViewer'), { ssr: false });
 import { SignatureModal } from '../../../components/SignatureModal';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
-import { FormTemplate } from '../../../formsData';
-import { formService } from '../../../services/formService';
+import { FormTemplateData, firestoreService } from '../../../lib/firebase';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, HardDrive, Bug, LogIn, LogOut, Cloud, CloudOff } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, Cloud, LogIn, LogOut, Save, Bug } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 import { generateUUID } from '../../../lib/uuid';
-import { useAuth, firestoreService } from '../../../lib/firebase';
+import { useAuth } from '../../../lib/firebase';
 
 // LocalStorage key prefix for saved form states (fallback for non-authenticated users)
 const FORM_STORAGE_KEY_PREFIX = 'pdf_form_state_';
@@ -47,10 +46,11 @@ function EditorContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [formNotFound, setFormNotFound] = useState(false);
-  const [currentForm, setCurrentForm] = useState<FormTemplate | null>(null);
+  const [currentForm, setCurrentForm] = useState<FormTemplateData | null>(null);
   const [globalDrawColor, setGlobalDrawColor] = useState<string>('#000000');
   const [isSavedToStorage, setIsSavedToStorage] = useState(false);
   const [isSavingToCloud, setIsSavingToCloud] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   const validationStates = useMemo(() => validateAllFields(fields), [fields]);
   const formIsValid = useMemo(() => isFormValid(validationStates), [validationStates]);
@@ -60,7 +60,7 @@ function EditorContent() {
     setIsClient(true);
   }, []);
 
-  // Load form by ID from formsData, checking Firebase (if authenticated) or localStorage for saved state
+  // Load form by ID from Firestore
   useEffect(() => {
     // Reset state when formId changes
     setIsLoading(true);
@@ -69,72 +69,70 @@ function EditorContent() {
     setPdfBytes(null);
     setPreviewBlob(null);
     setCurrentForm(null);
+    setIsOwner(false);
     
     const loadForm = async () => {
-      const form = formService.getFormById(formId);
-      if (!form) {
-        setFormNotFound(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      setCurrentForm(form);
-      
-      // Initialize with template defaults
-      let savedFields = form.fields;
-      let savedSections = form.sections || [];
-      let savedGlobalDrawColor = form.globalDrawColor || '#000000';
-      
-      // Try to load saved state from Firebase (if authenticated) or localStorage
       try {
-        let savedState: { fields?: FormField[]; sections?: FieldSection[]; globalDrawColor?: string } | null = null;
+        // Load form template from Firestore
+        const form = await firestoreService.getFormTemplate(formId);
+        if (!form) {
+          setFormNotFound(true);
+          setIsLoading(false);
+          return;
+        }
         
-        if (user) {
-          // Load from Firebase
-          const firebaseState = await firestoreService.getFormState(user.uid, formId);
-          if (firebaseState) {
-            savedState = {
-              fields: firebaseState.fields,
-              sections: firebaseState.sections,
-              globalDrawColor: firebaseState.globalDrawColor,
-            };
+        setCurrentForm(form);
+        
+        // Check if current user is the owner
+        const ownerStatus = user ? form.ownerId === user.uid : false;
+        setIsOwner(ownerStatus);
+        
+        // Initialize with template defaults
+        let savedFields = form.fields || [];
+        let savedSections = form.sections || [];
+        let savedGlobalDrawColor = form.globalDrawColor || '#000000';
+        
+        // If not owner, try to load user's saved state (their filled values)
+        if (!ownerStatus && user) {
+          try {
+            const userState = await firestoreService.getFormState(user.uid, formId);
+            if (userState) {
+              // Merge user's filled values with template fields
+              const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
+              savedFields = userState.fields.map((savedField: FormField) => {
+                const templateField = templateFieldsMap.get(savedField.id);
+                if (templateField) {
+                  return { ...templateField, ...savedField };
+                }
+                return savedField;
+              });
+            }
+          } catch (error) {
+            console.error('Failed to load user form state', error);
           }
-        } else {
+        } else if (!ownerStatus && !user) {
           // Fallback to localStorage for non-authenticated users
-          const localState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
-          if (localState) {
-            savedState = JSON.parse(localState);
+          try {
+            const localState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
+            if (localState) {
+              const parsed = JSON.parse(localState);
+              if (parsed.fields && Array.isArray(parsed.fields)) {
+                const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
+                savedFields = parsed.fields.map((savedField: FormField) => {
+                  const templateField = templateFieldsMap.get(savedField.id);
+                  if (templateField) {
+                    return { ...templateField, ...savedField };
+                  }
+                  return savedField;
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Failed to load localStorage state', error);
           }
         }
         
-        if (savedState) {
-          if (savedState.fields && Array.isArray(savedState.fields)) {
-            // Merge saved fields with template fields
-            // Saved state takes precedence, template fills in missing properties
-            const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
-            savedFields = savedState.fields.map((savedField: FormField) => {
-              const templateField = templateFieldsMap.get(savedField.id);
-              if (templateField) {
-                return {
-                  ...templateField,
-                  ...savedField,
-                };
-              }
-              return savedField;
-            });
-          }
-          if (savedState.sections && Array.isArray(savedState.sections)) {
-            savedSections = savedState.sections;
-          }
-          if (savedState.globalDrawColor) {
-            savedGlobalDrawColor = savedState.globalDrawColor;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load saved form state', error);
-      }
-      
-      try {
+        // Load PDF
         const response = await fetch(form.fileName);
         if (!response.ok) throw new Error('Failed to load PDF');
         
@@ -153,7 +151,8 @@ function EditorContent() {
         const previewBlobData = new Blob([generatedBytes as BlobPart], { type: 'application/pdf' });
         setPreviewBlob(previewBlobData);
         
-        // Always open sidebar - in fill mode it's the main content, in editor mode it's useful on desktop
+        // Set mode based on ownership - owners can edit, others can only fill
+        setMode(ownerStatus ? AppMode.EDITOR : AppMode.FILL);
         setIsSidebarOpen(true);
       } catch (error) {
         console.error('Failed to load form', error);
@@ -178,12 +177,19 @@ function EditorContent() {
     }
   };
 
-  // Save form state to Firebase (if authenticated) or localStorage
+  // Save form - owners save the template, others save their filled values
   const saveFormState = useCallback(async () => {
     setIsSavingToCloud(true);
     try {
-      if (user) {
-        // Save to Firebase
+      if (isOwner && user) {
+        // Owner saves the form template
+        await firestoreService.updateFormTemplate(formId, user.uid, {
+          fields,
+          sections,
+          globalDrawColor,
+        });
+      } else if (user) {
+        // Non-owner saves their filled values
         await firestoreService.saveFormState(user.uid, formId, fields, sections, globalDrawColor);
       } else {
         // Fallback to localStorage for non-authenticated users
@@ -199,11 +205,11 @@ function EditorContent() {
       setTimeout(() => setIsSavedToStorage(false), 2000);
     } catch (error) {
       console.error('Failed to save form state', error);
-      alert('Failed to save form progress');
+      alert('Failed to save. ' + (error instanceof Error ? error.message : ''));
     } finally {
       setIsSavingToCloud(false);
     }
-  }, [fields, sections, globalDrawColor, formId, user]);
+  }, [fields, sections, globalDrawColor, formId, user, isOwner]);
 
   useEffect(() => {
     if (!pdfBytes) return;
@@ -552,7 +558,7 @@ function EditorContent() {
             <span className="hidden md:inline truncate max-w-[150px] lg:max-w-none">{currentForm?.title || t.home.title}</span>
           </div>
           {/* Undo/Redo on mobile - shown on left side */}
-          {mode === AppMode.EDITOR && (
+          {mode === AppMode.EDITOR && isOwner && (
             <div className="flex sm:hidden items-center gap-0.5 ms-1">
               <button onClick={undo} disabled={!canUndo} className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
                 <Undo2 size={16} />
@@ -564,13 +570,15 @@ function EditorContent() {
           )}
         </div>
         
-        {/* Mode Toggle - Centered */}
+        {/* Mode Toggle - Centered (only show Editor mode for owners) */}
         <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
-            <Pencil size={14} />
-            <span className="hidden sm:inline">{t.editor.editorMode}</span>
-            <span className="sm:hidden">{t.editor.edit}</span>
-          </button>
+          {isOwner && (
+            <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
+              <Pencil size={14} />
+              <span className="hidden sm:inline">{t.editor.editorMode}</span>
+              <span className="sm:hidden">{t.editor.edit}</span>
+            </button>
+          )}
           <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
             <PenTool size={14} />
             <span className="hidden sm:inline">{t.editor.fillMode}</span>
@@ -580,7 +588,7 @@ function EditorContent() {
         
         {/* Action buttons */}
         <div className="flex items-center gap-0.5 md:gap-2 shrink-0 z-10">
-          {mode === AppMode.EDITOR && (
+          {mode === AppMode.EDITOR && isOwner && (
             <div className="hidden sm:flex items-center gap-0.5 me-0.5 md:me-2">
               <button onClick={undo} disabled={!canUndo} className="p-2 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
                 <Undo2 size={18} />
@@ -590,9 +598,9 @@ function EditorContent() {
               </button>
             </div>
           )}
-          <button onClick={saveFormState} disabled={isSavingToCloud} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title={user ? 'Save to cloud' : 'Save locally'}>
-            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToCloud ? <Cloud size={18} className="animate-pulse" /> : user ? <Cloud size={18} /> : <HardDrive size={18} />}
-            <span className="hidden lg:inline">{isSavedToStorage ? t.common.copied : isSavingToCloud ? 'Saving...' : (t.editor.saveProgress || 'Save')}</span>
+          <button onClick={saveFormState} disabled={isSavingToCloud} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title={isOwner ? 'Save form template' : user ? 'Save your progress' : 'Save locally'}>
+            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToCloud ? <Cloud size={18} className="animate-pulse" /> : <Save size={18} />}
+            <span className="hidden lg:inline">{isSavedToStorage ? 'Saved!' : isSavingToCloud ? 'Saving...' : isOwner ? 'Save Template' : 'Save Progress'}</span>
           </button>
           {isConfigured && (user ? (
             <button onClick={logout} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-manipulation" title="Sign out">
