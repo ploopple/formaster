@@ -477,7 +477,7 @@ function EditorContent() {
             </div>
             <input type="file" accept="application/pdf" onChange={handleFileUpload} className="hidden" />
           </label>
-          <button onClick={() => router.push('/')} className="mt-4 text-sm text-slate-500 hover:text-slate-700">{t.editor.backToHome}</button>
+          <button onClick={() => router.push('/dashboard')} className="mt-4 text-sm text-slate-500 hover:text-slate-700">{t.editor.backToHome}</button>
         </div>
       </div>
     );
@@ -487,7 +487,7 @@ function EditorContent() {
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
       <header className="h-16 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-30 shadow-sm relative">
         <div className="flex items-center gap-1">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg cursor-pointer" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/'); }}>
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg cursor-pointer" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/dashboard'); }}>
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
               <PenTool size={16} />
             </div>
@@ -592,10 +592,14 @@ function EditorContent() {
   );
 }
 
+import AuthGuard from '../../components/AuthGuard';
+
 export default function EditorPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
-      <EditorContent />
-    </Suspense>
+    <AuthGuard>
+      <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
+        <EditorContent />
+      </Suspense>
+    </AuthGuard>
   );
 }

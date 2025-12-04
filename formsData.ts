@@ -1,5 +1,5 @@
-// Form template interfaces
-// Forms are now stored in Firebase Firestore
+// Store all your form configurations here
+// Each form should have: fileName (path to PDF in public folder), fields array, and metadata
 
 export interface FieldSection {
   id: string;
@@ -12,13 +12,10 @@ export interface FormTemplate {
   id: string;
   title: string;
   description: string;
-  fileName: string;
-  fields: any[];
-  sections?: FieldSection[];
-  globalDrawColor?: string;
+  fileName: string; // Path to PDF in public folder, e.g., "/forms/application.pdf"
+  fields: any[]; // FormField array
+  sections?: FieldSection[]; // Named sections for grouping fields
+  globalDrawColor?: string; // Global color for drawing fields (default: #000000)
   createdAt: string;
   category?: string;
 }
-
-// No static forms - all forms are loaded from Firestore
-export const formsData: FormTemplate[] = [];

@@ -1,82 +1,151 @@
 'use client';
 
 import Link from 'next/link';
-import { FileUp, List, PenTool, LogIn, LogOut, User } from 'lucide-react';
-import { useI18n } from '../lib/i18n/I18nContext';
+import { FileText, Shield, Zap, Users, ArrowRight, LogIn, PenTool } from 'lucide-react';
 import { useAuth } from '../lib/firebase';
 
-export default function Home() {
-  const { t } = useI18n();
-  const { user, logout, loading, isConfigured } = useAuth();
+export default function LandingPage() {
+  const { user, loading, isConfigured } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 safe-area-inset-top safe-area-inset-bottom">
-      {/* Auth status indicator */}
-      {isConfigured && (
-        <div className="absolute top-4 right-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      {/* Header */}
+      <header className="px-4 md:px-8 py-4 flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+            <PenTool size={20} />
+          </div>
+          <span className="font-bold text-xl text-slate-800">Smart PDF Filler</span>
+        </div>
+        <div className="flex items-center gap-3">
           {loading ? (
             <div className="text-slate-400 text-sm">Loading...</div>
           ) : user ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm border border-slate-100">
-                <User size={16} className="text-slate-500" />
-                <span className="text-sm text-slate-600 max-w-[150px] truncate">{user.email}</span>
-              </div>
-              <button
-                onClick={logout}
-                className="p-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg shadow-sm border border-slate-100 transition-colors"
-                title="Sign out"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          ) : (
             <Link
-              href="/login"
-              className="flex items-center gap-2 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-600 px-3 py-2 rounded-lg shadow-sm border border-slate-100 transition-colors"
+              href="/dashboard"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              <LogIn size={18} />
-              <span className="text-sm font-medium">Sign In</span>
+              Go to Dashboard
+              <ArrowRight size={18} />
             </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-slate-600 hover:text-slate-800 px-4 py-2 font-medium transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/login"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Get Started
+                <ArrowRight size={18} />
+              </Link>
+            </>
           )}
         </div>
-      )}
+      </header>
 
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 md:p-8 text-center border border-slate-100">
-        <div className="w-16 h-16 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5 md:mb-6">
-          <PenTool size={32} />
-        </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">{t.home.title}</h1>
-        <p className="text-sm md:text-base text-slate-500 mb-6 md:mb-8">{t.home.subtitle}</p>
-        
-        <div className="space-y-3">
+      {/* Hero Section */}
+      <section className="px-4 md:px-8 py-16 md:py-24 max-w-7xl mx-auto text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-slate-800 mb-6 leading-tight">
+          Fill PDF Forms <br className="hidden md:block" />
+          <span className="text-blue-600">Smarter & Faster</span>
+        </h1>
+        <p className="text-lg md:text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
+          Upload any PDF, create fillable fields, and share with your team. 
+          Save time with reusable templates and cloud sync.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href={user ? "/dashboard" : "/login"}
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-blue-500/30"
+          >
+            {user ? "Go to Dashboard" : "Start for Free"}
+            <ArrowRight size={20} />
+          </Link>
           <Link
             href="/templates"
-            className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation text-base"
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all border border-slate-200"
           >
-            <List size={22} />
-            <span>{t.home.browseTemplates}</span>
-          </Link>
-          
-          <Link
-            href="/editor"
-            className="block w-full"
-          >
-            <div className="w-full bg-slate-600 hover:bg-slate-700 active:bg-slate-800 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-slate-500/30 active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation text-base">
-              <FileUp size={22} />
-              <span>{t.home.uploadNewPdf}</span>
-            </div>
+            Browse Templates
           </Link>
         </div>
-        
-        <p className="mt-4 text-xs text-slate-400">{t.home.supportedFormats}</p>
-        
-        {!user && !loading && isConfigured && (
-          <p className="mt-3 text-xs text-blue-600">
-            <Link href="/login" className="hover:underline">Sign in</Link> to save your forms to the cloud
+      </section>
+
+      {/* Features Section */}
+      <section className="px-4 md:px-8 py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 text-center mb-12">
+            Everything you need to manage PDF forms
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4">
+                <FileText size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">Easy Form Creation</h3>
+              <p className="text-slate-600">
+                Upload any PDF and add fillable fields with our intuitive drag-and-drop editor.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4">
+                <Shield size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">Secure Cloud Storage</h3>
+              <p className="text-slate-600">
+                Your forms are securely stored in the cloud and accessible from anywhere.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4">
+                <Users size={24} />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">Share & Collaborate</h3>
+              <p className="text-slate-600">
+                Share forms with your team or make them public for anyone to fill.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="px-4 md:px-8 py-16 md:py-24">
+        <div className="max-w-4xl mx-auto text-center bg-blue-600 rounded-3xl p-8 md:p-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Ready to get started?
+          </h2>
+          <p className="text-blue-100 text-lg mb-8">
+            Create your first fillable PDF form in minutes.
           </p>
-        )}
-      </div>
+          <Link
+            href={user ? "/dashboard" : "/login"}
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all"
+          >
+            {user ? "Go to Dashboard" : "Sign Up Free"}
+            <ArrowRight size={20} />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="px-4 md:px-8 py-8 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+              <PenTool size={16} />
+            </div>
+            <span className="font-semibold text-slate-800">Smart PDF Filler</span>
+          </div>
+          <p className="text-slate-500 text-sm">
+            © {new Date().getFullYear()} Smart PDF Filler. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

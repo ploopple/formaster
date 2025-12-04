@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, FileText, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth, firestoreService, storageService } from '../../lib/firebase';
+import AuthGuard from '../../components/AuthGuard';
 
-export default function CreateFormPage() {
+function CreateFormContent() {
   const router = useRouter();
-  const { user, loading, isConfigured } = useAuth();
+  const { user, isConfigured } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -16,12 +17,6 @@ export default function CreateFormPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,14 +67,6 @@ export default function CreateFormPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
-      </div>
-    );
-  }
 
   if (!isConfigured) {
     return (
@@ -227,5 +214,13 @@ export default function CreateFormPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateFormPage() {
+  return (
+    <AuthGuard>
+      <CreateFormContent />
+    </AuthGuard>
   );
 }

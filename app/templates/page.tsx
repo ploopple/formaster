@@ -4,8 +4,9 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import FormsList from '../../components/FormsList';
 import { FormTemplateData } from '../../lib/firebase';
+import AuthGuard from '../../components/AuthGuard';
 
-export default function TemplatesPage() {
+function TemplatesContent() {
   const router = useRouter();
 
   const handleSelectForm = async (form: FormTemplateData) => {
@@ -13,4 +14,12 @@ export default function TemplatesPage() {
   };
 
   return <FormsList onSelectForm={handleSelectForm} />;
+}
+
+export default function TemplatesPage() {
+  return (
+    <AuthGuard>
+      <TemplatesContent />
+    </AuthGuard>
+  );
 }

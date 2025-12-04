@@ -688,10 +688,14 @@ function EditorContent() {
   );
 }
 
+import AuthGuard from '../../../components/AuthGuard';
+
 export default function FormEditorPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
-      <EditorContent />
-    </Suspense>
+    <AuthGuard>
+      <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
+        <EditorContent />
+      </Suspense>
+    </AuthGuard>
   );
 }

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Search, Calendar, FolderOpen, ArrowLeft, Trash2, Plus, User, Globe, Lock } from 'lucide-react';
+import { FileText, Search, Calendar, FolderOpen, ArrowLeft, Trash2, Plus, User, Globe, Lock, Pencil } from 'lucide-react';
+import EditFormModal from './EditFormModal';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { useAuth, firestoreService, FormTemplateData } from '../lib/firebase';
 
@@ -18,6 +19,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const [forms, setForms] = useState<FormTemplateData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
+  const [editingForm, setEditingForm] = useState<FormTemplateData | null>(null);
 
   useEffect(() => {
     loadForms();
@@ -61,6 +63,17 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
       console.error('Failed to delete form:', error);
       alert('Failed to delete form');
     }
+  };
+
+  const handleEditForm = (e: React.MouseEvent, form: FormTemplateData) => {
+    e.stopPropagation();
+    if (!user || form.ownerId !== user.uid) return;
+    setEditingForm(form);
+  };
+
+  const handleSaveEdit = (updatedForm: FormTemplateData) => {
+    setForms(prev => prev.map(f => f.id === updatedForm.id ? updatedForm : f));
+    setEditingForm(null);
   };
 
   const categories = ['all', ...Array.from(new Set(forms.map(f => f.category).filter(Boolean)))] as string[];
@@ -227,13 +240,22 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                     </div>
                   </div>
                   {user && form.ownerId === user.uid && (
-                    <button
-                      onClick={(e) => handleDeleteForm(e, form)}
-                      className="p-2.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
-                      title="Delete form"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => handleEditForm(e, form)}
+                        className="p-2.5 md:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
+                        title="Edit form details"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteForm(e, form)}
+                        className="p-2.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
+                        title="Delete form"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
                 <p className="text-sm text-slate-600 mb-3 md:mb-4 line-clamp-2">{form.description}</p>
@@ -252,6 +274,15 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
           </div>
         )}
       </div>
+
+      {/* Edit Form Modal */}
+      {editingForm && (
+        <EditFormModal
+          form={editingForm}
+          onClose={() => setEditingForm(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
     </div>
   );
 };
