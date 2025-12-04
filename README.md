@@ -21,6 +21,45 @@ First, install dependencies:
 npm install
 ```
 
+### Firebase Setup (Optional)
+
+To enable user authentication and cloud storage for form data:
+
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Authentication (Email/Password and Google sign-in)
+3. Create a Firestore database
+4. Copy `.env.local.example` to `.env.local` and fill in your Firebase config:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Required environment variables:
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+
+**Note**: The app works without Firebase - form data will be saved to localStorage instead.
+
+### Firestore Security Rules
+
+Add these rules to your Firestore database:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /formStates/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}
+```
+
 Then run the development server:
 
 ```bash

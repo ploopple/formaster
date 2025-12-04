@@ -13,7 +13,7 @@ import { FormTemplate } from '../../formsData';
 import { saveFilledPDF, downloadBlob } from '../../services/pdfUtils';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug, FileUp } from 'lucide-react';
 import { useI18n } from '../../lib/i18n/I18nContext';
 import { generateUUID } from '../../lib/uuid';
 

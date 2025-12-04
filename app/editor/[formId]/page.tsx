@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
+import { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useParams } from 'next/navigation';
 import { AppMode, FormField, FieldSection } from '../../../types';
@@ -14,11 +14,12 @@ import { formService } from '../../../services/formService';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, HardDrive, Bug } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, HardDrive, Bug, LogIn, LogOut, Cloud, CloudOff } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 import { generateUUID } from '../../../lib/uuid';
+import { useAuth, firestoreService } from '../../../lib/firebase';
 
-// LocalStorage key prefix for saved form states
+// LocalStorage key prefix for saved form states (fallback for non-authenticated users)
 const FORM_STORAGE_KEY_PREFIX = 'pdf_form_state_';
 
 function EditorContent() {
@@ -26,6 +27,7 @@ function EditorContent() {
   const params = useParams();
   const formId = params.formId as string;
   const { t } = useI18n();
+  const { user, logout, isConfigured } = useAuth();
   
   const [mode, setMode] = useState<AppMode>(AppMode.FILL);
   const [file, setFile] = useState<File | null>(null);
@@ -48,6 +50,7 @@ function EditorContent() {
   const [currentForm, setCurrentForm] = useState<FormTemplate | null>(null);
   const [globalDrawColor, setGlobalDrawColor] = useState<string>('#000000');
   const [isSavedToStorage, setIsSavedToStorage] = useState(false);
+  const [isSavingToCloud, setIsSavingToCloud] = useState(false);
 
   const validationStates = useMemo(() => validateAllFields(fields), [fields]);
   const formIsValid = useMemo(() => isFormValid(validationStates), [validationStates]);
@@ -57,7 +60,7 @@ function EditorContent() {
     setIsClient(true);
   }, []);
 
-  // Load form by ID from formsData, checking localStorage for saved state first
+  // Load form by ID from formsData, checking Firebase (if authenticated) or localStorage for saved state
   useEffect(() => {
     // Reset state when formId changes
     setIsLoading(true);
@@ -77,40 +80,58 @@ function EditorContent() {
       
       setCurrentForm(form);
       
-      // Check localStorage for saved state
+      // Initialize with template defaults
       let savedFields = form.fields;
       let savedSections = form.sections || [];
       let savedGlobalDrawColor = form.globalDrawColor || '#000000';
       
+      // Try to load saved state from Firebase (if authenticated) or localStorage
       try {
-        const savedState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
+        let savedState: { fields?: FormField[]; sections?: FieldSection[]; globalDrawColor?: string } | null = null;
+        
+        if (user) {
+          // Load from Firebase
+          const firebaseState = await firestoreService.getFormState(user.uid, formId);
+          if (firebaseState) {
+            savedState = {
+              fields: firebaseState.fields,
+              sections: firebaseState.sections,
+              globalDrawColor: firebaseState.globalDrawColor,
+            };
+          }
+        } else {
+          // Fallback to localStorage for non-authenticated users
+          const localState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
+          if (localState) {
+            savedState = JSON.parse(localState);
+          }
+        }
+        
         if (savedState) {
-          const parsed = JSON.parse(savedState);
-          if (parsed.fields && Array.isArray(parsed.fields)) {
-            // Merge localStorage fields with template fields
-            // localStorage (user saved) takes precedence, template fills in missing properties
+          if (savedState.fields && Array.isArray(savedState.fields)) {
+            // Merge saved fields with template fields
+            // Saved state takes precedence, template fills in missing properties
             const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
-            savedFields = parsed.fields.map((savedField: FormField) => {
+            savedFields = savedState.fields.map((savedField: FormField) => {
               const templateField = templateFieldsMap.get(savedField.id);
               if (templateField) {
-                // Merge: localStorage saved values take precedence, template fills gaps
                 return {
-                  ...templateField, // Base from template (fills in any new properties not in localStorage)
-                  ...savedField, // Override with all saved properties (including fontWeight, fontStyle, textDecoration)
+                  ...templateField,
+                  ...savedField,
                 };
               }
-              return savedField; // Field not in template, keep as-is
+              return savedField;
             });
           }
-          if (parsed.sections && Array.isArray(parsed.sections)) {
-            savedSections = parsed.sections;
+          if (savedState.sections && Array.isArray(savedState.sections)) {
+            savedSections = savedState.sections;
           }
-          if (parsed.globalDrawColor) {
-            savedGlobalDrawColor = parsed.globalDrawColor;
+          if (savedState.globalDrawColor) {
+            savedGlobalDrawColor = savedState.globalDrawColor;
           }
         }
       } catch (error) {
-        console.error('Failed to load saved form state from localStorage', error);
+        console.error('Failed to load saved form state', error);
       }
       
       try {
@@ -144,7 +165,7 @@ function EditorContent() {
     if (formId) {
       loadForm();
     }
-  }, [formId, setFields]);
+  }, [formId, setFields, user]);
 
   const handleCopyShareLink = async () => {
     try {
@@ -157,23 +178,32 @@ function EditorContent() {
     }
   };
 
-  // Save form state to localStorage
-  const saveToLocalStorage = useCallback(() => {
+  // Save form state to Firebase (if authenticated) or localStorage
+  const saveFormState = useCallback(async () => {
+    setIsSavingToCloud(true);
     try {
-      const formState = {
-        fields,
-        sections,
-        globalDrawColor,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`, JSON.stringify(formState));
+      if (user) {
+        // Save to Firebase
+        await firestoreService.saveFormState(user.uid, formId, fields, sections, globalDrawColor);
+      } else {
+        // Fallback to localStorage for non-authenticated users
+        const formState = {
+          fields,
+          sections,
+          globalDrawColor,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`, JSON.stringify(formState));
+      }
       setIsSavedToStorage(true);
       setTimeout(() => setIsSavedToStorage(false), 2000);
     } catch (error) {
-      console.error('Failed to save to localStorage', error);
+      console.error('Failed to save form state', error);
       alert('Failed to save form progress');
+    } finally {
+      setIsSavingToCloud(false);
     }
-  }, [fields, sections, globalDrawColor, formId]);
+  }, [fields, sections, globalDrawColor, formId, user]);
 
   useEffect(() => {
     if (!pdfBytes) return;
@@ -560,10 +590,21 @@ function EditorContent() {
               </button>
             </div>
           )}
-          <button onClick={saveToLocalStorage} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation" title={t.editor.saveProgress || 'Save progress locally'}>
-            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : <HardDrive size={18} />}
-            <span className="hidden lg:inline">{isSavedToStorage ? t.common.copied : (t.editor.saveProgress || 'Save')}</span>
+          <button onClick={saveFormState} disabled={isSavingToCloud} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title={user ? 'Save to cloud' : 'Save locally'}>
+            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToCloud ? <Cloud size={18} className="animate-pulse" /> : user ? <Cloud size={18} /> : <HardDrive size={18} />}
+            <span className="hidden lg:inline">{isSavedToStorage ? t.common.copied : isSavingToCloud ? 'Saving...' : (t.editor.saveProgress || 'Save')}</span>
           </button>
+          {isConfigured && (user ? (
+            <button onClick={logout} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-manipulation" title="Sign out">
+              <LogOut size={18} />
+              <span className="hidden xl:inline">Sign Out</span>
+            </button>
+          ) : (
+            <button onClick={() => router.push('/login')} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all touch-manipulation" title="Sign in to save to cloud">
+              <LogIn size={18} />
+              <span className="hidden xl:inline">Sign In</span>
+            </button>
+          ))}
           <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all touch-manipulation" title={t.editor.copyShareLink || 'Copy share link'}>
             {isLinkCopied ? <Check size={18} className="text-green-600" /> : <Share2 size={18} />}
             <span className="hidden lg:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
