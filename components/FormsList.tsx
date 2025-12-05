@@ -94,30 +94,43 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-3 md:p-8 safe-area-inset-top safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 active:text-blue-700 mb-3 md:mb-4 transition-colors touch-manipulation p-1 -ml-1">
-            <ArrowLeft size={20} />
-            <span>{t.templates.backToHome}</span>
-          </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl md:text-4xl font-bold text-slate-800 mb-1 md:mb-2">{t.templates.title}</h1>
-              <p className="text-sm md:text-base text-slate-600">{t.templates.subtitle}</p>
+    <div className="min-h-screen bg-slate-50">
+      {/* Top Header Bar */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 safe-area-inset-top">
+        <div className="max-w-6xl mx-auto px-3 md:px-8 py-3 md:py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+              <FileText size={18} />
             </div>
+            <span className="font-bold text-lg md:text-xl text-slate-800">Smart PDF Filler</span>
+          </Link>
+          <div className="flex items-center gap-2 md:gap-3">
             {user && (
               <Link
                 href="/create"
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base"
               >
-                <Plus size={20} />
+                <Plus size={18} />
                 <span className="hidden sm:inline">Create Form</span>
               </Link>
             )}
+            <Link
+              href="/dashboard"
+              className="text-slate-600 hover:text-blue-600 px-3 py-2 font-medium transition-colors text-sm md:text-base"
+            >
+              Dashboard
+            </Link>
           </div>
         </div>
+      </header>
+
+      <div className="p-3 md:p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Page Title */}
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-4xl font-bold text-slate-800 mb-1 md:mb-2">{t.templates.title}</h1>
+            <p className="text-sm md:text-base text-slate-600">{t.templates.subtitle}</p>
+          </div>
 
         {/* Tabs */}
         {isConfigured && (
@@ -293,6 +306,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* Edit Form Modal */}
