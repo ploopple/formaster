@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Form Templates - public forms readable by all, private only by owner
+    match /formTemplates/{formId} {
+      // Anyone can read public forms, owners can read their own
+      allow read: if resource.data.isPublic == true || request.auth.uid == resource.data.ownerId;
+      
+      // Only authenticated users can create, and must set themselves as owner
+      allow create: if request.auth != null 
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.fileName is string;
+      
+      // Only owner can update/delete
+      allow update, delete: if request.auth.uid == resource.data.ownerId;
+    }
+    
+    // Form States - user's filled form data, private to each user
+    match /formStates/{stateId} {
+      // Users can only access their own form states
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.userId;
+      
+      // For creates, validate the userId matches
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}

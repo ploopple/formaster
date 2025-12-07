@@ -110,28 +110,19 @@ export const firestoreService = {
     return formId;
   },
 
-  // Update a form template (only owner can update)
+  // Update a form template (ownership enforced by Firestore security rules)
   updateFormTemplate: async (
     formId: string,
-    ownerId: string,
+    _ownerId: string, // Kept for API compatibility, but security is enforced server-side
     updates: Partial<Omit<FormTemplateData, 'id' | 'createdAt' | 'ownerId'>>
   ): Promise<void> => {
     if (!db) throw new Error('Firebase is not configured');
     const docRef = doc(db, FORM_TEMPLATES_COLLECTION, formId);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      throw new Error('Form not found');
-    }
-    
-    const formData = docSnap.data() as FormTemplateData;
-    if (formData.ownerId !== ownerId) {
-      throw new Error('You do not have permission to edit this form');
-    }
     
     // Deep clean to remove all undefined values - Firestore doesn't accept undefined
     const cleanedUpdates = removeUndefined(updates);
     
+    // Security rules will reject if user is not the owner
     await updateDoc(docRef, {
       ...cleanedUpdates,
       updatedAt: serverTimestamp(),
@@ -176,21 +167,12 @@ export const firestoreService = {
     return querySnapshot.docs.map(doc => doc.data() as FormTemplateData);
   },
 
-  // Delete a form template (only owner can delete)
-  deleteFormTemplate: async (formId: string, ownerId: string): Promise<void> => {
+  // Delete a form template (ownership enforced by Firestore security rules)
+  deleteFormTemplate: async (formId: string, _ownerId: string): Promise<void> => {
     if (!db) throw new Error('Firebase is not configured');
     const docRef = doc(db, FORM_TEMPLATES_COLLECTION, formId);
-    const docSnap = await getDoc(docRef);
     
-    if (!docSnap.exists()) {
-      throw new Error('Form not found');
-    }
-    
-    const formData = docSnap.data() as FormTemplateData;
-    if (formData.ownerId !== ownerId) {
-      throw new Error('You do not have permission to delete this form');
-    }
-    
+    // Security rules will reject if user is not the owner
     await deleteDoc(docRef);
   },
 
