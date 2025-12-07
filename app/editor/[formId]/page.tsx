@@ -605,6 +605,22 @@ function EditorContent() {
             {isLinkCopied ? <Check size={18} className="text-green-600" /> : <Share2 size={18} />}
             <span className="hidden lg:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
           </button>
+          {mode === AppMode.EDITOR && isOwner && (
+            <button
+              onClick={() => {
+                const jsonData = JSON.stringify({ fields, sections, globalDrawColor }, null, 2);
+                navigator.clipboard.writeText(jsonData).then(() => {
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+                });
+              }}
+              className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+              title="Copy JSON"
+            >
+              {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+              <span className="hidden lg:inline">{isCopied ? 'Copied!' : 'Copy JSON'}</span>
+            </button>
+          )}
           <a href="https://twitter.com/messages/compose?recipient_id=YOUR_TWITTER_ID&text=Feedback%20for%20Smart%20PDF%20Filler%3A%20" target="_blank" rel="noopener noreferrer" className="hidden md:flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Report Bug / Request Feature">
             <Bug size={16} />
             <span className="hidden xl:inline">Feedback</span>
