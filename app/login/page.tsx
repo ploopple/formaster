@@ -17,7 +17,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      router.push('/dashboard');
+      router.push('/templates');
     }
   }, [user, loading, router]);
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
       } else {
         await signIn(email, password);
       }
-      router.push('/dashboard');
+      router.push('/templates');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
       setError(errorMessage.replace('Firebase: ', ''));
@@ -45,7 +45,7 @@ export default function LoginPage() {
     setError('');
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      router.push('/templates');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Google sign-in failed';
       setError(errorMessage.replace('Firebase: ', ''));

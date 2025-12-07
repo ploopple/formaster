@@ -115,10 +115,10 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
               </Link>
             )}
             <Link
-              href="/dashboard"
+              href="/templates"
               className="text-slate-600 hover:text-blue-600 px-3 py-2 font-medium transition-colors text-sm md:text-base"
             >
-              Dashboard
+              Templates
             </Link>
           </div>
         </div>
@@ -295,7 +295,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Calendar size={14} />
                   <span>{formatDate(form.createdAt as { seconds: number })}</span>
-                  <span className="ms-auto">{form.fields?.length || 0} {t.common.fields}</span>
+                  {/* <span className="ms-auto">{form.fields?.length || 0} {t.common.fields}</span> */}
                 </div>
                 {form.ownerEmail && user?.uid !== form.ownerId && (
                   <div className="mt-2 text-xs text-slate-400 truncate">

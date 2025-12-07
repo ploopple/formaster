@@ -22,10 +22,10 @@ export default function LandingPage() {
             <div className="text-slate-400 text-sm">Loading...</div>
           ) : user ? (
             <Link
-              href="/dashboard"
+              href="/templates"
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Go to Dashboard
+              Go to Templates
               <ArrowRight size={18} />
             </Link>
           ) : (
@@ -60,18 +60,18 @@ export default function LandingPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href={user ? "/dashboard" : "/login"}
+            href={user ? "/templates" : "/login"}
             className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-blue-500/30"
           >
-            {user ? "Go to Dashboard" : "Start for Free"}
+            {user ? "Go to Templates" : "Start for Free"}
             <ArrowRight size={20} />
           </Link>
-          <Link
+          {/* <Link
             href="/templates"
             className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all border border-slate-200"
           >
             Browse Templates
-          </Link>
+          </Link> */}
         </div>
       </section>
 
@@ -123,10 +123,10 @@ export default function LandingPage() {
             Create your first fillable PDF form in minutes.
           </p>
           <Link
-            href={user ? "/dashboard" : "/login"}
+            href={user ? "/templates" : "/login"}
             className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all"
           >
-            {user ? "Go to Dashboard" : "Sign Up Free"}
+            {user ? "Go to Templates" : "Sign Up Free"}
             <ArrowRight size={20} />
           </Link>
         </div>
