@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://smartpdffiller.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drajonz.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Smart PDF Filler - Fill PDF Forms Smarter & Faster",
-    template: "%s | Smart PDF Filler",
+    default: "Drajonz - Fill PDF Forms Smarter & Faster",
+    template: "%s | Drajonz",
   },
   description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team. Cloud storage included.",
   keywords: [
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     "digital forms",
     "cloud PDF storage",
   ],
-  authors: [{ name: "Smart PDF Filler" }],
-  creator: "Smart PDF Filler",
-  publisher: "Smart PDF Filler",
+  authors: [{ name: "Drajonz" }],
+  creator: "Drajonz",
+  publisher: "Drajonz",
   formatDetection: {
     email: false,
     address: false,
@@ -48,24 +48,24 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: baseUrl,
-    siteName: "Smart PDF Filler",
-    title: "Smart PDF Filler - Fill PDF Forms Smarter & Faster",
+    siteName: "Drajonz",
+    title: "Drajonz - Fill PDF Forms Smarter & Faster",
     description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.",
     images: [
       {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "Smart PDF Filler - Fill PDF Forms Smarter & Faster",
+        alt: "Drajonz - Fill PDF Forms Smarter & Faster",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Smart PDF Filler - Fill PDF Forms Smarter & Faster",
+    title: "Drajonz - Fill PDF Forms Smarter & Faster",
     description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.",
     images: ["/og-image.svg"],
-    creator: "@smartpdffiller",
+    creator: "@drajonz",
   },
   robots: {
     index: true,

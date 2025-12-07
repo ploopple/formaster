@@ -1,10 +1,10 @@
 export function OrganizationJsonLd() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://smartpdffiller.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drajonz.com';
   
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Smart PDF Filler',
+    name: 'Drajonz',
     url: baseUrl,
     logo: `${baseUrl}/og-image.svg`,
     description: 'Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.',
@@ -20,12 +20,12 @@ export function OrganizationJsonLd() {
 }
 
 export function SoftwareApplicationJsonLd() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://smartpdffiller.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drajonz.com';
   
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Smart PDF Filler',
+    name: 'Drajonz',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     url: baseUrl,
@@ -59,12 +59,12 @@ export function SoftwareApplicationJsonLd() {
 }
 
 export function WebsiteJsonLd() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://smartpdffiller.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://drajonz.com';
   
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Smart PDF Filler',
+    name: 'Drajonz',
     url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',

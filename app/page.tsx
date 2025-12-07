@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { FileText, Shield, Zap, Users, ArrowRight, LogIn, PenTool } from 'lucide-react';
+import { FileText, Shield, Users, ArrowRight, PenTool } from 'lucide-react';
 import { useAuth } from '../lib/firebase';
 
 export default function LandingPage() {
-  const { user, loading, isConfigured } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -15,7 +15,7 @@ export default function LandingPage() {
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
             <PenTool size={20} />
           </div>
-          <span className="font-bold text-xl text-slate-800">Smart PDF Filler</span>
+          <span className="font-bold text-xl text-slate-800">Drajonz</span>
         </div>
         <div className="flex items-center gap-3">
           {loading ? (
@@ -139,10 +139,10 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
               <PenTool size={16} />
             </div>
-            <span className="font-semibold text-slate-800">Smart PDF Filler</span>
+            <span className="font-semibold text-slate-800">Drajonz</span>
           </div>
           <p className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} Smart PDF Filler. All rights reserved.
+            © {new Date().getFullYear()} Drajonz. All rights reserved.
           </p>
         </div>
       </footer>

@@ -7,4 +7,4 @@ Disallow: /admin/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://smartpdffiller.com/sitemap.xml
+Sitemap: https://drajonz.com/sitemap.xml
