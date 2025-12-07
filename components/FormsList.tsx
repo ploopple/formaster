@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Search, Calendar, FolderOpen, Trash2, Plus, User, Globe, Lock, Pencil, LogOut } from 'lucide-react';
+import { FileText, Search, Calendar, FolderOpen, Trash2, Plus, User, Globe, Lock, Pencil, LogOut, Copy } from 'lucide-react';
 import EditFormModal from './EditFormModal';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { useAuth, firestoreService, FormTemplateData } from '../lib/firebase';
@@ -22,6 +22,7 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
   const [editingForm, setEditingForm] = useState<FormTemplateData | null>(null);
+  const [copyingFormId, setCopyingFormId] = useState<string | null>(null);
 
   useEffect(() => {
     loadForms();
@@ -76,6 +77,30 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const handleSaveEdit = (updatedForm: FormTemplateData) => {
     setForms(prev => prev.map(f => f.id === updatedForm.id ? updatedForm : f));
     setEditingForm(null);
+  };
+
+  const handleCopyForm = async (e: React.MouseEvent, form: FormTemplateData) => {
+    e.stopPropagation();
+    if (!user || copyingFormId) return;
+    
+    setCopyingFormId(form.id);
+    try {
+      const newFormId = await firestoreService.copyFormTemplate(form.id, user.uid, user.email || '');
+      const newForm = await firestoreService.getFormTemplate(newFormId);
+      if (newForm) {
+        // If on "my" tab, add to list; otherwise switch to "my" tab
+        if (activeTab === 'my') {
+          setForms(prev => [newForm, ...prev]);
+        } else {
+          setActiveTab('my');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to copy form:', error);
+      alert('Failed to copy form');
+    } finally {
+      setCopyingFormId(null);
+    }
   };
 
   const categories = ['all', ...Array.from(new Set(forms.map(f => f.category).filter(Boolean)))] as string[];
@@ -275,22 +300,38 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                       </span>
                     </div>
                   </div>
-                  {user && form.ownerId === user.uid && (
+                  {user && (
                     <div className="flex gap-1">
                       <button
-                        onClick={(e) => handleEditForm(e, form)}
-                        className="p-2.5 md:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
-                        title="Edit form details"
+                        onClick={(e) => handleCopyForm(e, form)}
+                        disabled={copyingFormId === form.id}
+                        className="p-2.5 md:p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation disabled:opacity-100 disabled:cursor-not-allowed"
+                        title="Copy form"
                       >
-                        <Pencil size={18} />
+                        {copyingFormId === form.id ? (
+                          <div className="w-[18px] h-[18px] border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Copy size={18} />
+                        )}
                       </button>
-                      <button
-                        onClick={(e) => handleDeleteForm(e, form)}
-                        className="p-2.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
-                        title="Delete form"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {form.ownerId === user.uid && (
+                        <>
+                          <button
+                            onClick={(e) => handleEditForm(e, form)}
+                            className="p-2.5 md:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
+                            title="Edit form details"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteForm(e, form)}
+                            className="p-2.5 md:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
+                            title="Delete form"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -176,6 +176,43 @@ export const firestoreService = {
     await deleteDoc(docRef);
   },
 
+  // Copy a form template to create a new one owned by the current user
+  copyFormTemplate: async (
+    sourceFormId: string,
+    newOwnerId: string,
+    newOwnerEmail: string
+  ): Promise<string> => {
+    if (!db) throw new Error('Firebase is not configured');
+    
+    // Get the source form
+    const sourceForm = await firestoreService.getFormTemplate(sourceFormId);
+    if (!sourceForm) throw new Error('Source form not found');
+    
+    // Create a new form with copied data
+    const newFormId = doc(collection(db, FORM_TEMPLATES_COLLECTION)).id;
+    const docRef = doc(db, FORM_TEMPLATES_COLLECTION, newFormId);
+    
+    await setDoc(docRef, {
+      id: newFormId,
+      title: `${sourceForm.title} (Copy)`,
+      description: sourceForm.description,
+      fileName: sourceForm.fileName,
+      pdfUrl: sourceForm.pdfUrl,
+      fields: sourceForm.fields || [],
+      sections: sourceForm.sections || [],
+      globalDrawColor: sourceForm.globalDrawColor || '#000000',
+      category: sourceForm.category || '',
+      country: sourceForm.country || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ownerId: newOwnerId,
+      ownerEmail: newOwnerEmail,
+      isPublic: false, // Copies start as private
+    });
+    
+    return newFormId;
+  },
+
   // Check if user is the owner of a form
   isFormOwner: async (formId: string, userId: string): Promise<boolean> => {
     if (!db) return false;
