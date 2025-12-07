@@ -48,7 +48,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-bold text-slate-800 mb-4">2. Description of Service</h2>
             <p className="text-slate-600 mb-8 leading-relaxed">
               Drajonz provides a platform for creating, editing, and managing fillable PDF forms. 
-              The Service includes cloud storage, form sharing, and collaboration features.
+              The Service includes cloud storage and form sharing features.
             </p>
 
             <h2 className="text-2xl font-bold text-slate-800 mb-4">3. User Accounts</h2>

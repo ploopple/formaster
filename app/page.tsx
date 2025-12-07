@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FileText, Shield, Users, ArrowRight, PenTool, CheckCircle2, Zap, Cloud, Lock } from 'lucide-react';
+import { FileText, ArrowRight, PenTool, CheckCircle2, Zap, Cloud, Lock } from 'lucide-react';
 import { useAuth } from '../lib/firebase';
 
 export default function LandingPage() {
@@ -99,10 +99,7 @@ export default function LandingPage() {
                   <CheckCircle2 size={20} className="text-green-400" />
                   <span>Cloud Storage</span>
                 </div>
-                <div className="flex items-center gap-2 text-blue-100">
-                  <CheckCircle2 size={20} className="text-green-400" />
-                  <span>Team Collaboration</span>
-                </div>
+
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -180,15 +177,7 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="group bg-white p-8 rounded-2xl border border-slate-200 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Users size={28} />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-3">Team Collaboration</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Share forms with your team or make them public for anyone to fill. Real-time sync keeps everyone updated.
-              </p>
-            </div>
+
             
             <div className="group bg-white p-8 rounded-2xl border border-slate-200 hover:border-amber-200 hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300">
               <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">

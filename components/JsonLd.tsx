@@ -29,7 +29,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     url: baseUrl,
-    description: 'Fill PDF forms smarter and faster with drag-and-drop editor, cloud storage, and team collaboration.',
+    description: 'Fill PDF forms smarter and faster with drag-and-drop editor and cloud storage.',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -43,7 +43,6 @@ export function SoftwareApplicationJsonLd() {
     featureList: [
       'Drag-and-drop PDF form editor',
       'Cloud storage for forms',
-      'Team collaboration',
       'Digital signatures',
       'Form templates',
       'PDF export',

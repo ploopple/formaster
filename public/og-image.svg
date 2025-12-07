@@ -108,7 +108,7 @@
       <g transform="translate(0, 80)">
         <circle cx="10" cy="10" r="10" fill="#22c55e"/>
         <path d="M6 10L9 13L14 7" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <text x="30" y="15" font-family="system-ui, sans-serif" font-size="18" fill="#e0f2fe">Team Collaboration</text>
+        <text x="30" y="15" font-family="system-ui, sans-serif" font-size="18" fill="#e0f2fe">Digital Signatures</text>
       </g>
     </g>
   </g>

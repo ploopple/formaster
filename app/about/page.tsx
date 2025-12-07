@@ -83,10 +83,7 @@ export default function AboutPage() {
                 <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
                 <span>Secure cloud storage for all your documents</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Team collaboration and sharing features</span>
-              </li>
+
               <li className="flex items-start gap-3">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
                 <span>Digital signature support</span>

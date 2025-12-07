@@ -108,7 +108,7 @@ export default async function Image() {
             gap: 30,
           }}
         >
-          {['Drag & Drop Editor', 'Cloud Storage', 'Team Collaboration'].map(
+          {['Drag & Drop Editor', 'Cloud Storage', 'Digital Signatures'].map(
             (feature) => (
               <div
                 key={feature}
