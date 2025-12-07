@@ -13,7 +13,7 @@ import { FormTemplate } from '../../formsData';
 import { saveFilledPDF, downloadBlob } from '../../services/pdfUtils';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug, FileUp } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug, FileUp, ClipboardPaste } from 'lucide-react';
 import { useI18n } from '../../lib/i18n/I18nContext';
 import { generateUUID } from '../../lib/uuid';
 
@@ -30,6 +30,8 @@ function EditorContent() {
   const [sections, setSections] = useState<FieldSection[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isPasted, setIsPasted] = useState(false);
+  const [pasteError, setPasteError] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -509,21 +511,64 @@ function EditorContent() {
             </div>
           )}
 
-          {mode === AppMode.EDITOR && (
-            <button
-              onClick={() => {
-                const jsonData = JSON.stringify({ fields, sections, globalDrawColor }, null, 2);
-                navigator.clipboard.writeText(jsonData).then(() => {
-                  setIsCopied(true);
-                  setTimeout(() => setIsCopied(false), 2000);
-                });
-              }}
-              className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-              title="Copy JSON"
-            >
-              {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-              <span className="hidden sm:inline">{isCopied ? 'Copied!' : 'Copy JSON'}</span>
-            </button>
+          {process.env.NODE_ENV === 'development' && mode === AppMode.EDITOR && (
+            <>
+              <button
+                onClick={() => {
+                  const jsonData = JSON.stringify({ fields, sections, globalDrawColor }, null, 2);
+                  navigator.clipboard.writeText(jsonData).then(() => {
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                  });
+                }}
+                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                title="Copy JSON"
+              >
+                {isCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+                <span className="hidden sm:inline">{isCopied ? 'Copied!' : 'Copy JSON'}</span>
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    setPasteError(null);
+                    const clipboardText = await navigator.clipboard.readText();
+                    const parsed = JSON.parse(clipboardText);
+                    
+                    // Validate the structure
+                    if (parsed.fields && Array.isArray(parsed.fields)) {
+                      setFields(parsed.fields);
+                      if (parsed.sections && Array.isArray(parsed.sections)) {
+                        setSections(parsed.sections);
+                      }
+                      if (parsed.globalDrawColor) {
+                        setGlobalDrawColor(parsed.globalDrawColor);
+                      }
+                      setIsPasted(true);
+                      setTimeout(() => setIsPasted(false), 2000);
+                    } else {
+                      setPasteError('Invalid JSON format: missing fields array');
+                      setTimeout(() => setPasteError(null), 3000);
+                    }
+                  } catch (err) {
+                    setPasteError('Failed to paste: Invalid JSON');
+                    setTimeout(() => setPasteError(null), 3000);
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-lg transition-all ${
+                  pasteError 
+                    ? 'text-red-600 bg-red-50' 
+                    : isPasted 
+                      ? 'text-green-600 bg-green-50' 
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+                title="Paste JSON"
+              >
+                {isPasted ? <Check size={16} className="text-green-600" /> : <ClipboardPaste size={16} />}
+                <span className="hidden sm:inline">
+                  {pasteError ? 'Error!' : isPasted ? 'Pasted!' : 'Paste JSON'}
+                </span>
+              </button>
+            </>
           )}
           <a href="https://twitter.com/messages/compose?recipient_id=YOUR_TWITTER_ID&text=Feedback%20for%20Smart%20PDF%20Filler%3A%20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Report Bug / Request Feature">
             <Bug size={16} />
