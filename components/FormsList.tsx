@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Search, Calendar, FolderOpen, ArrowLeft, Trash2, Plus, User, Globe, Lock, Pencil } from 'lucide-react';
+import { FileText, Search, Calendar, FolderOpen, Trash2, Plus, User, Globe, Lock, Pencil, LogOut } from 'lucide-react';
 import EditFormModal from './EditFormModal';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { useAuth, firestoreService, FormTemplateData } from '../lib/firebase';
@@ -14,7 +14,7 @@ interface FormsListProps {
 
 const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
   const { t } = useI18n();
-  const { user, isConfigured } = useAuth();
+  const { user, isConfigured, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCountry, setSelectedCountry] = useState<string>('all');
@@ -114,12 +114,15 @@ const FormsList: React.FC<FormsListProps> = ({ onSelectForm }) => {
                 <span className="hidden sm:inline">Create Form</span>
               </Link>
             )}
-            <Link
-              href="/templates"
-              className="text-slate-600 hover:text-blue-600 px-3 py-2 font-medium transition-colors text-sm md:text-base"
-            >
-              Templates
-            </Link>
+            {user && (
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition-colors text-sm md:text-base"
+              >
+                <LogOut size={18} />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

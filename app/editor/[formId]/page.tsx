@@ -539,7 +539,7 @@ function EditorContent() {
       <header className="h-14 md:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-2 md:px-6 shrink-0 z-30 shadow-sm relative safe-area-inset-top">
         {/* Logo/Back button + Undo/Redo on mobile */}
         <div className="flex items-center gap-1 shrink-0">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-base md:text-lg cursor-pointer touch-manipulation" onClick={() => { if(confirm(t.editor.goBackConfirm)) router.push('/templates'); }}>
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-base md:text-lg cursor-pointer touch-manipulation" onClick={() => {  router.push('/templates'); }}>
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shrink-0">
               <PenTool size={16} />
             </div>
