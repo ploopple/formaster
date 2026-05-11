@@ -487,19 +487,19 @@ function EditorContent() {
             </div>
           )}
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            <Pencil size={14} />
-            <span className="hidden sm:inline">{t.editor.editorMode}</span>
-            <span className="sm:hidden">{t.editor.edit}</span>
-          </button>
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            <PenTool size={14} />
-            <span className="hidden sm:inline">{t.editor.fillMode}</span>
-            <span className="sm:hidden">{t.editor.fill}</span>
-          </button>
-        </div>
         <div className="flex items-center gap-1 md:gap-2 z-10">
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <Pencil size={14} />
+              <span className="hidden sm:inline">{t.editor.editorMode}</span>
+              <span className="sm:hidden">{t.editor.edit}</span>
+            </button>
+            <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              <PenTool size={14} />
+              <span className="hidden sm:inline">{t.editor.fillMode}</span>
+              <span className="sm:hidden">{t.editor.fill}</span>
+            </button>
+          </div>
           {mode === AppMode.EDITOR && (
             <div className="hidden sm:flex items-center gap-1 me-1 md:me-2">
               <button onClick={undo} disabled={!canUndo} className="p-1.5 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" title={t.editor.undo}>

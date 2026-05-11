@@ -560,24 +560,23 @@ function EditorContent() {
           )}
         </div>
         
-        {/* Mode Toggle - Centered (only show Editor mode for owners) */}
-        <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          {isOwner && (
-            <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
-              <Pencil size={14} />
-              <span className="hidden sm:inline">{t.editor.editorMode}</span>
-              <span className="sm:hidden">{t.editor.edit}</span>
-            </button>
-          )}
-          <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
-            <PenTool size={14} />
-            <span className="hidden sm:inline">{t.editor.fillMode}</span>
-            <span className="sm:hidden">{t.editor.fill}</span>
-          </button>
-        </div>
-        
         {/* Action buttons */}
         <div className="flex items-center gap-0.5 md:gap-2 shrink-0 z-10">
+          {/* Mode Toggle - Inline */}
+          <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg">
+            {isOwner && (
+              <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.EDITOR); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.EDITOR ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
+                <Pencil size={14} />
+                <span className="hidden sm:inline">{t.editor.editorMode}</span>
+                <span className="sm:hidden">{t.editor.edit}</span>
+              </button>
+            )}
+            <button onClick={() => { setSelectedFieldId(null); setMode(AppMode.FILL); }} className={`flex items-center gap-1.5 md:gap-2 px-2.5 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-all touch-manipulation ${mode === AppMode.FILL ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 active:bg-slate-200'}`}>
+              <PenTool size={14} />
+              <span className="hidden sm:inline">{t.editor.fillMode}</span>
+              <span className="sm:hidden">{t.editor.fill}</span>
+            </button>
+          </div>
           {mode === AppMode.EDITOR && isOwner && (
             <div className="hidden sm:flex items-center gap-0.5 me-0.5 md:me-2">
               <button onClick={undo} disabled={!canUndo} className="p-2 md:p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation" title={t.editor.undo}>
