@@ -153,6 +153,13 @@ const measureDateSegments = (segments: string[], font: PDFFont, size: number, le
     segments.reduce((sum, seg) => sum + measureTextRun(seg, font, size, letterSpacing), 0) +
     segmentSpacing * Math.max(0, segments.length - 1);
 
+// Left edge for a text run inside a box, honouring the horizontal alignment
+const alignedTextX = (boxLeft: number, boxWidth: number, textWidth: number, align: 'left' | 'center' | 'right' | undefined, padding: number): number => {
+    if (align === 'center') return boxLeft + (boxWidth - textWidth) / 2;
+    if (align === 'right') return boxLeft + boxWidth - textWidth - padding;
+    return boxLeft + padding;
+};
+
 // Draws each date segment with `segmentSpacing` points of extra gap between them
 const drawDateSegments = (page: PDFPage, segments: string[], x: number, y: number, size: number, font: PDFFont, color: Color, letterSpacing: number, segmentSpacing: number) => {
     let currentX = x;
@@ -214,8 +221,12 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
         let data: string[][] = [];
         try { data = JSON.parse(field.value || "[]"); } catch {}
         const customRows = fields.filter(f => f.parentFieldId === field.id && f.type === 'table-row');
+        // Rows are hand-placed only when the table says so. Tables saved before
+        // rowLayout existed are inferred from whether they have row children.
+        const useManualRows = field.rowLayout === 'manual'
+            || (field.rowLayout === undefined && customRows.length > 0);
         
-        if (customRows.length > 0) {
+        if (useManualRows && customRows.length > 0) {
             const sortedRows = customRows.sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0));
             const rowsToBurn = sortedRows.slice(0, field.filledRows || 1);
             const columns = field.columns || [];
@@ -262,7 +273,12 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             }
                             const cellFont = (hebrewFont && containsHebrew(displayValue)) ? hebrewFont : font;
                             const textColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
-                            const textX = pdfX + (col.padding || 3);
+                            const cellSpacing = col.letterSpacing || 0;
+                            const cellPad = col.padding || 3;
+                            const cellTextWidth = cellDateSegments
+                                ? measureDateSegments(cellDateSegments, cellFont, colFontSize, cellSpacing, cellDateSpacing)
+                                : measureTextRun(displayValue, cellFont, colFontSize, cellSpacing);
+                            const textX = alignedTextX(pdfX, pdfW, cellTextWidth, col.textAlign, cellPad);
                             
                             // Apply letter spacing if set
                             if (cellDateSegments) {
@@ -282,7 +298,7 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 });
             }
         } else {
-            // Legacy Table
+            // Auto layout: rows fill the table box evenly
             const rowsToRender = field.filledRows || 1;
             const rowsCapacity = field.maxRows || 1;
             const cols = field.columns || [];
@@ -297,6 +313,61 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
             const totalGapsH = Math.max(0, totalSlots - 1) * cellGap;
             const availableHeight = Math.max(0, tableHeightAbs - totalGapsH);
             const rowHeightAbs = availableHeight / totalSlots;
+
+            // Column left edges, so the grid and the header agree with the cells
+            const colEdges: number[] = [];
+            let edgeX = tableLeftX;
+            cols.forEach((col) => { colEdges.push(edgeX); edgeX += (col.width / 100) * tableWidthAbs; });
+
+            // Optional grid lines, for building a table on blank paper
+            if (field.showGrid) {
+                const gridColor = hexToRgb(field.gridColor) || rgb(0, 0, 0);
+                const gridWidth = field.gridWidth ?? 0.5;
+                const gridBottomY = tableTopY - tableHeightAbs;
+
+                for (let slot = 0; slot <= totalSlots; slot++) {
+                    const lineY = tableTopY - slot * (rowHeightAbs + cellGap) + (slot > 0 ? cellGap : 0);
+                    const clampedY = Math.max(gridBottomY, Math.min(tableTopY, lineY));
+                    page.drawLine({
+                        start: { x: tableLeftX, y: clampedY },
+                        end: { x: tableLeftX + tableWidthAbs, y: clampedY },
+                        thickness: gridWidth,
+                        color: gridColor,
+                    });
+                }
+
+                [...colEdges, tableLeftX + tableWidthAbs].forEach((lineX) => {
+                    page.drawLine({
+                        start: { x: lineX, y: tableTopY },
+                        end: { x: lineX, y: gridBottomY },
+                        thickness: gridWidth,
+                        color: gridColor,
+                    });
+                });
+            }
+
+            // Optional header text in the reserved header slot
+            if (field.showHeaders && field.printHeaderText) {
+                const headerCenterY = tableTopY - (rowHeightAbs / 2);
+                cols.forEach((col, cIdx) => {
+                    if (!col.name) return;
+                    const headerFontSize = col.fontSize || fontSize;
+                    const headerFont = (hebrewFont && containsHebrew(col.name)) ? hebrewFont : fontBold;
+                    const colWidthAbs = (col.width / 100) * tableWidthAbs;
+                    const textWidth = headerFont.widthOfTextAtSize(col.name, headerFontSize);
+                    const align = col.textAlign || 'center';
+                    let headerX = colEdges[cIdx] + cellPadding + 1;
+                    if (align === 'center') headerX = colEdges[cIdx] + (colWidthAbs - textWidth) / 2;
+                    else if (align === 'right') headerX = colEdges[cIdx] + colWidthAbs - textWidth - cellPadding;
+                    page.drawText(col.name, {
+                        x: headerX,
+                        y: headerCenterY - (headerFontSize * 0.7) / 2,
+                        size: headerFontSize,
+                        font: headerFont,
+                        color: hexToRgb(col.color || field.color) || rgb(0, 0, 0),
+                    });
+                });
+            }
 
             for (let r = 0; r < rowsToRender; r++) {
                 const visualRowIndex = field.showHeaders ? r + 1 : r;
@@ -329,7 +400,11 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             const textY = cellCenterY - (textHeight / 2);
                             const cellFont = (hebrewFont && containsHebrew(displayValue)) ? hebrewFont : font;
                             const textColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
-                            const textX = currentColX + cellPadding + 1;
+                            const cellSpacing = col.letterSpacing || 0;
+                            const cellTextWidth = cellDateSegments
+                                ? measureDateSegments(cellDateSegments, cellFont, colFontSize, cellSpacing, cellDateSpacing)
+                                : measureTextRun(displayValue, cellFont, colFontSize, cellSpacing);
+                            const textX = alignedTextX(currentColX, colWidthAbs, cellTextWidth, col.textAlign, cellPadding + 1);
                             
                             // Apply letter spacing if set
                             if (cellDateSegments) {

@@ -133,11 +133,19 @@ export interface FormField {
   // Table Specifics
   maxRows?: number;   // The capacity/limit of the table (defines row height)
   filledRows?: number; // The current number of rows visible/active in Fill Mode
-  showHeaders?: boolean;
+  showHeaders?: boolean; // Reserve a header row slot at the top of the table box
   columns?: TableColumn[]; // Column definitions with full field properties
   rowIndex?: number; // For table-row: which data index (0, 1, 2) does this visual row represent?
   cellPadding?: number; // Padding inside table cells
   cellGap?: number; // Margin/Gap between table cells
+  // How rows are placed: 'auto' lays them out inside the table box, 'manual'
+  // gives every row its own draggable box (for matching a pre-printed table).
+  // Undefined is treated as 'manual' when table-row children exist, else 'auto'.
+  rowLayout?: 'auto' | 'manual';
+  showGrid?: boolean; // Draw the table's own grid lines into the PDF
+  gridColor?: string; // Hex code for the grid lines
+  gridWidth?: number; // Grid line thickness in points
+  printHeaderText?: boolean; // Draw the column names into the PDF header row
 
   // Nesting logic
   parentFieldId?: string;

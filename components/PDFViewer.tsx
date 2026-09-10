@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Document, Page } from 'react-pdf';
 import { pdfjs } from '../lib/pdfjs-config';
-import { FormField, AppMode, FieldOption } from '../types';
+import { FormField, AppMode, FieldOption, FieldType } from '../types';
 import { Trash2, Rows, Eye, EyeOff, ZoomIn, ZoomOut, Maximize, Lock, ChevronLeft, ChevronRight, Grid3X3, X, Plus, Edit2 } from 'lucide-react';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -12,6 +12,8 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import { isFieldVisible } from '../services/formLogic';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { generateUUID } from '../lib/uuid';
+import FieldPalette from './FieldPalette';
+import { createField, getFieldTypeDef, nextFieldName, PALETTE_TYPES } from '../lib/fieldTypes';
 
 interface PDFViewerProps {
   file: any; // File or Blob
@@ -67,6 +69,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const [showMobileAddField, setShowMobileAddField] = useState<boolean>(false);
   const [doubleTapPosition, setDoubleTapPosition] = useState<{ x: number; y: number } | null>(null);
   const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  // Field type armed in the palette, placed by the next click or drag
+  const [armedType, setArmedType] = useState<FieldType | null>(null);
+  // Repeated by a double-click on an empty part of the page
+  const lastPlacedTypeRef = useRef<FieldType>('text');
   
   // Detect mobile device
   useEffect(() => {
@@ -503,6 +509,43 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [fields, pageNumber, scale, containerWidth, mode, drawingState, selectedFieldId, pageBox, globalDrawColor]);
 
 
+  /**
+   * Places a field of `type` on the current page. `box` is the drawn rectangle
+   * in page percent; when it is too small to be a deliberate drag the type's
+   * own default size is used instead, centred on the click.
+   */
+  const placeField = useCallback((type: FieldType, box: { x: number; y: number; width: number; height: number }) => {
+    const def = getFieldTypeDef(type);
+    const isDrag = box.width >= def.minSize.width && box.height >= def.minSize.height;
+
+    const placement = isDrag
+      ? { page: pageNumber, x: box.x, y: box.y, width: box.width, height: box.height }
+      : {
+          page: pageNumber,
+          // A click marks the centre of the field, not its corner
+          x: box.x - def.defaultSize.width / 2,
+          y: box.y - def.defaultSize.height / 2,
+        };
+
+    const newField = createField(type, placement, {
+      name: nextFieldName(type, fields),
+      color: globalDrawColor,
+    });
+
+    onFieldAdd(newField);
+    onFieldSelect(newField.id);
+    lastPlacedTypeRef.current = type;
+    setArmedType(null);
+  }, [pageNumber, fields, globalDrawColor, onFieldAdd, onFieldSelect]);
+
+  // Escape returns to the select tool
+  useEffect(() => {
+    if (!armedType) return;
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setArmedType(null); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [armedType]);
+
   // --- Interaction Logic ---
   useEffect(() => {
     if (!dragState && !drawingState) return;
@@ -572,12 +615,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 const y = Math.max(0, Math.min(100, Math.min(rawY1, rawY2)));
                 const width = Math.min(100 - x, Math.abs(rawX2 - rawX1));
                 const height = Math.min(100 - y, Math.abs(rawY2 - rawY1));
-                if (width > 1 && height > 1) {
-                     const newField: FormField = { 
-                        id: generateUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, textAlign: 'center', options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
-                    };
-                    onFieldAdd(newField);
-                    onFieldSelect(newField.id);
+
+                if (armedType) {
+                    // A click (no meaningful drag) drops the field at its default
+                    // size on the point clicked; placeField sorts out which it was
+                    const isDrag = width > 1 && height > 1;
+                    placeField(armedType, isDrag ? { x, y, width, height } : { x: rawX1, y: rawY1, width: 0, height: 0 });
+                } else if (width > 1 && height > 1) {
+                    // Select tool: drawing a box still makes a text field
+                    placeField('text', { x, y, width, height });
                 }
             }
             setDrawingState(null);
@@ -587,7 +633,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     return () => { window.removeEventListener('pointermove', handlePointerMove); window.removeEventListener('pointerup', handlePointerUp); };
-  }, [dragState, drawingState, onFieldUpdate, fields, pageNumber, onFieldAdd, onFieldSelect, globalDrawColor]);
+  }, [dragState, drawingState, onFieldUpdate, fields, pageNumber, onFieldAdd, onFieldSelect, globalDrawColor, armedType, placeField]);
 
   const [loadError, setLoadError] = useState<string | null>(null);
   const [workerReady, setWorkerReady] = useState(false);
@@ -637,6 +683,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   const handleBackgroundPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (mode !== AppMode.EDITOR) return;
+
+    // With a type armed, a click or a drag both place a field - on every device
+    if (armedType) {
+      setDrawingState({ isDrawing: true, startX: e.clientX, startY: e.clientY, currentX: e.clientX, currentY: e.clientY });
+      onFieldSelect(null);
+      return;
+    }
     
     // On mobile, detect double-tap to create field
     if (isMobile) {
@@ -673,6 +726,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       return;
     }
     
+    // Desktop: a double-click on empty space repeats the last field type
+    const now = Date.now();
+    const lastClick = lastTapRef.current;
+    if (lastClick && now - lastClick.time < 300 && Math.abs(e.clientX - lastClick.x) < 8 && Math.abs(e.clientY - lastClick.y) < 8) {
+      lastTapRef.current = null;
+      const rect = pageBoxRef.current?.getBoundingClientRect();
+      if (rect) {
+        placeField(lastPlacedTypeRef.current, {
+          x: ((e.clientX - rect.left) / rect.width) * 100,
+          y: ((e.clientY - rect.top) / rect.height) * 100,
+          width: 0,
+          height: 0,
+        });
+        return;
+      }
+    }
+    lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+
     setDrawingState({ isDrawing: true, startX: e.clientX, startY: e.clientY, currentX: e.clientX, currentY: e.clientY });
     onFieldSelect(null);
   };
@@ -756,9 +827,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const renderTable = (field: FormField) => {
     const customRows = fields.filter(f => f.parentFieldId === field.id && f.type === 'table-row');
     const columns = field.columns || [];
+    // Match the PDF renderer: rows are hand-placed only when the table says so
+    const useManualRows = field.rowLayout === 'manual'
+      || (field.rowLayout === undefined && customRows.length > 0);
     
-    // In FILL mode with custom rows, make cells clickable for editing
-    if (customRows.length > 0 && mode === AppMode.FILL) {
+    // In FILL mode with hand-placed rows, make cells clickable for editing
+    if (useManualRows && customRows.length > 0 && mode === AppMode.FILL) {
           const sortedRows = customRows.sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0));
           const visibleCount = Math.min(field.filledRows || 1, sortedRows.length);
           const visibleRows = sortedRows.slice(0, visibleCount);
@@ -1018,6 +1092,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         </div>
       </div>
       
+      {mode === AppMode.EDITOR && isMobile && (
+        <FieldPalette armedType={armedType} onArm={setArmedType} orientation="horizontal" />
+      )}
+
       {/* Minimap Panel - Mobile Optimized */}
       {showMinimap && numPages > 1 && (
         <div className="absolute top-16 md:top-14 left-2 right-2 md:right-auto z-30 bg-white rounded-xl shadow-xl border border-slate-200 p-3 max-h-[50vh] md:max-h-[60vh] overflow-y-auto">
@@ -1062,12 +1140,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           )}
         </div>
       )}
+      <div className="flex-1 flex min-h-0">
+      {mode === AppMode.EDITOR && !isMobile && (
+        <FieldPalette armedType={armedType} onArm={setArmedType} orientation="vertical" />
+      )}
       <div 
         className="flex-1 overflow-auto p-2 md:p-8 flex justify-center items-start md:items-center relative select-none touch-pan-x touch-pan-y" 
         ref={containerRef}
         onPointerDown={handlePanStart}
         onWheel={handleWheel}
-        style={{ cursor: isPanning ? 'grabbing' : 'default' }}
+        style={{ cursor: isPanning ? 'grabbing' : armedType ? 'crosshair' : 'default' }}
       >
         {!workerReady && (
           <div className="text-slate-600">Initializing PDF viewer...</div>
@@ -1116,7 +1198,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 className="absolute inset-0 pointer-events-none z-[2]"
               />
 
-              <div className="absolute inset-0 z-10">
+              <div className={`absolute inset-0 z-10 ${armedType ? 'pointer-events-none' : ''}`}>
                 {fields.filter(f => f.page === pageNumber).map(field => {
                     if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
                     if (mode === AppMode.FILL && field.type === 'table-row') return null;
@@ -1140,6 +1222,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             </div>
           </div>
         )}
+      </div>
       </div>
       
       {/* Mobile Add Field Bottom Sheet */}
@@ -1170,63 +1253,27 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
             )}
             
             <div className="p-4 pt-2 grid grid-cols-3 gap-3">
-              {[
-                { type: 'text', icon: '📝', label: t.sidebar?.fieldTypes?.text || 'Text' },
-                { type: 'number', icon: '🔢', label: t.sidebar?.fieldTypes?.number || 'Number' },
-                { type: 'date', icon: '📅', label: t.sidebar?.fieldTypes?.date || 'Date' },
-                { type: 'checkbox', icon: '☑️', label: t.sidebar?.fieldTypes?.checkbox || 'Checkbox' },
-                { type: 'radio', icon: '🔘', label: t.sidebar?.fieldTypes?.radio || 'Radio' },
-                { type: 'select', icon: '📋', label: t.sidebar?.fieldTypes?.select || 'Select' },
-                { type: 'textarea', icon: '📄', label: t.sidebar?.fieldTypes?.textarea || 'Textarea' },
-                { type: 'signature', icon: '✍️', label: t.sidebar?.fieldTypes?.signature || 'Signature' },
-                { type: 'table', icon: '📊', label: t.sidebar?.fieldTypes?.table || 'Table' },
-              ].map(({ type, icon, label }) => (
+              {PALETTE_TYPES.map((def) => {
+                const Icon = def.icon;
+                return (
                 <button
-                  key={type}
+                  key={def.type}
                   onClick={() => {
-                    // Use double-tap position if available, otherwise use default position
+                    // Use the double-tap point when there is one, otherwise stagger
+                    // new fields down the page so they don't stack on each other
                     const fieldX = doubleTapPosition ? doubleTapPosition.x : 10;
                     const fieldY = doubleTapPosition ? doubleTapPosition.y : (30 + (fields.filter(f => f.page === pageNumber).length * 8) % 40);
-                    
-                    const newField: FormField = {
-                      id: generateUUID(),
-                      page: pageNumber,
-                      x: fieldX,
-                      y: fieldY,
-                      width: type === 'checkbox' || type === 'radio' ? 5 : type === 'table' ? 80 : 50,
-                      height: type === 'textarea' ? 15 : type === 'table' ? 20 : type === 'signature' ? 10 : 5,
-                      name: `${label} ${fields.length + 1}`,
-                      value: '',
-                      previewText: type === 'date' ? 'DD/MM/YYYY' : type === 'signature' ? 'Sign Here' : '',
-                      type: type as any,
-                      fontSize: 12,
-                      letterSpacing: 0,
-                      textAlign: 'center',
-                      options: (type === 'radio' || type === 'checkbox' || type === 'select') ? [
-                        { id: generateUUID(), x: fieldX, y: fieldY, width: 4, height: 3, value: 'Option 1' },
-                        { id: generateUUID(), x: fieldX + 10, y: fieldY, width: 4, height: 3, value: 'Option 2' },
-                      ] : [],
-                      color: globalDrawColor,
-                      useGlobalColor: true,
-                      dateFormat: type === 'date' ? 'DD/MM/YYYY' : undefined,
-                      columns: type === 'table' ? [
-                        { id: generateUUID(), name: 'Col 1', type: 'text', width: 50 },
-                        { id: generateUUID(), name: 'Col 2', type: 'text', width: 50 },
-                      ] : undefined,
-                      maxRows: type === 'table' ? 3 : undefined,
-                      filledRows: type === 'table' ? 1 : undefined,
-                    };
-                    onFieldAdd(newField);
-                    onFieldSelect(newField.id);
+                    placeField(def.type, { x: fieldX, y: fieldY, width: 0, height: 0 });
                     setShowMobileAddField(false);
-                    setDoubleTapPosition(null); // Clear the position after use
+                    setDoubleTapPosition(null);
                   }}
                   className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 hover:bg-blue-50 active:bg-blue-100 rounded-xl border border-slate-200 hover:border-blue-300 transition-all touch-manipulation"
                 >
-                  <span className="text-2xl">{icon}</span>
-                  <span className="text-xs font-medium text-slate-700">{label}</span>
+                  <Icon size={22} className="text-slate-600" />
+                  <span className="text-xs font-medium text-slate-700">{def.label}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
             
             <div className="p-4 pt-0">

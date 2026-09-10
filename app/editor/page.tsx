@@ -11,6 +11,7 @@ import { SignatureModal } from '../../components/SignatureModal';
 import KeyboardShortcutsPanel from '../../components/KeyboardShortcutsPanel';
 import { FormTemplate } from '../../formsData';
 import { saveFilledPDF, downloadBlob } from '../../services/pdfUtils';
+import { setTableRowLayout, distributeTableRows, appendTableRow } from '../../services/tableLayout';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../services/validationService';
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug, FileUp, ClipboardPaste } from 'lucide-react';
@@ -237,35 +238,22 @@ function EditorContent() {
   }, [fields, setFields]);
 
   const addTableRow = useCallback((tableId: string) => {
-    const tableField = fields.find(f => f.id === tableId);
-    if(!tableField) return;
-    const existingRows = fields.filter(f => f.parentFieldId === tableId && f.type === 'table-row');
-    const nextIndex = existingRows.length;
-    const lastRow = existingRows[existingRows.length - 1];
-    let newY = lastRow ? lastRow.y + lastRow.height : (tableField.showHeaders ? tableField.y + 4 : tableField.y);
-    if (newY > 95) newY = tableField.y;
-    // Row only has position - cells are derived from parent table's columns
-    const newRow: FormField = { 
-      id: generateUUID(), 
-      page: tableField.page, 
-      x: tableField.x, 
-      y: newY, 
-      width: tableField.width, 
-      height: 5, 
-      name: `${tableField.name} Row ${nextIndex + 1}`, 
-      value: '', 
-      previewText: '', 
-      type: 'table-row', 
-      fontSize: 12, 
-      letterSpacing: 0, 
-      textAlign: 'center',
-      
-      parentFieldId: tableId, 
-      rowIndex: nextIndex 
-    };
-    setFields(prev => [...prev, newRow]);
-    setSelectedFieldId(newRow.id);
-  }, [fields, setFields]);
+    setFields(prev => {
+      const next = appendTableRow(prev, tableId);
+      const added = next[next.length - 1];
+      if (added && added.type === 'table-row') setSelectedFieldId(added.id);
+      return next;
+    });
+  }, [setFields]);
+
+  // Switches a table between the auto grid and hand-placed rows
+  const setRowLayout = useCallback((tableId: string, layout: 'auto' | 'manual') => {
+    setFields(prev => setTableRowLayout(prev, tableId, layout));
+  }, [setFields]);
+
+  const distributeRows = useCallback((tableId: string) => {
+    setFields(prev => distributeTableRows(prev, tableId));
+  }, [setFields]);
 
   // Sync composite child fields based on template placeholders
   const syncCompositeChildren = useCallback((compositeId: string, template: string) => {
@@ -590,7 +578,7 @@ function EditorContent() {
         {mode === AppMode.EDITOR && (previewBlob || file) && (
           <PDFViewer file={previewBlob || file} mode={mode} fields={fields} selectedFieldId={selectedFieldId} onFieldAdd={addField} onFieldUpdate={updateField} onFieldSelect={(id) => { setSelectedFieldId(id); if (id) setIsSidebarOpen(true); }} onFieldDelete={deleteField} onOpenSignature={(id) => setSigningFieldId(id)} onPageDimensionsChange={(width, height) => setPageDimensions({ width, height })} globalDrawColor={globalDrawColor} />
         )}
-        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} globalDrawColor={globalDrawColor} onGlobalDrawColorChange={setGlobalDrawColor} />
+        <Sidebar mode={mode} fields={fields} selectedField={fields.find(f => f.id === selectedFieldId)} onUpdateField={updateField} onSelectField={setSelectedFieldId} onDeleteField={deleteField} onDuplicateField={duplicateField} onAddLinkedFieldLocation={addLinkedFieldLocation} onClearAllFields={clearAllFields} onDownload={handleDownload} onAddNestedField={addNestedField} onReorderFields={reorderFields} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onOpenSignature={(id) => setSigningFieldId(id)} onAddTableRow={addTableRow} pageDimensions={pageDimensions} sections={sections} onAddSection={addSection} onUpdateSection={updateSection} onDeleteSection={deleteSection} onReorderSections={reorderSections} validationStates={validationStates} touchedFields={touchedFields} onFieldBlur={handleFieldBlur} onSyncCompositeChildren={syncCompositeChildren} globalDrawColor={globalDrawColor} onGlobalDrawColorChange={setGlobalDrawColor} onSetRowLayout={setRowLayout} onDistributeRows={distributeRows} />
       </div>
       <SignatureModal 
         isOpen={!!signingFieldId} 

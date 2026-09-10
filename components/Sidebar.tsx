@@ -6,9 +6,11 @@ import { Download, Edit2, Type, MousePointer2, ArrowLeft, Layers, Copy, Trash2, 
 import { isFieldVisible, getFieldDepth } from '../services/formLogic';
 import { validateField, getPatternDisplayName } from '../services/validationService';
 import TableBuilder from './TableBuilder';
+import PropertyGroup from './PropertyGroup';
 import InlineTableEditor from './InlineTableEditor';
 import { useI18n } from '../lib/i18n/I18nContext';
 import { generateUUID } from '../lib/uuid';
+import { propsForTypeChange, getCapabilities, FIELD_TYPES, getFieldTypeDef } from '../lib/fieldTypes';
 
 interface SidebarProps {
   mode: AppMode;
@@ -39,6 +41,8 @@ interface SidebarProps {
   onSyncCompositeChildren?: (compositeId: string, template: string) => void;
   globalDrawColor?: string;
   onGlobalDrawColorChange?: (color: string) => void;
+  onSetRowLayout?: (tableId: string, layout: 'auto' | 'manual') => void;
+  onDistributeRows?: (tableId: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -69,7 +73,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onFieldBlur,
   onSyncCompositeChildren,
   globalDrawColor = '#000000',
-  onGlobalDrawColorChange
+  onGlobalDrawColorChange,
+  onSetRowLayout,
+  onDistributeRows
 }) => {
   const { t } = useI18n();
   const [draggedFieldId, setDraggedFieldId] = React.useState<string | null>(null);
@@ -132,45 +138,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleTypeChange = (newType: FieldType) => {
     if (!selectedField) return;
-    
-    const updates: Partial<FormField> = { type: newType };
-    
-    if ((newType === 'radio' || newType === 'checkbox' || newType === 'select') && (!selectedField.options || selectedField.options.length === 0)) {
-        updates.options = [
-            { id: generateUUID(), x: selectedField.x, y: selectedField.y, width: 0, height: 0, value: "Option 1" },
-            { id: generateUUID(), x: selectedField.x, y: selectedField.y, width: 0, height: 0, value: "Option 2" }
-        ];
-        if (newType !== 'select') {
-           updates.options = updates.options.map(o => ({
-               ...o,
-               width: Math.min(5, selectedField.width),
-               height: Math.min(3, selectedField.height)
-           }));
-        }
-        updates.value = "";
-    }
-    
-    if (newType === 'table') {
-        updates.maxRows = 3;
-        updates.filledRows = 1;
-        updates.showHeaders = true;
-        updates.cellPadding = 2;
-        updates.cellGap = 0;
-        updates.columns = [
-            { id: generateUUID(), name: 'Col 1', type: 'text', width: 50 },
-            { id: generateUUID(), name: 'Col 2', type: 'text', width: 50 }
-        ];
-        updates.value = "[]"; 
-    }
-    
-    if (newType === 'signature') { updates.value = ""; updates.previewText = "Sign Here"; }
-    if (newType === 'date') { updates.value = ""; updates.previewText = "DD/MM/YYYY"; updates.dateFormat = "DD/MM/YYYY"; }
-    if (newType === 'select') { updates.previewText = "Select..."; }
-    if (newType === 'textarea') { updates.previewText = "Multiline Text..."; }
-    if (newType === 'composite') { 
-        updates.compositeTemplate = "I am a permanent resident since {date:since_date}. I live in {text:location}.";
-        updates.compositeValues = {};
-        updates.previewText = "Composite Text...";
+    if (newType === selectedField.type) return;
+
+    // The registry owns each type's defaults and clears settings that no longer
+    // apply, so a leftover option list or date format can't affect the new type
+    const updates = propsForTypeChange(newType, selectedField);
+
+    // Keep existing choices when switching between the choice types
+    const keepsOptions = getCapabilities(newType).options && (selectedField.options?.length || 0) > 0;
+    if (keepsOptions) {
+        updates.options = selectedField.options?.map((o) => ({
+            ...o,
+            // Radio and checkbox marks sit on the page, a dropdown's don't
+            width: newType === 'select' ? 0 : (o.width || Math.min(5, selectedField.width)),
+            height: newType === 'select' ? 0 : (o.height || Math.min(3, selectedField.height)),
+        }));
     }
 
     onUpdateField(selectedField.id, updates);
@@ -464,17 +446,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t.sidebar.type}</label>
                             <select value={selectedField.type} onChange={(e) => handleTypeChange(e.target.value as FieldType)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
-                                <option value="text">{t.sidebar.fieldTypes.text}</option>
-                                <option value="textarea">{t.sidebar.fieldTypes.textarea}</option>
-                                <option value="number">{t.sidebar.fieldTypes.number}</option>
-                                <option value="date">{t.sidebar.fieldTypes.date}</option>
-                                <option value="signature">{t.sidebar.fieldTypes.signature}</option>
-                                <option value="select">{t.sidebar.fieldTypes.select}</option>
-                                <option value="radio">{t.sidebar.fieldTypes.radio}</option>
-                                <option value="checkbox">{t.sidebar.fieldTypes.checkbox}</option>
-                                <option value="table">{t.sidebar.fieldTypes.table}</option>
-                                <option value="composite">{t.sidebar.fieldTypes.composite}</option>
+                                {FIELD_TYPES.map((def) => (
+                                    <option key={def.type} value={def.type}>{def.label}</option>
+                                ))}
                             </select>
+                            <p className="text-[10px] text-slate-400">{getFieldTypeDef(selectedField.type).hint}</p>
                         </div>
                     )}
                     
@@ -531,11 +507,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {/* COMPOSITE FIELD CONFIGURATION */}
                     {selectedField.type === 'composite' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                            <div className="flex items-center gap-2 mb-1">
-                                <FileText size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.compositeTemplate}</h3>
-                            </div>
+                        <PropertyGroup title={t.sidebar.compositeTemplate} icon={FileText} defaultOpen={true}>
                             <p className="text-[10px] text-slate-500 leading-relaxed">
                                 {t.sidebar.compositeHelp}
                             </p>
@@ -593,16 +565,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     })()}
                                 </div>
                             )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* VISUAL STYLING SECTION */}
-                    {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'date' || selectedField.type === 'select' || selectedField.type === 'textarea' || selectedField.type === 'signature' || selectedField.type === 'radio' || selectedField.type === 'checkbox') && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-1">
-                                <Palette size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.visualStyling}</h3>
-                             </div>
+                    {selectedField.type !== 'table' && selectedField.type !== 'table-row' && selectedField.type !== 'composite' && (
+                        <PropertyGroup title={t.sidebar.visualStyling} icon={Palette} defaultOpen={false}>
                              
                              {/* Use Global Color Checkbox */}
                              <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer p-2 bg-slate-50 rounded-md border border-slate-200">
@@ -672,16 +640,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                  <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.padding}</label>
                                  <input type="number" min="0" value={selectedField.padding || 3} onChange={(e) => onUpdateField(selectedField.id, { padding: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs" />
                              </div>
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* SIGNATURE CANVAS SIZE */}
                     {selectedField.type === 'signature' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-1">
-                                <PenTool size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.signatureCanvasSize || 'Canvas Size'}</h3>
-                             </div>
+                        <PropertyGroup title={t.sidebar.signatureCanvasSize || 'Canvas Size'} icon={PenTool} defaultOpen={false}>
                              <p className="text-[10px] text-slate-400">{t.sidebar.signatureCanvasSizeHelp || 'Set the drawing area size for the signature modal'}</p>
                              
                              <div className="grid grid-cols-2 gap-3">
@@ -708,15 +672,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     />
                                 </div>
                              </div>
-                        </div>
+                        </PropertyGroup>
                     )}
 
-                    {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'date' || selectedField.type === 'select' || selectedField.type === 'textarea') && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-1">
-                                <Type size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.typography}</h3>
-                             </div>
+                    {getCapabilities(selectedField.type).typography && (
+                        <PropertyGroup title={t.sidebar.typography} icon={Type} defaultOpen={true}>
                              
                              <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
@@ -729,7 +689,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 </div>
                              </div>
 
-                             {(selectedField.type === 'text' || selectedField.type === 'number' || selectedField.type === 'textarea') && (
+                             {getCapabilities(selectedField.type).maxLength && (
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.maxLength}</label>
                                     <input 
@@ -761,7 +721,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                              </div>
                              
                              {/* Rich Text Formatting */}
-                             {(selectedField.type === 'text' || selectedField.type === 'textarea') && (
+                             {getCapabilities(selectedField.type).richText && (
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.richText || 'Text Formatting'}</label>
                                     <div className="flex bg-slate-100 rounded p-1 gap-1">
@@ -789,17 +749,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </div>
                                 </div>
                              )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* DIGIT POSITIONS FOR NUMBER FIELDS */}
                     {selectedField.type === 'number' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <PropertyGroup title={'Digit Positions'} icon={BoxSelect} defaultOpen={false} badge={(selectedField.digitPositions || []).length || null}>
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <BoxSelect size={14} className="text-slate-600" />
-                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Digit Positions</h3>
-                                </div>
                                 <button 
                                     onClick={() => {
                                         const positions = selectedField.digitPositions || [];
@@ -870,42 +826,21 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     Clear All Positions
                                 </button>
                             )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {selectedField.type === 'table' && (
                         <div className="space-y-4 pt-2 border-t border-slate-100">
-                             {/* Custom Rows Section */}
-                             <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Custom Rows</h3>
-                                </div>
-                                <button onClick={() => onAddTableRow?.(selectedField.id)} className="w-full py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md text-sm font-medium flex items-center justify-center gap-2 border border-indigo-200">
-                                    <Plus size={16} /> Add Custom Row Template
-                                </button>
-                                
-                                {fields.filter(f => f.parentFieldId === selectedField.id && f.type === 'table-row').length > 0 && (
-                                    <div className="space-y-1 mt-2">
-                                        {fields.filter(f => f.parentFieldId === selectedField.id && f.type === 'table-row').map(row => (
-                                            <div key={row.id} className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded text-xs">
-                                                <span className="font-medium truncate flex-1">{row.name}</span>
-                                                <div className="flex items-center gap-2">
-                                                    <button onClick={() => onSelectField(row.id)} className="text-blue-600 hover:underline">Edit</button>
-                                                    <button onClick={() => onDeleteField(row.id)} className="text-red-500 hover:text-red-700"><Trash2 size={12} /></button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                             </div>
-
-                             {/* Table Builder Component */}
-                             <div className="pt-2 border-t border-slate-100">
-                                <TableBuilder 
-                                    field={selectedField} 
-                                    onUpdateField={onUpdateField}
-                                />
-                             </div>
+                            <TableBuilder 
+                                field={selectedField} 
+                                onUpdateField={onUpdateField}
+                                fields={fields}
+                                onSelectField={onSelectField}
+                                onDeleteField={onDeleteField}
+                                onSetRowLayout={onSetRowLayout}
+                                onAddTableRow={onAddTableRow}
+                                onDistributeRows={onDistributeRows}
+                            />
                         </div>
                     )}
 
@@ -939,9 +874,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                     )}
 
-                    {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select') && !(selectedField.type === 'checkbox' && selectedField.useFieldAsCheckbox) && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center justify-between"><h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{t.sidebar.options}</h3><button onClick={addOption} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"><Plus size={12} /> {t.common.add}</button></div>
+                    {getCapabilities(selectedField.type).options && !(selectedField.type === 'checkbox' && selectedField.useFieldAsCheckbox) && (
+                        <PropertyGroup title={t.sidebar.options} icon={List} defaultOpen={true} badge={(selectedField.options || []).length || null}>
+                             <div className="flex items-center justify-between"><button onClick={addOption} className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded flex items-center gap-1 transition-colors"><Plus size={12} /> {t.common.add}</button></div>
                              <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {(selectedField.options || []).map((opt, idx) => (
                                     <div key={opt.id} className="p-2 bg-slate-50 rounded border border-slate-200 space-y-2">
@@ -958,15 +893,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </div>
                                 ))}
                              </div>
-                        </div>
+                        </PropertyGroup>
                     )}
 
-                    {(selectedField.type === 'radio' || selectedField.type === 'checkbox') && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-1">
-                                <Check size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Mark Style</h3>
-                             </div>
+                    {getCapabilities(selectedField.type).markStyle && (
+                        <PropertyGroup title={'Mark Style'} icon={Check} defaultOpen={false}>
                              <div className="grid grid-cols-6 gap-2">
                                 {[
                                     { value: 'checkmark', label: '✓', title: 'Checkmark' },
@@ -990,16 +921,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </button>
                                 ))}
                              </div>
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* USE FIELD AS CHECKBOX - Only for checkbox type */}
                     {selectedField.type === 'checkbox' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                             <div className="flex items-center gap-2 mb-1">
-                                <BoxSelect size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Checkbox Mode</h3>
-                             </div>
+                        <PropertyGroup title={'Checkbox Mode'} icon={BoxSelect} defaultOpen={false}>
                              <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                                 <input 
                                     type="checkbox" 
@@ -1063,16 +990,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     })()}
                                 </div>
                              )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* PARENT FIELD SECTION - For radio/checkbox/composite */}
                     {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'composite') && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
-                            <div className="flex items-center gap-2 mb-1">
-                                <CornerDownRight size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Parent Field</h3>
-                            </div>
+                        <PropertyGroup title={'Parent Field'} icon={CornerDownRight} defaultOpen={false}>
                             <p className="text-[10px] text-slate-500 leading-relaxed">
                                 Make this field visible only when a specific option is selected in another radio/checkbox field.
                             </p>
@@ -1141,17 +1064,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </div>
                                 );
                             })()}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* VALIDATION RULES SECTION */}
                     {selectedField.type !== 'table' && selectedField.type !== 'table-row' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <PropertyGroup title={'Validation'} icon={ShieldCheck} defaultOpen={false} badge={(selectedField.validationRules || []).length || null}>
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <ShieldCheck size={14} className="text-slate-600" />
-                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Validation</h3>
-                                </div>
                                 <button
                                     onClick={() => {
                                         const rules = selectedField.validationRules || [];
@@ -1314,16 +1233,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     ))}
                                 </div>
                             )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* DOCUMENT ATTACHMENT SECTION */}
-                    <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <PropertyGroup title={'Document Attachment'} icon={Paperclip} defaultOpen={false} badge={(selectedField.attachments || []).length || null}>
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Paperclip size={14} className="text-slate-600" />
-                                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Document Attachment</h3>
-                            </div>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -1440,13 +1355,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </PropertyGroup>
 
-                    <div className="space-y-3 pt-2 border-t border-slate-100">
-                        <div className="flex items-center gap-2 mb-1">
-                            <BoxSelect size={14} className="text-slate-600" />
-                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Geometry</h3>
-                        </div>
+                    <PropertyGroup title={'Geometry'} icon={BoxSelect} defaultOpen={false}>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">Page</label><input type="number" min="1" value={selectedField.page} onChange={(e) => onUpdateField(selectedField.id, { page: Number(e.target.value) })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                             <div></div>
@@ -1455,16 +1366,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">W (px)</label><input type="number" value={Math.round((selectedField.width / 100) * pageDimensions.width)} onChange={(e) => onUpdateField(selectedField.id, { width: (Number(e.target.value) / pageDimensions.width) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                             <div className="space-y-1"><label className="text-[10px] font-semibold text-slate-400 uppercase">H (px)</label><input type="number" value={Math.round((selectedField.height / 100) * pageDimensions.height)} onChange={(e) => onUpdateField(selectedField.id, { height: (Number(e.target.value) / pageDimensions.height) * 100 })} className="w-full px-2 py-1 bg-slate-50 border rounded text-sm" /></div>
                         </div>
-                    </div>
+                    </PropertyGroup>
 
                     {/* Additional Positions - for fields that need to appear in multiple places */}
                     {selectedField.type !== 'table' && selectedField.type !== 'table-row' && selectedField.type !== 'radio' && selectedField.type !== 'checkbox' && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <PropertyGroup title={'Additional Positions'} icon={MapPin} defaultOpen={false} badge={(selectedField.additionalPositions || []).length || null}>
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Copy size={14} className="text-slate-600" />
-                                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Additional Positions</h3>
-                                </div>
                                 <button 
                                     onClick={() => {
                                         const positions = selectedField.additionalPositions || [];
@@ -1603,7 +1510,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             ) : (
                                 <p className="text-[10px] text-slate-400 italic">No additional positions. Click "Add Position" to render this field in multiple places.</p>
                             )}
-                        </div>
+                        </PropertyGroup>
                     )}
 
                     {/* Field Locking */}
