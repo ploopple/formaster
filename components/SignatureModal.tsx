@@ -13,6 +13,9 @@ interface SignatureModalProps {
   strokeColor?: string; // Color for the signature stroke (default: #000000)
 }
 
+// Drawing stroke width, in CSS pixels
+const STROKE_WIDTH = 2.5;
+
 export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, canvasWidth = 500, canvasHeight = 300, strokeColor = '#000000' }) => {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,14 +55,21 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
     const canvas = canvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      
+      if (!rect.width || !rect.height) return;
+
+      // Back the canvas with a higher resolution bitmap so the signature stays
+      // sharp once it is scaled onto the PDF
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+
       // Reset context properties after resize
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // Keep drawing coordinates in CSS pixels
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = STROKE_WIDTH;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
@@ -107,18 +117,76 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose,
     if (canvas) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // clearRect works in the transformed (CSS pixel) space
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
         setHasSignature(false);
       }
     }
   };
 
+  // Crops the empty margins around the drawn strokes. Without this the exported
+  // PNG is the whole (mostly blank) canvas, so the signature ends up rendered
+  // tiny inside the PDF field once it is scaled to fit.
+  const cropToInk = (canvas: HTMLCanvasElement): string => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !canvas.width || !canvas.height) return canvas.toDataURL('image/png');
+
+    let pixels: ImageData;
+    try {
+      pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } catch {
+      return canvas.toDataURL('image/png');
+    }
+
+    const { data } = pixels;
+    let minX = canvas.width;
+    let minY = canvas.height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        // Any non-transparent pixel counts as ink
+        if (data[(y * canvas.width + x) * 4 + 3] > 0) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    // Nothing was drawn - fall back to the full canvas
+    if (maxX < 0 || maxY < 0) return canvas.toDataURL('image/png');
+
+    // Leave a little breathing room so the round stroke caps aren't clipped
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const pad = Math.ceil(STROKE_WIDTH * dpr);
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(canvas.width - 1, maxX + pad);
+    maxY = Math.min(canvas.height - 1, maxY + pad);
+
+    const cropWidth = maxX - minX + 1;
+    const cropHeight = maxY - minY + 1;
+
+    const cropped = document.createElement('canvas');
+    cropped.width = cropWidth;
+    cropped.height = cropHeight;
+    const croppedCtx = cropped.getContext('2d');
+    if (!croppedCtx) return canvas.toDataURL('image/png');
+    croppedCtx.drawImage(canvas, minX, minY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+    return cropped.toDataURL('image/png');
+  };
+
   const handleSave = () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Create a temporary canvas to crop or just send raw data
-      // Sending raw data URL for now
-      onSave(canvas.toDataURL('image/png'));
+      onSave(cropToInk(canvas));
       onClose();
     }
   };

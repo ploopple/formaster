@@ -89,9 +89,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   
-  // Stable blob URL to prevent Document remounting on every blob change
+  // Blob URL of the bytes currently being displayed
   const [stableFileUrl, setStableFileUrl] = useState<string | null>(null);
   const previousUrlRef = useRef<string | null>(null);
+  // URLs of superseded documents, released once the replacement has loaded
+  const staleUrlsRef = useRef<string[]>([]);
 
   // Drawing New Field State
   const [drawingState, setDrawingState] = useState<{
@@ -121,46 +123,105 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   useEffect(() => { setActiveOptionId(null); }, [selectedFieldId]);
 
-  // Track file identity to detect when a new file is passed
-  const fileIdRef = useRef<number>(0);
-  
-  // Create stable blob URL that updates without causing Document remount
+  // --- FLICKER-FREE RELOAD ---------------------------------------------------
+  // The editor regenerates the whole PDF on every field change. react-pdf drops
+  // its children while the new bytes parse, which made the page blink. We keep
+  // a snapshot of the last rendered page on screen until the new one is ready.
+  const [frozenFrame, setFrozenFrame] = useState<boolean>(false);
+  const frozenCanvasRef = useRef<HTMLCanvasElement>(null);
+  const frozenFrameTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Last measured size of the rendered page, used to hold the layout steady
+  // while a new version of the document is parsed. `forWidth` records the
+  // requested page width it was measured at so a zoom change re-measures.
+  const [pageBox, setPageBox] = useState<{ width: number; height: number; forWidth: number } | null>(null);
+  const pageBoxRef = useRef<HTMLDivElement>(null);
+
+  // Safety net: never leave a stale frame up if the new render never completes
+  const armFrozenFrameTimeout = () => {
+    if (frozenFrameTimeoutRef.current) clearTimeout(frozenFrameTimeoutRef.current);
+    frozenFrameTimeoutRef.current = setTimeout(() => setFrozenFrame(false), 4000);
+  };
+
+  function freezeCurrentFrame() {
+    const source = containerRef.current?.querySelector('canvas.react-pdf__Page__canvas') as HTMLCanvasElement | null;
+    const target = frozenCanvasRef.current;
+
+    if (source && target && source.width && source.height) {
+      target.width = source.width;
+      target.height = source.height;
+      const ctx = target.getContext('2d');
+      if (ctx) {
+        // Copying the bitmap is far cheaper than encoding it to a data URL
+        ctx.drawImage(source, 0, 0);
+        setFrozenFrame(true);
+        armFrozenFrameTimeout();
+        return;
+      }
+    }
+
+    // Already covered by an earlier snapshot (edits arriving back to back) -
+    // keep it up rather than flashing an empty page
+    if (frozenFrameTimeoutRef.current) armFrozenFrameTimeout();
+  }
+
+  const clearFrozenFrame = useCallback(() => {
+    if (frozenFrameTimeoutRef.current) {
+      clearTimeout(frozenFrameTimeoutRef.current);
+      frozenFrameTimeoutRef.current = null;
+    }
+    setFrozenFrame(false);
+  }, []);
+
+  useEffect(() => () => {
+    if (frozenFrameTimeoutRef.current) clearTimeout(frozenFrameTimeoutRef.current);
+  }, []);
+
+  // Point the viewer at the new bytes. Each URL gets its own <Document> (see
+  // the `key` below): swapping `file` on a live Document lets react-pdf destroy
+  // the old PDFDocumentProxy while its Page is still mounted, and the next
+  // getPage() call then throws "messageHandler is null". Remounting is only
+  // acceptable because the frozen frame hides it.
   useEffect(() => {
     if (!file) {
-      setStableFileUrl(null);
-      return;
-    }
-    
-    // Increment file ID to track this specific file instance
-    const currentFileId = ++fileIdRef.current;
-    
-    // Clear the URL first to prevent using stale URL
-    setStableFileUrl(null);
-    
-    // Revoke previous URL to prevent memory leaks
-    if (previousUrlRef.current) {
-      URL.revokeObjectURL(previousUrlRef.current);
-      previousUrlRef.current = null;
-    }
-    
-    // Create new URL for the blob after a small delay to ensure cleanup
-    const timeoutId = setTimeout(() => {
-      // Only proceed if this is still the current file
-      if (fileIdRef.current !== currentFileId) return;
-      
-      const newUrl = URL.createObjectURL(file instanceof Blob ? file : new Blob([file]));
-      previousUrlRef.current = newUrl;
-      setStableFileUrl(newUrl);
-    }, 50);
-    
-    return () => {
-      clearTimeout(timeoutId);
       if (previousUrlRef.current) {
         URL.revokeObjectURL(previousUrlRef.current);
         previousUrlRef.current = null;
       }
-    };
+      setStableFileUrl(null);
+      return;
+    }
+
+    // Keep the currently rendered page on screen while the new bytes load,
+    // otherwise the viewer blinks on every single field edit
+    freezeCurrentFrame();
+
+    // pdf.js reads blob URLs lazily, so the outgoing URL can only be released
+    // once its document is gone and the replacement has finished loading
+    if (previousUrlRef.current) staleUrlsRef.current.push(previousUrlRef.current);
+
+    const newUrl = URL.createObjectURL(file instanceof Blob ? file : new Blob([file]));
+    previousUrlRef.current = newUrl;
+    setStableFileUrl(newUrl);
   }, [file]);
+
+  // Release every URL that is no longer the one being displayed
+  const revokeStaleUrls = useCallback(() => {
+    const stale = staleUrlsRef.current;
+    staleUrlsRef.current = [];
+    for (const url of stale) {
+      if (url !== previousUrlRef.current) URL.revokeObjectURL(url);
+    }
+  }, []);
+
+  // Release the remaining URLs when the viewer unmounts
+  useEffect(() => () => {
+    for (const url of staleUrlsRef.current) URL.revokeObjectURL(url);
+    staleUrlsRef.current = [];
+    if (previousUrlRef.current) {
+      URL.revokeObjectURL(previousUrlRef.current);
+      previousUrlRef.current = null;
+    }
+  }, []);
 
   // Handle middle-mouse or space+drag panning
   const handlePanStart = useCallback((e: React.PointerEvent) => {
@@ -306,10 +367,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     const canvas = overlayCanvasRef.current;
     if (!canvas || !containerWidth) return;
     
-    const pdfPage = containerRef.current?.querySelector('.react-pdf__Page');
+    const pdfPage = pageBoxRef.current;
     if (!pdfPage) return;
     
     const rect = pdfPage.getBoundingClientRect();
+    // The page hasn't been laid out yet - wait for the render to report its size
+    if (!rect.width || !rect.height) return;
     canvas.width = rect.width;
     canvas.height = rect.height;
     
@@ -437,7 +500,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         ctx.strokeRect(canvasX, canvasY, w, h);
     }
 
-  }, [fields, pageNumber, scale, containerWidth, mode, drawingState, selectedFieldId]);
+  }, [fields, pageNumber, scale, containerWidth, mode, drawingState, selectedFieldId, pageBox, globalDrawColor]);
 
 
   // --- Interaction Logic ---
@@ -445,7 +508,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     if (!dragState && !drawingState) return;
     const handlePointerMove = (e: PointerEvent) => {
       e.preventDefault(); 
-      const overlay = containerRef.current?.querySelector('.react-pdf__Page');
+      const overlay = pageBoxRef.current;
       const rect = overlay?.getBoundingClientRect();
       if (!rect) return;
 
@@ -498,7 +561,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     };
     const handlePointerUp = (e: PointerEvent) => {
         if (drawingState?.isDrawing) {
-            const overlay = containerRef.current?.querySelector('.react-pdf__Page');
+            const overlay = pageBoxRef.current;
             const rect = overlay?.getBoundingClientRect();
             if (rect) {
                 const rawX1 = (drawingState.startX - rect.left) / rect.width * 100;
@@ -511,7 +574,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 const height = Math.min(100 - y, Math.abs(rawY2 - rawY1));
                 if (width > 1 && height > 1) {
                      const newField: FormField = { 
-                        id: generateUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
+                        id: generateUUID(), page: pageNumber, x, y, width, height, name: `Field ${fields.length + 1}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, textAlign: 'center', options: [], color: globalDrawColor, useGlobalColor: true, backgroundColor: undefined, borderColor: undefined, borderWidth: 0, padding: 2
                     };
                     onFieldAdd(newField);
                     onFieldSelect(newField.id);
@@ -543,15 +606,33 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setLoadError(null);
+    revokeStaleUrls();
   };
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
     setLoadError('Failed to load PDF. Please try again.');
+    revokeStaleUrls();
   };
   
   const onPageRenderSuccess = () => {
-    // Pan offset is preserved via state, no scroll restoration needed
+    // Pan offset is preserved via state, no scroll restoration needed.
+    // Record the rendered size so the container can hold it while reloading.
+    const canvas = containerRef.current?.querySelector('canvas.react-pdf__Page__canvas') as HTMLCanvasElement | null;
+    if (canvas) {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const forWidth = containerWidth * scale;
+      if (width && height) {
+        setPageBox((prev) =>
+          prev && prev.width === width && prev.height === height && prev.forWidth === forWidth
+            ? prev
+            : { width, height, forWidth }
+        );
+      }
+    }
+    // The fresh page is on screen - drop the snapshot that was covering it
+    clearFrozenFrame();
   };
 
   const handleBackgroundPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -573,7 +654,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           Math.abs(e.clientX - lastTap.x) < 50 && 
           Math.abs(e.clientY - lastTap.y) < 50) {
         // Double-tap detected! Get position relative to PDF page
-        const overlay = containerRef.current?.querySelector('.react-pdf__Page');
+        const overlay = pageBoxRef.current;
         const rect = overlay?.getBoundingClientRect();
         if (rect) {
           const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
@@ -605,7 +686,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     // Don't allow dragging locked fields
     if (field.locked) return;
     
-    const overlay = containerRef.current?.querySelector('.react-pdf__Page'); 
+    const overlay = pageBoxRef.current; 
     const containerRect = overlay?.getBoundingClientRect() || e.currentTarget.parentElement?.getBoundingClientRect();
     if (!containerRect) return;
     setDragState({
@@ -622,7 +703,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     // Don't allow resizing locked fields
     if (field.locked) return;
     
-    const overlay = containerRef.current?.querySelector('.react-pdf__Page');
+    const overlay = pageBoxRef.current;
     const containerRect = overlay?.getBoundingClientRect();
     if (!containerRect) return;
     setDragState({
@@ -1003,45 +1084,60 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
               transition: isPanning ? 'none' : 'transform 0.1s ease-out'
             }}
           >
-            <Document 
-              key="pdf-document"
-              file={stableFileUrl} 
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={<div className="text-slate-600">Loading PDF...</div>}
-              className="shadow-xl"
+            {/* The page box keeps its measured size while a new version of the
+                PDF loads, so the field layer never jumps or disappears */}
+            <div 
+              ref={pageBoxRef}
+              className="relative shadow-xl" 
+              onPointerDown={handleBackgroundPointerDown}
+              style={pageBox && pageBox.forWidth === containerWidth * scale ? { width: pageBox.width, height: pageBox.height } : undefined}
             >
-              <div className="relative" onPointerDown={handleBackgroundPointerDown}>
+              <Document 
+                // One Document per set of bytes - never swap `file` in place
+                key={stableFileUrl}
+                file={stableFileUrl} 
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                loading={frozenFrame ? <div style={{ width: pageBox?.width, height: pageBox?.height }} /> : <div className="text-slate-600">Loading PDF...</div>}
+              >
                 <Page pageNumber={pageNumber} width={containerWidth * scale} renderAnnotationLayer={false} renderTextLayer={false} onRenderSuccess={onPageRenderSuccess} />
-                
-                <canvas 
-                  ref={overlayCanvasRef} 
-                  className="absolute inset-0 pointer-events-none z-0"
-                />
+              </Document>
 
-                <div className="absolute inset-0 z-10">
-                  {fields.filter(f => f.page === pageNumber).map(field => {
-                      if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
-                      if (mode === AppMode.FILL && field.type === 'table-row') return null;
-                      // For checkbox with useFieldAsCheckbox, render the field box itself
-                      if (field.type === 'checkbox' && field.useFieldAsCheckbox) return renderBox(field, null);
-                      if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
-                      return renderBox(field, null);
-                    })}
-                  
-                  {/* Double-tap position indicator */}
-                  {isMobile && doubleTapPosition && showMobileAddField && (
-                    <div 
-                      className="absolute w-4 h-4 -ml-2 -mt-2 z-50 pointer-events-none"
-                      style={{ left: `${doubleTapPosition.x}%`, top: `${doubleTapPosition.y}%` }}
-                    >
-                      <div className="w-full h-full bg-green-500 rounded-full animate-ping opacity-75" />
-                      <div className="absolute inset-0 w-full h-full bg-green-500 rounded-full" />
-                    </div>
-                  )}
-                </div>
+              {/* Snapshot of the previous render, shown only while reloading */}
+              <canvas 
+                ref={frozenCanvasRef}
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full pointer-events-none select-none z-[1]"
+                style={{ display: frozenFrame ? 'block' : 'none' }}
+              />
+
+              <canvas 
+                ref={overlayCanvasRef} 
+                className="absolute inset-0 pointer-events-none z-[2]"
+              />
+
+              <div className="absolute inset-0 z-10">
+                {fields.filter(f => f.page === pageNumber).map(field => {
+                    if (mode === AppMode.FILL && !isFieldVisible(field, fields)) return null;
+                    if (mode === AppMode.FILL && field.type === 'table-row') return null;
+                    // For checkbox with useFieldAsCheckbox, render the field box itself
+                    if (field.type === 'checkbox' && field.useFieldAsCheckbox) return renderBox(field, null);
+                    if ((field.type === 'radio' || field.type === 'checkbox') && field.options?.length) return field.options.map(opt => renderBox(field, opt));
+                    return renderBox(field, null);
+                  })}
+                
+                {/* Double-tap position indicator */}
+                {isMobile && doubleTapPosition && showMobileAddField && (
+                  <div 
+                    className="absolute w-4 h-4 -ml-2 -mt-2 z-50 pointer-events-none"
+                    style={{ left: `${doubleTapPosition.x}%`, top: `${doubleTapPosition.y}%` }}
+                  >
+                    <div className="w-full h-full bg-green-500 rounded-full animate-ping opacity-75" />
+                    <div className="absolute inset-0 w-full h-full bg-green-500 rounded-full" />
+                  </div>
+                )}
               </div>
-            </Document>
+            </div>
           </div>
         )}
       </div>
@@ -1105,6 +1201,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                       type: type as any,
                       fontSize: 12,
                       letterSpacing: 0,
+                      textAlign: 'center',
                       options: (type === 'radio' || type === 'checkbox' || type === 'select') ? [
                         { id: generateUUID(), x: fieldX, y: fieldY, width: 4, height: 3, value: 'Option 1' },
                         { id: generateUUID(), x: fieldX + 10, y: fieldY, width: 4, height: 3, value: 'Option 2' },

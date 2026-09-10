@@ -501,6 +501,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 />
                                 {t.sidebar.hideSeparator}
                             </label>
+                            {(selectedField.dateFormat || 'DD/MM/YYYY') !== 'YYYY' && (
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase">{t.sidebar.dateSegmentSpacing}</label>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max="40" 
+                                            step="1" 
+                                            value={selectedField.dateSegmentSpacing || 0} 
+                                            onChange={(e) => onUpdateField(selectedField.id, { dateSegmentSpacing: Number(e.target.value) })} 
+                                            className="flex-1 accent-blue-600" 
+                                        />
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            step="1" 
+                                            value={selectedField.dateSegmentSpacing || 0} 
+                                            onChange={(e) => onUpdateField(selectedField.id, { dateSegmentSpacing: Number(e.target.value) || 0 })} 
+                                            className="w-16 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-sm" 
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-400">{t.sidebar.dateSegmentSpacingHelp}</p>
+                                </div>
+                            )}
                         </div>
                     )}
 

@@ -309,7 +309,7 @@ function EditorContent() {
       const newField: FormField = { 
         id: generateUUID(), page: parentField.page, x: Math.min(parentField.x + 5, 90), y: Math.min(parentField.y + 5, 95), 
         width: 20, height: 3, name: `Nested: ${parentField.name}`, value: '', previewText: '', type: 'text', 
-        fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId,
+        fontSize: 12, letterSpacing: 0, textAlign: 'center', options: [], parentFieldId: parentId,
       };
       setFields(prev => [...prev, newField]);
       setSelectedFieldId(newField.id);
@@ -318,7 +318,7 @@ function EditorContent() {
     
     const parentOption = parentField?.options?.find(o => o.id === optionId);
     if (!parentOption) return;
-    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
+    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, textAlign: 'center', options: [], parentFieldId: parentId, parentOptionId: optionId };
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
   }, [fields, setFields]);
@@ -334,7 +334,7 @@ function EditorContent() {
     const newRow: FormField = { 
       id: generateUUID(), page: tableField.page, x: tableField.x, y: newY, width: tableField.width, height: 5, 
       name: `${tableField.name} Row ${nextIndex + 1}`, value: '', previewText: '', type: 'table-row', 
-      fontSize: 12, letterSpacing: 0, parentFieldId: tableId, rowIndex: nextIndex 
+      fontSize: 12, letterSpacing: 0, textAlign: 'center', parentFieldId: tableId, rowIndex: nextIndex 
     };
     setFields(prev => [...prev, newRow]);
     setSelectedFieldId(newRow.id);
@@ -368,7 +368,7 @@ function EditorContent() {
         const newChild: FormField = {
           id: generateUUID(), page: compositeField.page, x: compositeField.x + (idx * 15) % 60, y: compositeField.y + Math.floor(idx / 4) * 5,
           width: 15, height: 3, name: childName, value: '', previewText: ph.type === 'date' ? 'DD/MM/YYYY' : '', type: ph.type,
-          fontSize: compositeField.fontSize || 12, letterSpacing: compositeField.letterSpacing || 0, parentFieldId: compositeId,
+          fontSize: compositeField.fontSize || 12, letterSpacing: compositeField.letterSpacing || 0, textAlign: compositeField.textAlign || 'center', parentFieldId: compositeId,
           dateFormat: ph.type === 'date' ? 'DD/MM/YYYY' : undefined,
         };
         newChildren.push(newChild);

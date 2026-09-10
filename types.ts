@@ -57,6 +57,7 @@ export interface TableColumn {
   maxLength?: number; // For text/number
   dateFormat?: string; // For date type
   dateHideSeparator?: boolean; // For date type
+  dateSegmentSpacing?: number; // Extra spacing (in points) between day/month/year segments
   options?: FieldOption[]; // For radio/checkbox/select
   markStyle?: MarkStyle; // For radio/checkbox
   
@@ -121,6 +122,7 @@ export interface FormField {
   maxLength?: number;
   dateFormat?: string; // Format pattern for date fields (e.g., DD/MM/YYYY, MM/YYYY)
   dateHideSeparator?: boolean; // Hide the "/" separator when rendering date in PDF
+  dateSegmentSpacing?: number; // Extra spacing (in points) between the day / month / year segments
   
   // For number fields: control individual digit positions
   digitPositions?: { x: number; y: number }[]; // Array of x,y offsets for each digit (relative to field)

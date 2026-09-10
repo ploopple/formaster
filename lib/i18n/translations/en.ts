@@ -140,6 +140,8 @@ export const en = {
     // Date format
     dateFormat: 'Date Format',
     hideSeparator: 'Hide "/" separator in PDF',
+    dateSegmentSpacing: 'Segment Spacing',
+    dateSegmentSpacingHelp: 'Extra gap between day / month / year when printed on the PDF',
 
     // Composite field
     compositeTemplate: 'Composite Template',

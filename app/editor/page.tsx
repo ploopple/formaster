@@ -218,6 +218,7 @@ function EditorContent() {
         type: 'text', 
         fontSize: 12, 
         letterSpacing: 0, 
+        textAlign: 'center',
         options: [], 
         parentFieldId: parentId,
         // No parentOptionId needed for useFieldAsCheckbox
@@ -230,7 +231,7 @@ function EditorContent() {
     // Standard option-based nesting
     const parentOption = parentField?.options?.find(o => o.id === optionId);
     if (!parentOption) return;
-    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, options: [], parentFieldId: parentId, parentOptionId: optionId };
+    const newField: FormField = { id: generateUUID(), page: parentField.page, x: Math.min(parentOption.x + 5, 90), y: Math.min(parentOption.y + 5, 95), width: 20, height: 3, name: `Nested: ${parentOption.value}`, value: '', previewText: '', type: 'text', fontSize: 12, letterSpacing: 0, textAlign: 'center', options: [], parentFieldId: parentId, parentOptionId: optionId };
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
   }, [fields, setFields]);
@@ -257,6 +258,8 @@ function EditorContent() {
       type: 'table-row', 
       fontSize: 12, 
       letterSpacing: 0, 
+      textAlign: 'center',
+      
       parentFieldId: tableId, 
       rowIndex: nextIndex 
     };
@@ -311,6 +314,7 @@ function EditorContent() {
           type: ph.type,
           fontSize: compositeField.fontSize || 12,
           letterSpacing: compositeField.letterSpacing || 0,
+          textAlign: compositeField.textAlign || 'center',
           parentFieldId: compositeId,
           dateFormat: ph.type === 'date' ? 'DD/MM/YYYY' : undefined,
         };

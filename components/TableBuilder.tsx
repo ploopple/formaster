@@ -345,6 +345,12 @@ const TableBuilder: React.FC<TableBuilderProps> = ({ field, onUpdateField }) => 
                         <input type="checkbox" checked={col.dateHideSeparator || false} onChange={(e) => updateColumn(col.id, { dateHideSeparator: e.target.checked })} className="rounded border-slate-300 text-blue-600" />
                         Hide "/" separator in PDF
                       </label>
+                      {(col.dateFormat || 'DD/MM/YYYY') !== 'YYYY' && (
+                        <div className="space-y-1">
+                          <label className="text-[9px] text-slate-400">Segment Spacing (day / month / year)</label>
+                          <input type="number" min="0" step="1" value={col.dateSegmentSpacing || 0} onChange={(e) => updateColumn(col.id, { dateSegmentSpacing: Number(e.target.value) || 0 })} className="w-full px-2 py-1 text-xs border border-slate-200 rounded bg-white" />
+                        </div>
+                      )}
                     </div>
                   )}
 

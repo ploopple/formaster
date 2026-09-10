@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts, PDFPage, Color } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont, Color } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { FormField, MarkStyle, FieldPosition } from '../types';
 import { isFieldVisible } from './formLogic';
@@ -105,6 +105,63 @@ const containsHebrew = (text: string): boolean => {
   return /[\u0590-\u05FF]/.test(text);
 };
 
+// Splits a date value into its day / month / year segments so they can be drawn
+// with extra spacing between them. Accepts either the raw HTML input format
+// (YYYY-MM-DD / YYYY-MM) or the already formatted value (DD/MM/YYYY).
+// Separators stay attached to the segment they follow unless they are hidden.
+const getDateSegments = (rawValue: string, format: string, hideSeparator?: boolean): string[] => {
+    let parts: string[];
+    if (rawValue.includes('-')) {
+        const [year, month, day] = rawValue.split('-');
+        if (format === 'MM/YYYY') parts = [month, year];
+        else if (format === 'YYYY') parts = [year];
+        else parts = [day, month, year];
+    } else {
+        parts = rawValue.split('/');
+    }
+    parts = parts.filter((p) => !!p);
+    if (hideSeparator || parts.length < 2) return parts;
+    return parts.map((p, i) => (i < parts.length - 1 ? `${p}/` : p));
+};
+
+// Advance width of a text run, taking letter spacing into account
+const measureTextRun = (text: string, font: PDFFont, size: number, letterSpacing: number = 0): number => {
+    if (letterSpacing > 0) {
+        let total = 0;
+        for (const char of text) total += font.widthOfTextAtSize(char, size) + letterSpacing;
+        return total;
+    }
+    return font.widthOfTextAtSize(text, size);
+};
+
+// Draws a text run (honouring letter spacing) and returns its advance width
+const drawTextRun = (page: PDFPage, text: string, x: number, y: number, size: number, font: PDFFont, color: Color, letterSpacing: number = 0): number => {
+    if (letterSpacing > 0) {
+        let currentX = x;
+        for (const char of text) {
+            page.drawText(char, { x: currentX, y, size, font, color });
+            currentX += font.widthOfTextAtSize(char, size) + letterSpacing;
+        }
+        return currentX - x;
+    }
+    page.drawText(text, { x, y, size, font, color });
+    return font.widthOfTextAtSize(text, size);
+};
+
+// Total width of date segments including the gap inserted between them
+const measureDateSegments = (segments: string[], font: PDFFont, size: number, letterSpacing: number, segmentSpacing: number): number =>
+    segments.reduce((sum, seg) => sum + measureTextRun(seg, font, size, letterSpacing), 0) +
+    segmentSpacing * Math.max(0, segments.length - 1);
+
+// Draws each date segment with `segmentSpacing` points of extra gap between them
+const drawDateSegments = (page: PDFPage, segments: string[], x: number, y: number, size: number, font: PDFFont, color: Color, letterSpacing: number, segmentSpacing: number) => {
+    let currentX = x;
+    segments.forEach((seg, i) => {
+        currentX += drawTextRun(page, seg, currentX, y, size, font, color, letterSpacing);
+        if (i < segments.length - 1) currentX += segmentSpacing;
+    });
+};
+
 export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormField[]): Promise<Uint8Array> => {
   const pdfDoc = await PDFDocument.load(originalPdfBytes);
   
@@ -195,27 +252,22 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         } else {
                             let displayValue = cellValue;
                             // Format date values from YYYY-MM-DD to user's format
-                            if (col.type === 'date' && cellValue.includes('-')) {
-                                const [y, m, d] = cellValue.split('-');
+                            let cellDateSegments: string[] | null = null;
+                            const cellDateSpacing = col.dateSegmentSpacing || 0;
+                            if (col.type === 'date' && cellValue) {
                                 const format = col.dateFormat || 'DD/MM/YYYY';
-                                if (format === 'DD/MM/YYYY') {
-                                    displayValue = `${d}/${m}/${y}`;
-                                } else if (format === 'MM/YYYY') {
-                                    displayValue = `${m}/${y}`;
-                                } else if (format === 'YYYY') {
-                                    displayValue = y;
-                                }
-                                // Remove separators if dateHideSeparator is true
-                                if (col.dateHideSeparator) {
-                                    displayValue = displayValue.replace(/\//g, '');
-                                }
+                                const segments = getDateSegments(cellValue, format, col.dateHideSeparator);
+                                displayValue = segments.join('');
+                                if (cellDateSpacing > 0 && segments.length > 1) cellDateSegments = segments;
                             }
                             const cellFont = (hebrewFont && containsHebrew(displayValue)) ? hebrewFont : font;
                             const textColor = hexToRgb(col.color || field.color) || rgb(0, 0, 0);
                             const textX = pdfX + (col.padding || 3);
                             
                             // Apply letter spacing if set
-                            if (col.letterSpacing && col.letterSpacing > 0) {
+                            if (cellDateSegments) {
+                                drawDateSegments(page, cellDateSegments, textX, textY, colFontSize, cellFont, textColor, col.letterSpacing || 0, cellDateSpacing);
+                            } else if (col.letterSpacing && col.letterSpacing > 0) {
                                 let currentX = textX;
                                 for (const char of displayValue) {
                                     page.drawText(char, { x: currentX, y: textY, size: colFontSize, font: cellFont, color: textColor });
@@ -264,19 +316,13 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         } else {
                             let displayValue = cellValue;
                             // Format date values from YYYY-MM-DD to user's format
-                            if (col.type === 'date' && cellValue.includes('-')) {
-                                const [y, m, d] = cellValue.split('-');
+                            let cellDateSegments: string[] | null = null;
+                            const cellDateSpacing = col.dateSegmentSpacing || 0;
+                            if (col.type === 'date' && cellValue) {
                                 const format = col.dateFormat || 'DD/MM/YYYY';
-                                if (format === 'DD/MM/YYYY') {
-                                    displayValue = `${d}/${m}/${y}`;
-                                } else if (format === 'MM/YYYY') {
-                                    displayValue = `${m}/${y}`;
-                                } else if (format === 'YYYY') {
-                                    displayValue = y;
-                                }
-                                if (col.dateHideSeparator) {
-                                    displayValue = displayValue.replace(/\//g, '');
-                                }
+                                const segments = getDateSegments(cellValue, format, col.dateHideSeparator);
+                                displayValue = segments.join('');
+                                if (cellDateSpacing > 0 && segments.length > 1) cellDateSegments = segments;
                             }
                             const colFontSize = col.fontSize || fontSize;
                             const textHeight = colFontSize * 0.7;
@@ -286,7 +332,9 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                             const textX = currentColX + cellPadding + 1;
                             
                             // Apply letter spacing if set
-                            if (col.letterSpacing && col.letterSpacing > 0) {
+                            if (cellDateSegments) {
+                                drawDateSegments(page, cellDateSegments, textX, textY, colFontSize, cellFont, textColor, col.letterSpacing || 0, cellDateSpacing);
+                            } else if (col.letterSpacing && col.letterSpacing > 0) {
                                 let charX = textX;
                                 for (const char of displayValue) {
                                     page.drawText(char, { x: charX, y: textY, size: colFontSize, font: cellFont, color: textColor });
@@ -381,23 +429,14 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 let displayValue = field.value.toString();
                 
                 // For date fields: convert from YYYY-MM-DD to user's format and optionally remove separators
+                let dateSegments: string[] | null = null;
+                const dateSegmentSpacing = field.dateSegmentSpacing || 0;
                 if (field.type === 'date' && displayValue) {
-                    // HTML date input stores as YYYY-MM-DD, convert to display format
-                    if (displayValue.includes('-')) {
-                        const [year, month, day] = displayValue.split('-');
-                        const format = field.dateFormat || 'DD/MM/YYYY';
-                        if (format === 'DD/MM/YYYY') {
-                            displayValue = `${day}/${month}/${year}`;
-                        } else if (format === 'MM/YYYY') {
-                            displayValue = `${month}/${year}`;
-                        } else if (format === 'YYYY') {
-                            displayValue = year;
-                        }
-                    }
-                    // Remove separators if requested
-                    if (field.dateHideSeparator) {
-                        displayValue = displayValue.replace(/[\/\-]/g, '');
-                    }
+                    const format = field.dateFormat || 'DD/MM/YYYY';
+                    const segments = getDateSegments(displayValue, format, field.dateHideSeparator);
+                    displayValue = segments.join('');
+                    // Only take the segmented drawing path when a gap was actually requested
+                    if (dateSegmentSpacing > 0 && segments.length > 1) dateSegments = segments;
                 }
                 
                 // Use Hebrew font if text contains Hebrew characters
@@ -407,7 +446,9 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                 }
                 
                 // Calculate Text Alignment X
-                const textWidth = fontToUse.widthOfTextAtSize(displayValue, sizeToUse);
+                const textWidth = dateSegments
+                    ? measureDateSegments(dateSegments, fontToUse, sizeToUse, posLetterSpacing, dateSegmentSpacing)
+                    : fontToUse.widthOfTextAtSize(displayValue, sizeToUse);
                 let textX = x + padding; // Left default
                 
                 if (field.textAlign === 'center') {
@@ -433,6 +474,9 @@ export const saveFilledPDF = async (originalPdfBytes: ArrayBuffer, fields: FormF
                         maxWidth: fieldWidthPoints - (padding * 2),
                         lineHeight: sizeToUse * 1.35, // Match Web line-height 1.35
                     });
+                } else if (dateSegments) {
+                    // Date drawn segment by segment so day / month / year can be spaced apart
+                    drawDateSegments(posPage, dateSegments, textX, textY, sizeToUse, fontToUse, textColor, posLetterSpacing, dateSegmentSpacing);
                 } else if (field.type === 'number' && field.digitPositions && field.digitPositions.length > 0) {
                     // Number field with individual digit positions
                     const digits = displayValue.replace(/[^0-9]/g, ''); // Extract only digits
