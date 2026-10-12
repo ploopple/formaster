@@ -9,15 +9,14 @@ import Sidebar from '../../../components/Sidebar';
 const PDFViewer = dynamic(() => import('../../../components/PDFViewer'), { ssr: false });
 import { SignatureModal } from '../../../components/SignatureModal';
 import KeyboardShortcutsPanel from '../../../components/KeyboardShortcutsPanel';
-import { FormTemplateData, firestoreService } from '../../../lib/firebase';
+import { localForms, type FormTemplateData } from '../../../lib/localForms';
 import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { setTableRowLayout, distributeTableRows, appendTableRow } from '../../../services/tableLayout';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, Cloud, LogIn, LogOut, Save, Bug, ClipboardPaste } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, Save, Bug, ClipboardPaste } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 import { generateUUID } from '../../../lib/uuid';
-import { useAuth } from '../../../lib/firebase';
 
 // LocalStorage key prefix for saved form states (fallback for non-authenticated users)
 const FORM_STORAGE_KEY_PREFIX = 'pdf_form_state_';
@@ -27,7 +26,6 @@ function EditorContent() {
   const params = useParams();
   const formId = params.formId as string;
   const { t } = useI18n();
-  const { user, logout, isConfigured } = useAuth();
   
   const [mode, setMode] = useState<AppMode>(AppMode.FILL);
   const [file, setFile] = useState<File | null>(null);
@@ -52,7 +50,7 @@ function EditorContent() {
   const [currentForm, setCurrentForm] = useState<FormTemplateData | null>(null);
   const [globalDrawColor, setGlobalDrawColor] = useState<string>('#000000');
   const [isSavedToStorage, setIsSavedToStorage] = useState(false);
-  const [isSavingToCloud, setIsSavingToCloud] = useState(false);
+  const [isSavingToStorage, setIsSavingToStorage] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
 
   const validationStates = useMemo(() => validateAllFields(fields), [fields]);
@@ -63,7 +61,7 @@ function EditorContent() {
     setIsClient(true);
   }, []);
 
-  // Load form by ID from Firestore
+  // Load the form and its PDF from this browser's IndexedDB storage.
   useEffect(() => {
     // Reset state when formId changes
     setIsLoading(true);
@@ -76,8 +74,7 @@ function EditorContent() {
     
     const loadForm = async () => {
       try {
-        // Load form template from Firestore
-        const form = await firestoreService.getFormTemplate(formId);
+        const form = await localForms.get(formId);
         if (!form) {
           setFormNotFound(true);
           setIsLoading(false);
@@ -86,61 +83,31 @@ function EditorContent() {
         
         setCurrentForm(form);
         
-        // Check if current user is the owner
-        const ownerStatus = user ? form.ownerId === user.uid : false;
-        setIsOwner(ownerStatus);
+        setIsOwner(true);
         
         // Initialize with template defaults
         let savedFields = form.fields || [];
         let savedSections = form.sections || [];
         let savedGlobalDrawColor = form.globalDrawColor || '#000000';
         
-        // If not owner, try to load user's saved state (their filled values)
-        if (!ownerStatus && user) {
-          try {
-            const userState = await firestoreService.getFormState(user.uid, formId);
-            if (userState) {
-              // Merge user's filled values with template fields
+        try {
+          const localState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
+          if (localState) {
+            const parsed = JSON.parse(localState);
+            if (parsed.fields && Array.isArray(parsed.fields)) {
               const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
-              savedFields = userState.fields.map((savedField: FormField) => {
+              savedFields = parsed.fields.map((savedField: FormField) => {
                 const templateField = templateFieldsMap.get(savedField.id);
-                if (templateField) {
-                  return { ...templateField, ...savedField };
-                }
-                return savedField;
+                return templateField ? { ...templateField, ...savedField } : savedField;
               });
             }
-          } catch (error) {
-            console.error('Failed to load user form state', error);
           }
-        } else if (!ownerStatus && !user) {
-          // Fallback to localStorage for non-authenticated users
-          try {
-            const localState = localStorage.getItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`);
-            if (localState) {
-              const parsed = JSON.parse(localState);
-              if (parsed.fields && Array.isArray(parsed.fields)) {
-                const templateFieldsMap = new Map(form.fields.map(f => [f.id, f]));
-                savedFields = parsed.fields.map((savedField: FormField) => {
-                  const templateField = templateFieldsMap.get(savedField.id);
-                  if (templateField) {
-                    return { ...templateField, ...savedField };
-                  }
-                  return savedField;
-                });
-              }
-            }
-          } catch (error) {
-            console.error('Failed to load localStorage state', error);
-          }
+        } catch (error) {
+          console.error('Failed to load localStorage state', error);
         }
         
-        // Load PDF - use pdfUrl (Firebase Storage) if available, otherwise fall back to fileName
-        const pdfSource = form.pdfUrl || form.fileName;
-        const response = await fetch(pdfSource);
-        if (!response.ok) throw new Error('Failed to load PDF');
-        
-        const blob = await response.blob();
+        const pdfSource = form.fileName;
+        const blob = form.pdf;
         
         // Validate that we got a PDF
         if (blob.type && !blob.type.includes('pdf') && !blob.type.includes('octet-stream')) {
@@ -163,7 +130,7 @@ function EditorContent() {
         setPreviewBlob(previewBlobData);
         
         // Set mode based on ownership - owners can edit, others can only fill
-        setMode(ownerStatus ? AppMode.EDITOR : AppMode.FILL);
+        setMode(AppMode.EDITOR);
         setIsSidebarOpen(true);
       } catch (error) {
         console.error('Failed to load form', error);
@@ -175,7 +142,7 @@ function EditorContent() {
     if (formId) {
       loadForm();
     }
-  }, [formId, setFields, user]);
+  }, [formId, setFields]);
 
   const handleCopyShareLink = async () => {
     try {
@@ -188,29 +155,15 @@ function EditorContent() {
     }
   };
 
-  // Save form - owners save the template, others save their filled values
+  // Save the form template and a filled PDF in this browser.
   const saveFormState = useCallback(async () => {
-    setIsSavingToCloud(true);
+    setIsSavingToStorage(true);
     try {
-      if (isOwner && user) {
-        // Owner saves the form template
-        await firestoreService.updateFormTemplate(formId, user.uid, {
-          fields,
-          sections,
-          globalDrawColor,
-        });
-      } else if (user) {
-        // Non-owner saves their filled values
-        await firestoreService.saveFormState(user.uid, formId, fields, sections, globalDrawColor);
-      } else {
-        // Fallback to localStorage for non-authenticated users
-        const formState = {
-          fields,
-          sections,
-          globalDrawColor,
-          savedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(`${FORM_STORAGE_KEY_PREFIX}${formId}`, JSON.stringify(formState));
+      await localForms.update(formId, { fields, sections, globalDrawColor });
+      if (pdfBytes) {
+        const fieldsWithGlobalColor = fields.map(f => f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f);
+        const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
+        await localForms.savePdf(`filled_${file?.name || currentForm?.fileName || 'document.pdf'}`, new Blob([generatedBytes as BlobPart], { type: 'application/pdf' }));
       }
       setIsSavedToStorage(true);
       setTimeout(() => setIsSavedToStorage(false), 2000);
@@ -218,9 +171,9 @@ function EditorContent() {
       console.error('Failed to save form state', error);
       alert('Failed to save. ' + (error instanceof Error ? error.message : ''));
     } finally {
-      setIsSavingToCloud(false);
+      setIsSavingToStorage(false);
     }
-  }, [fields, sections, globalDrawColor, formId, user, isOwner]);
+  }, [fields, sections, globalDrawColor, formId, pdfBytes, file, currentForm]);
 
   useEffect(() => {
     if (!pdfBytes) return;
@@ -431,7 +384,9 @@ function EditorContent() {
         f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
       );
       const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
-      downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
+      const name = `filled_${file?.name || 'document.pdf'}`;
+      await localForms.savePdf(name, new Blob([generatedBytes as BlobPart], { type: 'application/pdf' }));
+      downloadBlob(generatedBytes, name);
     } catch (error) {
       console.error('Failed to save PDF', error);
       alert('Failed to generate PDF. Please try again.');
@@ -447,7 +402,9 @@ function EditorContent() {
         f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
       );
       const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
-      downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
+      const name = `filled_${file?.name || 'document.pdf'}`;
+      await localForms.savePdf(name, new Blob([generatedBytes as BlobPart], { type: 'application/pdf' }));
+      downloadBlob(generatedBytes, name);
     } catch (error) {
       console.error('Failed to save PDF', error);
       alert('Failed to generate PDF. Please try again.');
@@ -589,21 +546,10 @@ function EditorContent() {
               </button>
             </div>
           )}
-          <button onClick={saveFormState} disabled={isSavingToCloud} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title={isOwner ? 'Save form template' : user ? 'Save your progress' : 'Save locally'}>
-            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToCloud ? <Cloud size={18} className="animate-pulse" /> : <Save size={18} />}
-            <span className="hidden lg:inline">{isSavedToStorage ? 'Saved!' : isSavingToCloud ? 'Saving...' : isOwner ? 'Save Template' : 'Save Progress'}</span>
+          <button onClick={saveFormState} disabled={isSavingToStorage} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title="Save this form and a filled PDF in this browser">
+            {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToStorage ? <Save size={18} className="animate-pulse" /> : <Save size={18} />}
+            <span className="hidden lg:inline">{isSavedToStorage ? 'Saved!' : isSavingToStorage ? 'Saving...' : 'Save Locally'}</span>
           </button>
-          {isConfigured && (user ? (
-            <button onClick={logout} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-manipulation" title="Sign out">
-              <LogOut size={18} />
-              <span className="hidden xl:inline">Sign Out</span>
-            </button>
-          ) : (
-            <button onClick={() => router.push('/login')} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all touch-manipulation" title="Sign in to save to cloud">
-              <LogIn size={18} />
-              <span className="hidden xl:inline">Sign In</span>
-            </button>
-          ))}
           <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all touch-manipulation" title={t.editor.copyShareLink || 'Copy share link'}>
             {isLinkCopied ? <Check size={18} className="text-green-600" /> : <Share2 size={18} />}
             <span className="hidden lg:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
@@ -726,14 +672,6 @@ function EditorContent() {
   );
 }
 
-import AuthGuard from '../../../components/AuthGuard';
-
 export default function FormEditorPage() {
-  return (
-    <AuthGuard>
-      <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
-        <EditorContent />
-      </Suspense>
-    </AuthGuard>
-  );
+  return <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}><EditorContent /></Suspense>;
 }

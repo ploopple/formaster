@@ -3,8 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import FormsList from '../../components/FormsList';
-import { FormTemplateData } from '../../lib/firebase';
-import AuthGuard from '../../components/AuthGuard';
+import type { FormTemplateData } from '../../lib/localForms';
 
 function TemplatesContent() {
   const router = useRouter();
@@ -17,9 +16,5 @@ function TemplatesContent() {
 }
 
 export default function TemplatesPage() {
-  return (
-    <AuthGuard>
-      <TemplatesContent />
-    </AuthGuard>
-  );
+  return <TemplatesContent />;
 }

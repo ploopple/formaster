@@ -17,6 +17,7 @@ import { validateAllFields, isFormValid, getValidationSummary } from '../../serv
 import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Bug, FileUp, ClipboardPaste } from 'lucide-react';
 import { useI18n } from '../../lib/i18n/I18nContext';
 import { generateUUID } from '../../lib/uuid';
+import { localForms } from '../../lib/localForms';
 
 function EditorContent() {
   const router = useRouter();
@@ -369,7 +370,9 @@ function EditorContent() {
         f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
       );
       const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
-      downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
+      const name = `filled_${file?.name || 'document.pdf'}`;
+      await localForms.savePdf(name, new Blob([generatedBytes as BlobPart], { type: 'application/pdf' }));
+      downloadBlob(generatedBytes, name);
     } catch (error) {
       console.error('Failed to save PDF', error);
       alert('Failed to generate PDF. Please try again.');
@@ -385,7 +388,9 @@ function EditorContent() {
         f.useGlobalColor !== false ? { ...f, color: globalDrawColor } : f
       );
       const generatedBytes = await saveFilledPDF(pdfBytes, fieldsWithGlobalColor);
-      downloadBlob(generatedBytes, `filled_${file?.name || 'document'}`);
+      const name = `filled_${file?.name || 'document.pdf'}`;
+      await localForms.savePdf(name, new Blob([generatedBytes as BlobPart], { type: 'application/pdf' }));
+      downloadBlob(generatedBytes, name);
     } catch (error) {
       console.error('Failed to save PDF', error);
       alert('Failed to generate PDF. Please try again.');
@@ -621,14 +626,6 @@ function EditorContent() {
   );
 }
 
-import AuthGuard from '../../components/AuthGuard';
-
 export default function EditorPage() {
-  return (
-    <AuthGuard>
-      <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}>
-        <EditorContent />
-      </Suspense>
-    </AuthGuard>
-  );
+  return <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-600">Loading...</div></div>}><EditorContent /></Suspense>;
 }

@@ -2,12 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FileText, ArrowRight, PenTool, CheckCircle2, Zap, Cloud, Lock } from 'lucide-react';
-import { useAuth } from '../lib/firebase';
+import { FileText, ArrowRight, PenTool, CheckCircle2, Zap, HardDrive, Lock } from 'lucide-react';
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -24,33 +21,8 @@ export default function LandingPage() {
             <a href="#how-it-works" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">How it Works</a>
           </nav>
           <div className="flex items-center gap-3">
-            {loading ? (
-              <div className="text-slate-400 text-sm">Loading...</div>
-            ) : user ? (
-              <Link
-                href="/templates"
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20"
-              >
-                Go to Templates
-                <ArrowRight size={18} />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-slate-600 hover:text-slate-800 px-4 py-2 font-medium transition-colors hidden sm:block"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/login"
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20"
-                >
-                  Get Started
-                  <ArrowRight size={18} />
-                </Link>
-              </>
-            )}
+            <Link href="/templates" className="text-slate-600 hover:text-slate-800 px-4 py-2 font-medium">My PDFs</Link>
+            <Link href="/create" className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-lg shadow-blue-500/20">Create Form<ArrowRight size={18} /></Link>
           </div>
         </div>
       </header>
@@ -97,17 +69,17 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-100">
                   <CheckCircle2 size={20} className="text-green-400" />
-                  <span>Cloud Storage</span>
+                  <span>Saved in Your Browser</span>
                 </div>
 
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href={user ? "/templates" : "/login"}
+                  href="/create"
                   className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl hover:shadow-2xl"
                 >
-                  {user ? "Go to Templates" : "Start for Free"}
+                  Start for Free
                   <ArrowRight size={20} />
                 </Link>
               </div>
@@ -169,11 +141,11 @@ export default function LandingPage() {
             
             <div className="group bg-white p-8 rounded-2xl border border-slate-200 hover:border-green-200 hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300">
               <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <Cloud size={28} />
+                <HardDrive size={28} />
               </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-3">Cloud Storage</h3>
+              <h3 className="text-xl font-semibold text-slate-800 mb-3">Private Browser Storage</h3>
               <p className="text-slate-600 leading-relaxed">
-                Your forms are securely stored in the cloud and accessible from anywhere, on any device.
+                PDFs and form data stay in your browser on this device. No account or cloud upload is needed.
               </p>
             </div>
             
@@ -280,10 +252,10 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href={user ? "/templates" : "/login"}
+                  href="/create"
                   className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl hover:shadow-2xl"
                 >
-                  {user ? "Go to Templates" : "Get Started Free"}
+                  Get Started Free
                   <ArrowRight size={20} />
                 </Link>
               </div>

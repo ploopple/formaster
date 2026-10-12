@@ -2,20 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload, FileText, Globe, Lock } from 'lucide-react';
+import { ArrowLeft, Upload, FileText } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth, firestoreService, storageService } from '../../lib/firebase';
+import { localForms } from '../../lib/localForms';
+import type { FormField } from '../../types';
 import { countries } from '../../lib/countries';
-import AuthGuard from '../../components/AuthGuard';
 
 function CreateFormContent() {
   const router = useRouter();
-  const { user, isConfigured } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [country, setCountry] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -32,37 +30,26 @@ function CreateFormContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !pdfFile) return;
+    if (!pdfFile) return;
 
     setError('');
     setIsSubmitting(true);
 
     try {
-      // First create the form to get the formId
-      const formId = await firestoreService.createFormTemplate(
-        user.uid,
-        user.email || '',
-        title,
-        description,
-        '', // Temporary empty fileName
-        [], // Empty fields - user will add them in editor
-        [],
-        '#000000',
+      const form = await localForms.create({
+        title: title.trim(),
+        description: description.trim(),
+        fileName: pdfFile.name,
+        pdf: pdfFile,
+        fields: [] as FormField[],
+        sections: [],
+        globalDrawColor: '#000000',
         category,
         country,
-        isPublic
-      );
-
-      // Upload PDF to Firebase Storage
-      const pdfUrl = await storageService.uploadPDF(user.uid, pdfFile, formId);
-
-      // Update the form with the PDF URL
-      await firestoreService.updateFormTemplate(formId, user.uid, {
-        fileName: pdfUrl,
-        pdfUrl: pdfUrl,
+        isPublic: false,
+        ownerId: 'local',
       });
-
-      router.push(`/editor/${formId}`);
+      router.push(`/editor/${form.id}`);
     } catch (err) {
       console.error('Failed to create form:', err);
       setError('Failed to create form. Please try again.');
@@ -70,18 +57,6 @@ function CreateFormContent() {
       setIsSubmitting(false);
     }
   };
-
-  if (!isConfigured) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <h1 className="text-2xl font-bold text-slate-800 mb-4">Firebase Not Configured</h1>
-          <p className="text-slate-500 mb-6">Please configure Firebase to create forms.</p>
-          <Link href="/" className="text-blue-600 hover:underline">Back to Home</Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
@@ -93,7 +68,7 @@ function CreateFormContent() {
 
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-100">
           <h1 className="text-2xl font-bold text-slate-800 mb-2">Create New Form</h1>
-          <p className="text-slate-500 mb-6">Upload a PDF and create a fillable form template.</p>
+          <p className="text-slate-500 mb-6">Upload a PDF and create a fillable form. It stays in this browser.</p>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -122,7 +97,7 @@ function CreateFormContent() {
                   <label className="cursor-pointer">
                     <Upload className="mx-auto text-slate-400 mb-2" size={32} />
                     <p className="text-slate-600 mb-1">Click to upload PDF</p>
-                    <p className="text-xs text-slate-400">PDF will be uploaded to Firebase Storage</p>
+                    <p className="text-xs text-slate-400">PDF will be saved on this device in this browser</p>
                     <input
                       type="file"
                       accept=".pdf"
@@ -186,40 +161,6 @@ function CreateFormContent() {
               </select>
             </div>
 
-            {/* Visibility */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Visibility</label>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsPublic(true)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${
-                    isPublic
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
-                  }`}
-                >
-                  <Globe size={20} />
-                  <span>Public</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsPublic(false)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${
-                    !isPublic
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-slate-200 text-slate-600 hover:border-slate-300'
-                  }`}
-                >
-                  <Lock size={20} />
-                  <span>Private</span>
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                {isPublic ? 'Anyone can view and fill this form' : 'Only you can access this form'}
-              </p>
-            </div>
-
             {/* Submit */}
             <button
               type="submit"
@@ -236,9 +177,5 @@ function CreateFormContent() {
 }
 
 export default function CreateFormPage() {
-  return (
-    <AuthGuard>
-      <CreateFormContent />
-    </AuthGuard>
-  );
+  return <CreateFormContent />;
 }

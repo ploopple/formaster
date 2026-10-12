@@ -5,7 +5,8 @@ A Next.js application for creating interactive PDF forms with a visual editor an
 ## Features
 
 - **Visual PDF Editor**: Draw and position form fields directly on PDF documents
-- **Form Templates**: Browse and use pre-configured form templates
+- **Local Form Library**: Store uploaded form PDFs in your browser
+- **Saved PDFs**: Keep filled PDF copies in your browser and download them again later
 - **Multiple Field Types**: Text, number, date, select, radio, checkbox, signature, and table fields
 - **Conditional Logic**: Show/hide fields based on other field values
 - **Validation**: Built-in field validation with error messages
@@ -21,53 +22,7 @@ First, install dependencies:
 npm install
 ```
 
-### Firebase Setup (Optional)
-
-To enable user authentication and cloud storage for form data:
-
-1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Enable Authentication (Email/Password and Google sign-in)
-3. Create a Firestore database
-4. Copy `.env.local.example` to `.env.local` and fill in your Firebase config:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Required environment variables:
-- `NEXT_PUBLIC_FIREBASE_API_KEY`
-- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
-- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
-- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
-- `NEXT_PUBLIC_FIREBASE_APP_ID`
-
-**Note**: The app works without Firebase - form data will be saved to localStorage instead.
-
-### Firestore Security Rules
-
-Add these rules to your Firestore database:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Form templates - owners can edit, anyone can read public forms
-    match /formTemplates/{formId} {
-      allow read: if resource.data.isPublic == true || 
-                    (request.auth != null && request.auth.uid == resource.data.ownerId);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
-    }
-    
-    // Form states - users can only access their own filled form data
-    match /formStates/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-    }
-  }
-}
-```
+PDFs and form data are stored in IndexedDB in the current browser profile. They remain available after a browser restart, but they are not synced to other devices. Clearing browser site data removes these files.
 
 Then run the development server:
 
@@ -100,7 +55,7 @@ services/
 ## Usage
 
 1. **Home Page** (`/`): Choose to upload a new PDF or browse templates
-2. **Templates** (`/templates`): Select from pre-configured form templates
+2. **My PDFs** (`/templates`): Open locally saved forms or download filled PDFs again
 3. **Editor** (`/editor`): 
    - **Editor Mode**: Create and position form fields on the PDF
    - **Fill Mode**: Fill out the form fields and download the result

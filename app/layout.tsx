@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "../lib/i18n/I18nContext";
-import { AuthProvider } from "../lib/firebase";
 import { OrganizationJsonLd, SoftwareApplicationJsonLd, WebsiteJsonLd } from "../components/JsonLd";
 
 const geistSans = Geist({
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
     default: "Drajonz - Fill PDF Forms Smarter & Faster",
     template: "%s | Drajonz",
   },
-  description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team. Cloud storage included.",
+  description: "Create and fill PDF forms in your browser. Your PDFs stay saved on your device.",
   keywords: [
     "PDF filler",
     "fillable PDF",
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
     "document management",
     "PDF templates",
     "digital forms",
-    "cloud PDF storage",
+    "local PDF storage",
   ],
   authors: [{ name: "Drajonz" }],
   creator: "Drajonz",
@@ -114,11 +113,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <I18nProvider>
-            {children}
-          </I18nProvider>
-        </AuthProvider>
+        <I18nProvider>{children}</I18nProvider>
       </body>
     </html>
   );
