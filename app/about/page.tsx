@@ -81,7 +81,7 @@ export default function AboutPage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Secure cloud storage for all your documents</span>
+                <span>PDFs saved locally in your browser</span>
               </li>
 
               <li className="flex items-start gap-3">

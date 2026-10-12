@@ -14,7 +14,7 @@ import { saveFilledPDF, downloadBlob } from '../../../services/pdfUtils';
 import { setTableRowLayout, distributeTableRows, appendTableRow } from '../../../services/tableLayout';
 import { useUndoRedo } from '../../../hooks/useUndoRedo';
 import { validateAllFields, isFormValid, getValidationSummary } from '../../../services/validationService';
-import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Share2, Save, Bug, ClipboardPaste } from 'lucide-react';
+import { Pencil, PenTool, Menu, Copy, Check, Undo2, Redo2, Keyboard, AlertTriangle, Save, Bug, ClipboardPaste } from 'lucide-react';
 import { useI18n } from '../../../lib/i18n/I18nContext';
 import { generateUUID } from '../../../lib/uuid';
 
@@ -36,7 +36,6 @@ function EditorContent() {
   const [isCopied, setIsCopied] = useState(false);
   const [isPasted, setIsPasted] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
-  const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -143,17 +142,6 @@ function EditorContent() {
       loadForm();
     }
   }, [formId, setFields]);
-
-  const handleCopyShareLink = async () => {
-    try {
-      const url = window.location.href;
-      await navigator.clipboard.writeText(url);
-      setIsLinkCopied(true);
-      setTimeout(() => setIsLinkCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy link', error);
-    }
-  };
 
   // Save the form template and a filled PDF in this browser.
   const saveFormState = useCallback(async () => {
@@ -549,10 +537,6 @@ function EditorContent() {
           <button onClick={saveFormState} disabled={isSavingToStorage} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-green-600 hover:bg-green-50 active:bg-green-100 rounded-lg transition-all touch-manipulation disabled:opacity-50" title="Save this form and a filled PDF in this browser">
             {isSavedToStorage ? <Check size={18} className="text-green-600" /> : isSavingToStorage ? <Save size={18} className="animate-pulse" /> : <Save size={18} />}
             <span className="hidden lg:inline">{isSavedToStorage ? 'Saved!' : isSavingToStorage ? 'Saving...' : 'Save Locally'}</span>
-          </button>
-          <button onClick={handleCopyShareLink} className="flex items-center gap-1.5 p-2 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all touch-manipulation" title={t.editor.copyShareLink || 'Copy share link'}>
-            {isLinkCopied ? <Check size={18} className="text-green-600" /> : <Share2 size={18} />}
-            <span className="hidden lg:inline">{isLinkCopied ? t.common.copied : (t.editor.share || 'Share')}</span>
           </button>
           {process.env.NODE_ENV === 'development' && mode === AppMode.EDITOR && isOwner && (
             <>

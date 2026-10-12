@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     url: baseUrl,
     siteName: "Drajonz",
     title: "Drajonz - Fill PDF Forms Smarter & Faster",
-    description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.",
+    description: "Create and fill PDF forms in your browser. Store PDFs locally on your device.",
     images: [
       {
         url: "/og-image.svg",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Drajonz - Fill PDF Forms Smarter & Faster",
-    description: "Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.",
+    description: "Create and fill PDF forms in your browser. Store PDFs locally on your device.",
     images: ["/og-image.svg"],
     creator: "@drajonz",
   },

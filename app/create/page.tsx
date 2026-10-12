@@ -46,8 +46,6 @@ function CreateFormContent() {
         globalDrawColor: '#000000',
         category,
         country,
-        isPublic: false,
-        ownerId: 'local',
       });
       router.push(`/editor/${form.id}`);
     } catch (err) {

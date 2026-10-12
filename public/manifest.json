@@ -1,7 +1,7 @@
 {
   "name": "Drajonz",
   "short_name": "Drajonz",
-  "description": "Fill PDF forms smarter and faster with drag-and-drop editor and cloud storage",
+  "description": "Create and fill PDF forms in your browser. Your documents stay on your device.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

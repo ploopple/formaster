@@ -58,7 +58,7 @@ export default function LandingPage() {
                 <span className="text-blue-200">Smarter & Faster</span>
               </h1>
               <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-xl mx-auto lg:mx-0">
-                Upload any PDF, create fillable fields with our intuitive editor, and share with your team. Save hours with reusable templates.
+                Upload PDFs, create fillable fields with our intuitive editor, and keep your forms saved in this browser.
               </p>
               
               {/* Feature checklist */}
@@ -175,9 +175,9 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Lock size={28} />
               </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-3">Enterprise Security</h3>
+              <h3 className="text-xl font-semibold text-slate-800 mb-3">On-Device Storage</h3>
               <p className="text-slate-600 leading-relaxed">
-                Bank-level encryption and secure authentication keep your sensitive documents protected.
+                Your PDFs are stored in this browser profile and are not uploaded to a cloud account.
               </p>
             </div>
           </div>

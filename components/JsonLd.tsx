@@ -7,7 +7,7 @@ export function OrganizationJsonLd() {
     name: 'Drajonz',
     url: baseUrl,
     logo: `${baseUrl}/og-image.svg`,
-    description: 'Create fillable PDF forms with our intuitive drag-and-drop editor. Upload any PDF, add form fields, signatures, and share with your team.',
+    description: 'Create and fill PDF forms in your browser. Store PDFs locally on your device.',
     sameAs: [],
   };
 
@@ -29,7 +29,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
     url: baseUrl,
-    description: 'Fill PDF forms smarter and faster with drag-and-drop editor and cloud storage.',
+    description: 'Create and fill PDF forms in your browser with local storage for your documents.',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -42,7 +42,7 @@ export function SoftwareApplicationJsonLd() {
     },
     featureList: [
       'Drag-and-drop PDF form editor',
-      'Cloud storage for forms',
+      'Browser storage for forms',
       'Digital signatures',
       'Form templates',
       'PDF export',

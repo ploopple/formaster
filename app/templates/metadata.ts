@@ -2,10 +2,10 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Templates',
-  description: 'Browse and manage your PDF form templates. Create, edit, and share fillable PDF forms with your team.',
+  description: 'Open form templates and filled PDFs saved in this browser.',
   openGraph: {
     title: 'PDF Form Templates | Drajonz',
-    description: 'Browse and manage your PDF form templates. Create, edit, and share fillable PDF forms.',
+    description: 'Open form templates and filled PDFs saved in this browser.',
   },
   robots: {
     index: false,
